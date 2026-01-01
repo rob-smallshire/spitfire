@@ -18,7 +18,7 @@ The system uses an ATMega1284p microcontroller as an SPI slave device. The BBC M
 ┌─────────────────────┐         SPI          ┌──────────────────────┐
 │  BBC Master Compact │◄────────────────────►│     ATMega1284p      │
 │                     │   (bit-banged on     │                      │
-│  6522 VIA Port      │    VIA outputs)      │  ┌────────────────┐  │
+│  6522 VIA Port      │    User VIA Port B)  │  ┌────────────────┐  │
 └─────────────────────┘                      │  │ ADC: Joystick  │  │
                                              │  │ GPIO: Buttons  │  │
                                              │  │ GPIO: Mouse    │  │

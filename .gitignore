@@ -28,10 +28,37 @@ cmake-build-*/
 # macOS
 .DS_Store
 
-# KiCAD backups
+# KiCad
+# Backup files
 *.bak
+*.bck
+*.kicad_pcb-bak
+*.kicad_sch-bak
+*.sch-bak
 *-backups/
+rescue-backup/
+_autosave-*
+*-save.pro
+*-save.kicad_pcb
+*.000
+*.tmp
+\#auto_saved_files\#
+
+# Lock files
+*.lck
+
+# Project-specific
+*.kicad_prl
 fp-info-cache
+
+# Netlist and autorouter
+*.net
+*.dsn
+*.ses
+
+# Export directories
+bom/
+out/
 
 # Claude Code
 CLAUDE.md

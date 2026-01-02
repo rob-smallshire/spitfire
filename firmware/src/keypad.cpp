@@ -15,14 +15,15 @@ namespace {
     // Joy1: PC0-PC3, Joy2: PC4-PC7
     constexpr uint8_t ROW_MASK = 0xFF;  // All 8 bits of PORTC
 
-    // Settling time after column strobe (microseconds)
-    constexpr uint8_t SETTLE_US = 5;
+    // Settling time for column strobe and pull-up recovery (microseconds)
+    constexpr uint8_t SETTLE_US = 20;
 }
 
 void init() {
-    // Configure column pins as outputs, idle high
-    DDRB |= COL_MASK;
-    PORTB |= COL_MASK;
+    // Configure column pins as inputs (high-Z) initially
+    // They will be set to output only when strobing
+    DDRB &= ~COL_MASK;
+    PORTB &= ~COL_MASK;  // No pull-ups
 
     // Configure row pins as inputs with pull-ups
     DDRC &= ~ROW_MASK;
@@ -30,23 +31,28 @@ void init() {
 }
 
 void scan(uint8_t* col0, uint8_t* col1, uint8_t* col2) {
-    // Scan column 0
-    PORTB &= ~_BV(COL0_PIN);  // Drive low
+    // Scan column 0: set to output-low, read, then back to high-Z
+    PORTB &= ~_BV(COL0_PIN);  // Ensure output will be low
+    DDRB |= _BV(COL0_PIN);    // Set as output (drives low)
     _delay_us(SETTLE_US);
     *col0 = PINC;
-    PORTB |= _BV(COL0_PIN);   // Drive high
+    DDRB &= ~_BV(COL0_PIN);   // Back to high-Z
+    _delay_us(SETTLE_US);     // Let pull-ups recover
 
     // Scan column 1
     PORTB &= ~_BV(COL1_PIN);
+    DDRB |= _BV(COL1_PIN);
     _delay_us(SETTLE_US);
     *col1 = PINC;
-    PORTB |= _BV(COL1_PIN);
+    DDRB &= ~_BV(COL1_PIN);
+    _delay_us(SETTLE_US);
 
     // Scan column 2
     PORTB &= ~_BV(COL2_PIN);
+    DDRB |= _BV(COL2_PIN);
     _delay_us(SETTLE_US);
     *col2 = PINC;
-    PORTB |= _BV(COL2_PIN);
+    DDRB &= ~_BV(COL2_PIN);
 }
 
 uint16_t scan_joy1() {

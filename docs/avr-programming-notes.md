@@ -6,7 +6,7 @@ This document tracks fuse settings, programming parameters, and configuration ch
 
 - **MCU**: ATMega1284p-PU (40-pin DIP)
 - **Target Clock**: 18.432 MHz external crystal
-- **Load Capacitors**: 22 pF
+- **Load Capacitors**: 15 pF (22 pF failed on breadboard)
 - **Programmer**: USBasp v1.04
 - **Power**: External 5V (tested also with programmer power)
 
@@ -110,6 +110,20 @@ No changes. BOD (Brown-Out Detection) remains disabled.
 - FTDI RXI → AVR TXD0 (PD1, pin 15)
 - FTDI TXO → AVR RXD0 (PD0, pin 14)
 - FTDI GND → AVR GND
+
+## Joystick Wiring
+
+**Voltmace Delta 14b (DA-15 connector):**
+- Pin 7  - Y pot wiper
+- Pin 8  - AGND (analog ground)
+- Pin 14 - VREF (5V reference)
+- Pin 15 - X pot wiper
+
+**ATMega1284p connections (DIP-40):**
+- PA0 (pin 40) ← DA-15 pin 15 (X axis)
+- PA1 (pin 39) ← DA-15 pin 7 (Y axis)
+- AVCC (pin 30) ← DA-15 pin 14 (VREF)
+- GND ← DA-15 pin 8 (AGND)
 
 ## Commands Reference
 

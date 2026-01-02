@@ -20,8 +20,8 @@ int main() {
     uart::init(BAUD_RATE);
     adc::init();
 
-    uart::println("SPItFIRE Joystick X-axis Test");
-    uart::println("ADC0 (PA0) -> Joystick X");
+    uart::println("SPItFIRE Joystick Test");
+    uart::println("ADC0 (PA0) -> X, ADC1 (PA1) -> Y");
     uart::println("");
 
     // Configure PB0 as output for LED
@@ -29,16 +29,16 @@ int main() {
     PORTB |= _BV(PB0);  // LED off
 
     while (true) {
-        // Read joystick X position
+        // Read joystick position
         uint16_t x_raw = adc::read(adc::Channel::ADC0);
-        uint8_t x_8bit = static_cast<uint8_t>(x_raw >> 2);
+        uint16_t y_raw = adc::read(adc::Channel::ADC1);
 
         // Report values
         uart::print("X: ");
         uart::print_int(x_raw);
-        uart::print(" (0x");
-        uart::print_hex(x_8bit, 2);
-        uart::println(")");
+        uart::print("  Y: ");
+        uart::print_int(y_raw);
+        uart::println("");
 
         // Toggle LED to show activity
         PORTB ^= _BV(PB0);

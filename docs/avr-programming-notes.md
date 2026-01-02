@@ -94,6 +94,22 @@ No changes. BOD (Brown-Out Detection) remains disabled.
 | 2024-12-31 | Read fuses | `avrdude -c usbasp -p m1284p -B 125kHz -U lfuse:r:-:h -U hfuse:r:-:h -U efuse:r:-:h` | 0x62, 0x99, 0xff |
 | 2024-12-31 | Write fuses | `avrdude -c usbasp -p m1284p -B 125kHz -U lfuse:w:0xf7:m -U hfuse:w:0xd9:m -U efuse:w:0xff:m` | Success, verified |
 | 2024-12-31 | Flash LED blink | `avrdude -c usbasp -p m1284p -B 5 -U flash:w:spitfire.hex:i` | 200 bytes, LED blinking at 1 Hz |
+| 2025-01-02 | Flash UART test | `avrdude -c usbasp -p m1284p -B 5 -U flash:w:spitfire.hex:i` | 890 bytes, serial output confirmed |
+| 2025-01-02 | Crystal test | 18.432 MHz with 15pF caps | Working (22pF failed on breadboard) |
+
+## Serial Debugging Setup
+
+**macOS Sequoia FTDI Driver Issue**: Apple's built-in FTDI DEXT (`com.apple.DriverKit-AppleUSBFTDI.dext`) causes terminal hangs when accessing FTDI serial ports via standard tools (picocom, screen, cat).
+
+**Workaround**: Use "Serial 2" app from Decisive Tactics, which includes its own FTDI driver.
+- App Store: Search "Serial 2" by Decisive Tactics
+- Works with Sparkfun FTDI Basic Breakout
+- Baud rate: 115200, 8N1
+
+**Hardware connection:**
+- FTDI RXI → AVR TXD0 (PD1, pin 15)
+- FTDI TXO → AVR RXD0 (PD0, pin 14)
+- FTDI GND → AVR GND
 
 ## Commands Reference
 

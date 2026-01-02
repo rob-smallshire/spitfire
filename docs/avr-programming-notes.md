@@ -125,6 +125,26 @@ No changes. BOD (Brown-Out Detection) remains disabled.
 - AVCC (pin 30) ← DA-15 pin 14 (VREF)
 - GND ← DA-15 pin 8 (AGND)
 
+## Keypad Wiring
+
+**3x4 matrix scanning:**
+- Columns active-low strobe, rows active-low with internal pull-ups
+- Button pressed = row reads low when column is strobed
+
+**ATMega1284p connections (DIP-40):**
+- PB0 (pin 1) → Column 0 strobe (accent buttons)
+- PB1 (pin 2) → Column 1 strobe (number buttons)
+- PB2 (pin 3) → Column 2 strobe (number buttons)
+- PB3 (pin 4) → Activity LED (active-low)
+- PC0 (pin 22) ← Joy1 Row 0
+- PC1 (pin 23) ← Joy1 Row 1
+- PC2 (pin 24) ← Joy1 Row 2
+- PC3 (pin 25) ← Joy1 Row 3
+- PC4 (pin 26) ← Joy2 Row 0
+- PC5 (pin 27) ← Joy2 Row 1
+- PC6 (pin 28) ← Joy2 Row 2
+- PC7 (pin 29) ← Joy2 Row 3
+
 ## Commands Reference
 
 ```bash

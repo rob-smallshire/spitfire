@@ -395,7 +395,7 @@
     "meta": {
       "version": 1
     },
-    "net_format_name": "",
+    "net_format_name": "KiCad",
     "page_layout_descr_file": "",
     "plot_directory": "",
     "space_save_all_events": true,
@@ -416,6 +416,14 @@
     [
       "b2803d4d-10bd-4088-a3d9-c185506ad2c5",
       "Delta 14b"
+    ],
+    [
+      "845d2646-4b7e-4131-baf5-32413a5be084",
+      "Delta 3b Twin"
+    ],
+    [
+      "1cc94f17-3819-4fc0-9e35-99596cc7197b",
+      "Delta 3b Single"
     ]
   ],
   "text_variables": {}

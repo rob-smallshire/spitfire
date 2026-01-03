@@ -6,6 +6,90 @@
 	(paper "A4")
 	(lib_symbols)
 	(sheet
+		(at 74.93 26.035)
+		(size 81.28 42.545)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "1cc94f17-3819-4fc0-9e35-99596cc7197b")
+		(property "Sheetname" "Delta 3b Single"
+			(at 74.93 25.3234 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "voltmace-delta-3b-single.kicad_sch"
+			(at 74.93 69.1646 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 119.38 102.87)
+		(size 62.23 38.1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "845d2646-4b7e-4131-baf5-32413a5be084")
+		(property "Sheetname" "Delta 3b Twin"
+			(at 119.38 102.1584 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "voltmace-delta-3b-twin.kicad_sch"
+			(at 119.38 141.5546 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
 		(at 204.47 29.21)
 		(size 62.23 48.26)
 		(exclude_from_sim no)

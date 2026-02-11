@@ -63,6 +63,30 @@ void print_int(int32_t value) {
     }
 }
 
+void print_int_padded(int32_t value, uint8_t width) {
+    // Calculate number of digits needed
+    uint8_t digits = 0;
+    int32_t temp = value;
+    if (temp <= 0) {
+        digits = 1;  // At least one digit for 0 or negative sign
+        if (temp < 0) temp = -temp;
+    }
+    while (temp > 0) {
+        digits++;
+        temp /= 10;
+    }
+    if (value < 0) digits++;  // Account for minus sign
+
+    // Pad with spaces
+    while (digits < width) {
+        put(' ');
+        digits++;
+    }
+
+    // Print the actual value
+    print_int(value);
+}
+
 void print_hex(uint32_t value, uint8_t digits) {
     static const char hex[] = "0123456789ABCDEF";
     for (int8_t i = digits - 1; i >= 0; --i) {

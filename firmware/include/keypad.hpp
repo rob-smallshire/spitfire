@@ -2,25 +2,29 @@
 #define SPITFIRE_KEYPAD_HPP
 
 #include <stdint.h>
+#include "joystick.hpp"
 
 namespace keypad {
 
-/// Initialize keypad I/O pins
-/// Columns PB0-PB2: outputs, active-high idle
-/// Rows PC0-PC7: inputs with pull-ups (PC0-3 joy1, PC4-7 joy2)
+/// Initialize keypad I/O pins for Delta 14B scanning
+/// New pin mapping (Even=A, Odd=B):
+/// - Columns: PB0/PB1 (COL0), PB2/PB3 (COL1), PC0/PC1 (COL2)
+/// - Rows: PA6/PA7 (ROW0), PC2/PC3 (ROW1), PC4/PC5 (ROW2), PC6/PC7 (ROW3)
 void init();
 
-/// Scan both keypads and return 24-bit state
-/// Each byte represents one column, bits [3:0] = joy1 rows, bits [7:4] = joy2 rows
-/// Button pressed = bit is 0
-void scan(uint8_t* col0, uint8_t* col1, uint8_t* col2);
+/// Scan keypad for a specific port and return 12-bit button state
+/// Button numbering: switch_number = row * 3 + column (0-11)
+/// Bit N = switch N, where 0 = pressed, 1 = not pressed
+/// @param port Which joystick port to scan (PORT_A or PORT_B)
+/// @return 12-bit button state in lower 12 bits of uint16_t
+uint16_t scan(joystick::Port port);
 
-/// Scan and return state for joystick 1 only (12 bits packed into uint16_t)
-/// Bits [3:0] = col0, [7:4] = col1, [11:8] = col2
-uint16_t scan_joy1();
-
-/// Scan and return state for joystick 2 only (12 bits packed into uint16_t)
-uint16_t scan_joy2();
+/// Scan keypad and return raw column data for a specific port
+/// @param port Which joystick port to scan
+/// @param col0 Output: ROW3:ROW2:ROW1:ROW0 for column 0 (bits 3:2:1:0)
+/// @param col1 Output: ROW3:ROW2:ROW1:ROW0 for column 1
+/// @param col2 Output: ROW3:ROW2:ROW1:ROW0 for column 2
+void scan_raw(joystick::Port port, uint8_t* col0, uint8_t* col1, uint8_t* col2);
 
 }  // namespace keypad
 

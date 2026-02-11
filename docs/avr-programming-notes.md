@@ -111,39 +111,51 @@ No changes. BOD (Brown-Out Detection) remains disabled.
 - FTDI TXO → AVR RXD0 (PD0, pin 14)
 - FTDI GND → AVR GND
 
-## Joystick Wiring
+## Dual Joystick Port Wiring
 
-**Voltmace Delta 14b (DA-15 connector):**
-- Pin 7  - Y pot wiper
-- Pin 8  - AGND (analog ground)
-- Pin 14 - VREF (5V reference)
-- Pin 15 - X pot wiper
+Two DA-15 ports (Port A and Port B) with interleaved pin assignments.
+Even-numbered AVR pins → Port A, Odd-numbered pins → Port B.
 
-**ATMega1284p connections (DIP-40):**
-- PA0 (pin 40) ← DA-15 pin 15 (X axis)
-- PA1 (pin 39) ← DA-15 pin 7 (Y axis)
-- AVCC (pin 30) ← DA-15 pin 14 (VREF)
-- GND ← DA-15 pin 8 (AGND)
+See `docs/joystick-detection.md` for automatic type detection algorithm.
+See `docs/voltmace-pinouts.md` for complete DA-15 to AVR mapping.
 
-## Keypad Wiring
+### Analog Inputs (Port A - all 8 channels)
 
-**3x4 matrix scanning:**
-- Columns active-low strobe, rows active-low with internal pull-ups
-- Button pressed = row reads low when column is strobed
+| Function | Port A | Port B | ADC | DA-15 Pin |
+|----------|--------|--------|-----|-----------|
+| X axis | PA0 (pin 40) | PA1 (pin 39) | ADC0/1 | 15 |
+| Y axis | PA2 (pin 38) | PA3 (pin 37) | ADC2/3 | 7 |
+| X_RIGHT | PA4 (pin 36) | PA5 (pin 35) | ADC4/5 | 12 |
+| Y_RIGHT | PA6 (pin 34) | PA7 (pin 33) | ADC6/7 | 4 |
 
-**ATMega1284p connections (DIP-40):**
-- PB0 (pin 1) → Column 0 strobe (accent buttons)
-- PB1 (pin 2) → Column 1 strobe (number buttons)
-- PB2 (pin 3) → Column 2 strobe (number buttons)
-- PB3 (pin 4) → Activity LED (active-low)
-- PC0 (pin 22) ← Joy1 Row 0
-- PC1 (pin 23) ← Joy1 Row 1
-- PC2 (pin 24) ← Joy1 Row 2
-- PC3 (pin 25) ← Joy1 Row 3
-- PC4 (pin 26) ← Joy2 Row 0
-- PC5 (pin 27) ← Joy2 Row 1
-- PC6 (pin 28) ← Joy2 Row 2
-- PC7 (pin 29) ← Joy2 Row 3
+Note: PA6/PA7 are Y_RIGHT for Delta 3B Twin, or ROW0 for Delta 14B (mutually exclusive).
+
+### Keypad Matrix (Delta 14B)
+
+**Columns (active-low strobe, high-Z idle):**
+| Column | Port A | Port B | DA-15 Pin |
+|--------|--------|--------|-----------|
+| COL0 | PB0 (pin 1) | PB1 (pin 2) | 5 |
+| COL1 | PB2 (pin 3) | PB3 (pin 4) | 3 |
+| COL2 | PC0 (pin 22) | PC1 (pin 23) | 2 |
+
+**Rows (active-low with internal pull-ups):**
+| Row | Port A | Port B | DA-15 Pin |
+|-----|--------|--------|-----------|
+| ROW0 | PA6 (pin 34) | PA7 (pin 33) | 4 |
+| ROW1 | PC2 (pin 24) | PC3 (pin 25) | 6 |
+| ROW2 | PC4 (pin 26) | PC5 (pin 27) | 10 |
+| ROW3 | PC6 (pin 28) | PC7 (pin 29) | 13 |
+
+**Button numbering:** switch = row * 3 + column (0-11)
+
+### Other Pins
+
+- **LED:** PD7 (pin 21) - Active-low activity indicator
+- **UART:** PD0 (RX), PD1 (TX) - Serial debug at 115200 baud
+- **SPI:** PB4 (SS), PB5 (MOSI), PB6 (MISO), PB7 (SCK) - Reserved for BBC Micro
+- **VREF:** AVCC (pin 30) ← DA-15 pins 11/14
+- **AGND:** GND ← DA-15 pin 8
 
 ## Commands Reference
 

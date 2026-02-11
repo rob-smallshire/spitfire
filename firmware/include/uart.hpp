@@ -20,6 +20,11 @@ void println(const char* str);
 /// Send an integer as decimal
 void print_int(int32_t value);
 
+/// Send an integer as decimal with right-alignment padding
+/// @param value The value to print
+/// @param width Minimum width (pads with spaces on left)
+void print_int_padded(int32_t value, uint8_t width);
+
 /// Send an integer as hex
 void print_hex(uint32_t value, uint8_t digits = 2);
 

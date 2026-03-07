@@ -61,9 +61,11 @@ namespace {
                 PORTC &= ~_BV(GND_PIN6_A);
                 DDRC |= _BV(GND_PIN6_A);
             } else {
-                // Release to high-Z
+                // Release to input with pull-up (for keypad ROW1/COL1)
                 DDRB &= ~_BV(GND_PIN3_A);
+                PORTB &= ~_BV(GND_PIN3_A);  // No pull-up on COL1 (active-low strobe)
                 DDRC &= ~_BV(GND_PIN6_A);
+                PORTC |= _BV(GND_PIN6_A);   // Pull-up on ROW1
             }
         } else {
             if (enable) {
@@ -72,8 +74,11 @@ namespace {
                 PORTC &= ~_BV(GND_PIN6_B);
                 DDRC |= _BV(GND_PIN6_B);
             } else {
+                // Release to input with pull-up (for keypad ROW1/COL1)
                 DDRB &= ~_BV(GND_PIN3_B);
+                PORTB &= ~_BV(GND_PIN3_B);  // No pull-up on COL1 (active-low strobe)
                 DDRC &= ~_BV(GND_PIN6_B);
+                PORTC |= _BV(GND_PIN6_B);   // Pull-up on ROW1
             }
         }
     }
@@ -91,8 +96,9 @@ namespace {
             } else {
                 // Re-enable pull-up for keypad ROW0 (14B mode)
                 PORTA |= _BV(Y_RIGHT_A);
-                // Release PB0 to high-Z for keypad COL0
+                // Release PB0 to high-Z for keypad COL0 (no pull-up needed)
                 DDRB &= ~_BV(AGND_RIGHT_A);
+                PORTB &= ~_BV(AGND_RIGHT_A);
             }
         } else {
             if (enable) {
@@ -104,8 +110,9 @@ namespace {
             } else {
                 // Re-enable pull-up for keypad ROW0 (14B mode)
                 PORTA |= _BV(Y_RIGHT_B);
-                // Release PB1 to high-Z for keypad COL0
+                // Release PB1 to high-Z for keypad COL0 (no pull-up needed)
                 DDRB &= ~_BV(AGND_RIGHT_B);
+                PORTB &= ~_BV(AGND_RIGHT_B);
             }
         }
     }

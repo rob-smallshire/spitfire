@@ -68,3 +68,40 @@ The 14B has a 3×4 keypad matrix (12 buttons) which requires the full matrix
 scanning implemented in keypad.cpp. The original Delta 14B/1 interface box
 handled this scanning and connected to both the BBC Micro analogue port and
 User Port. SPItFIRE replaces the 14B/1 interface with AVR-based scanning.
+
+#### Keypad Matrix Layout
+
+```
+ROW3: [9]  [10] [11]   (top row)
+ROW2: [6]  [7]  [8]
+ROW1: [3]  [4]  [5]
+ROW0: [0]  [1]  [2]    (bottom row)
+      COL0 COL1 COL2
+```
+
+Button number = ROW × 3 + COL
+
+Two additional physical buttons are wired in parallel with button 10,
+giving 14 physical buttons but only 12 logical buttons.
+
+#### Scan Result Encoding
+
+The keypad scan returns a 12-bit value where bit N corresponds to button N.
+A bit value of 0 indicates the button is pressed (active-low).
+
+| Button | Bit | Hex (pressed) | Position    |
+|--------|-----|---------------|-------------|
+| 0      | 0   | FFE           | Bottom-left |
+| 1      | 1   | FFD           | Bottom-mid  |
+| 2      | 2   | FFB           | Bottom-right|
+| 3      | 3   | FF7           | Row 1 left  |
+| 4      | 4   | FEF           | Row 1 mid   |
+| 5      | 5   | FDF           | Row 1 right |
+| 6      | 6   | FBF           | Row 2 left  |
+| 7      | 7   | F7F           | Row 2 mid   |
+| 8      | 8   | EFF           | Row 2 right |
+| 9      | 9   | DFF           | Top-left    |
+| 10     | 10  | BFF           | Top-mid     |
+| 11     | 11  | 7FF           | Top-right   |
+
+With no buttons pressed, the scan returns FFF.

@@ -55,11 +55,11 @@ Pin 3 (PB1) ──┬──────────────────┬�
 Pin 5 (CB1) ──┘ (wire together)  ├─────────→ SD SCK
                                  └─────────→ Dev3 SCK
 
-Pin 9 (CB2) ←────────────────────┬─────────── AVR PB6 (MISO)
+Pin 9 (CB2) ←────────────────────┬─[1kΩ]─── AVR PB6 (MISO)
                                  ├─────────── SD MISO
                                  └─────────── Dev3 MISO
 
-Pin 2 (PB2) ─────────[1kΩ]───────────────────→ AVR PB4 (SS)
+Pin 2 (PB2) ─────────────────────────────────→ AVR PB4 (SS)
 Pin 1 (PB3) ─────────────────────────────────→ SD SS
 Pin 4 (PB4) ─────────────────────────────────→ Dev3 SS
 Pin 8 (0V)  ─────────────────────────────────── GND (common)
@@ -76,37 +76,56 @@ directly select one device at a time by driving its SS line low:
 | 1 | 0 | 1 | SD Card |
 | 0 | 1 | 1 | Device 3 |
 
-## SPItFIRE Minimal Wiring
+## SPItFIRE As-Built Wiring
 
-For SPItFIRE only (no SD card):
+Connection from female DE-9 breakout board to ATmega1284p, using a straight-through
+DE-9 cable from the Master Compact:
 
 ```
-DE-9 Connector              ATmega1284p
-──────────────              ───────────
-Pin 6 (PB0) ────[1kΩ]─────→ PB5 (MOSI)
-Pin 3 (PB1) ──┬─[1kΩ]─────→ PB7 (SCK)
-Pin 5 (CB1) ──┘ (wire together)
-Pin 2 (PB2) ────[1kΩ]─────→ PB4 (SS)
-Pin 9 (CB2) ←───────────────PB6 (MISO)
-Pin 8 (0V)  ──────────────── GND
+Female DE-9 Breakout        ATmega1284p
+────────────────────        ───────────
+Pin 2 (PB2/SS)   ─────────────────────→ PB4 (SS)
+Pin 3 (PB1/SCK)  ──┬───────[1kΩ]──────→ PB7 (SCK)
+Pin 5 (CB1)      ──┘ (wire together)
+Pin 6 (PB0/MOSI) ──────────[1kΩ]──────→ PB5 (MOSI)
+Pin 9 (CB2/MISO) ←─────────[1kΩ]─────── PB6 (MISO)
+Pin 8 (GND)      ─────────────────────── GND
 ```
+
+| DE-9 Pin | Signal | Resistor | AVR Pin |
+|----------|--------|----------|---------|
+| 2 | SS | direct | PB4 |
+| 3 | SCK | 1kΩ | PB7 |
+| 5 | CB1 | wire to pin 3 | - |
+| 6 | MOSI | 1kΩ | PB5 |
+| 8 | GND | direct | GND |
+| 9 | MISO | 1kΩ | PB6 |
+
+Pins 1, 4, 7 unused (spare SS lines and +5V).
 
 ## Series Resistors
 
-1kΩ resistors between BBC VIA outputs and AVR inputs (MOSI, SCK, SS) allow ISP programmer to override during programming:
+1kΩ series resistors serve two purposes:
+
+**ISP programming compatibility (MOSI, SCK):** The BBC VIA and ISP programmer both
+drive these lines to the AVR. The resistors allow the programmer to override the
+BBC's signals during programming. SS does not need a resistor because the ISP
+programmer uses RESET, not SS, to enter programming mode.
+
+**Protection (MISO):** Although only the AVR drives MISO, a series resistor is
+included for general protection.
 
 ```
 ISP Programmer               ATmega1284p
 ──────────────               ───────────
-MOSI ──────────────────────→ PB5 (direct)
+MOSI ──────────────────────→ PB5 (direct, overrides BBC via 1kΩ)
 MISO ←──────────────────────── PB6 (direct)
-SCK  ──────────────────────→ PB7 (direct)
+SCK  ──────────────────────→ PB7 (direct, overrides BBC via 1kΩ)
 RESET ─────────────────────→ RESET
 ```
 
-No resistor needed on MISO (AVR output, BBC input).
-
-SD card connections do not need resistors as they don't conflict with the AVR programmer (different device on shared bus).
+SD card connections do not need resistors as they don't conflict with the AVR
+programmer (different device on shared bus).
 
 ## SPI Protocol Parameters
 

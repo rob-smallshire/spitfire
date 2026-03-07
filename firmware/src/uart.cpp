@@ -94,4 +94,15 @@ void print_hex(uint32_t value, uint8_t digits) {
     }
 }
 
+bool available() {
+    return UCSR0A & _BV(RXC0);
+}
+
+uint8_t get() {
+    if (available()) {
+        return UDR0;
+    }
+    return 0;
+}
+
 }  // namespace uart

@@ -28,6 +28,14 @@ void print_int_padded(int32_t value, uint8_t width);
 /// Send an integer as hex
 void print_hex(uint32_t value, uint8_t digits = 2);
 
+/// Check if a byte is available to read
+/// @return true if a byte is waiting in the receive buffer
+bool available();
+
+/// Read a single byte (non-blocking)
+/// @return The received byte, or 0 if none available
+uint8_t get();
+
 }  // namespace uart
 
 #endif  // SPITFIRE_UART_HPP

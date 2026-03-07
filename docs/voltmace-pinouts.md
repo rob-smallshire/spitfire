@@ -31,3 +31,36 @@ additional logic between the joystick and the analogue user ports
 of the BBC Micro. This is rather clever, as these pins have no ill effects
 when such a joystick is connected directly to the BBC Micro analogue port,
 other than some buttons becoming undetectable.
+
+## Fire Button Wiring
+
+The standard BBC Micro DA-15 analogue port provides only two digital inputs
+for fire buttons: PB0 (DA-15 pin 13) and PB1 (DA-15 pin 10).
+
+### Delta 3B Twin
+
+The 3B Twin has two handsets, each with three physical fire buttons.
+All three buttons on each handset are wired in parallel:
+- Left handset buttons → PB0 (DA-15 pin 13) → PC6 (Port A) / PC7 (Port B)
+- Right handset buttons → PB1 (DA-15 pin 10) → PC4 (Port A) / PC5 (Port B)
+
+This gives 2 logical buttons (one per handset), active-low with internal pull-ups.
+
+### Delta 3B Single
+
+The 3B Single is an unusual design: a single handset with potentiometers wired
+to both X/Y pairs, allowing it to serve as either player's joystick in a
+turn-based two-player game.
+
+It has three physical buttons in two groups:
+- 2 buttons → PB0 (left fire, DA-15 pin 13) → PC6 (Port A) / PC7 (Port B)
+- 1 button → PB1 (right fire, DA-15 pin 10) → PC4 (Port A) / PC5 (Port B)
+
+This gives 2 logical buttons, active-low with internal pull-ups.
+
+### Delta 14B
+
+The 14B has a 3×4 keypad matrix (12 buttons) which requires the full matrix
+scanning implemented in keypad.cpp. The original Delta 14B/1 interface box
+handled this scanning and connected to both the BBC Micro analogue port and
+User Port. SPItFIRE replaces the 14B/1 interface with AVR-based scanning.

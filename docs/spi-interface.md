@@ -106,7 +106,7 @@ RESET ─────────────────────→ RESET
 
 No resistor needed on MISO (AVR output, BBC input).
 
-SD card connections do not need resistors as they don't conflict with the AVR programmer (directly directly directly directly different device on shared bus).
+SD card connections do not need resistors as they don't conflict with the AVR programmer (different device on shared bus).
 
 ## SPI Protocol Parameters
 
@@ -165,8 +165,41 @@ This matches MMFS "turbo read" mode for high-speed data transfer.
 
 Hardware SPI configured as slave, mode 0, MSB first.
 
+## Alternative Approach: Time&Config
+
+The Time&Config project (RTC and FRAM interface) also uses the User VIA for serial
+communication but takes a different approach:
+
+| VIA Pin | Time&Config Function |
+|---------|---------------------|
+| PB1 | Clock line (input with pullup, pulsed during cleanup) |
+| PB5 | RTC chip select (active low) |
+| PB6 | RTC alarm signal (input) |
+| PB7 | FRAM chip select (active low) |
+| CB1 | Shift register clock (external from RTC) |
+| CB2 | Shift register data (bidirectional) |
+
+Key differences from MMFS/SPItFIRE:
+
+1. **External clock source**: The RTC chip provides clock pulses at 4096 Hz to CB1,
+   rather than the BBC generating clock via PB1.
+
+2. **No PB1-CB1 wiring**: Since the clock comes from the RTC, no external wire
+   between PB1 and CB1 is needed.
+
+3. **Different chip selects**: Uses PB5/PB7 instead of PB2/PB3/PB4.
+
+4. **VIA shift register modes**: Uses Timer 2-controlled output (mode 6) and
+   external clock input (mode 2), rather than the MMFS approach of software-
+   clocked shifts.
+
+The designs use non-overlapping chip select lines, so they could potentially
+coexist. However, the PB1-CB1 wire required for MMFS/SPItFIRE would conflict
+with Time&Config's expectation of external clock input on CB1.
+
 ## References
 
 - [MMFS GitHub - Hardware Wiki](https://github.com/hoglet67/MMFS/wiki/Hardware)
 - [MMFS Stardot Forum](https://www.stardot.org.uk/forums/viewtopic.php?t=30037)
 - MMFS uses identical CB1/PB1 wiring for shift register acceleration
+- [Time&Config - Codeberg](https://codeberg.org/Barneyntd/Time-Config.)

@@ -46,6 +46,10 @@ All three buttons on each handset are wired in parallel:
 
 This gives 2 logical buttons (one per handset), active-low with internal pull-ups.
 
+Note: Internally, the 3B Twin wires buttons with rows grounded and columns as
+signals (opposite to the 3B Single). This difference is handled by the joystick
+PCB wiring to the DA-15 connector, so the software interface is identical.
+
 ### Delta 3B Single
 
 The 3B Single is an unusual design: a single handset with potentiometers wired

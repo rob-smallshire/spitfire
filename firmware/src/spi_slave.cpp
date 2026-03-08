@@ -40,10 +40,6 @@ namespace {
         PORTD |= _BV(LED_PIN);  // LED off (active-low)
     }
 
-    void led_on() {
-        PORTD &= ~_BV(LED_PIN);
-    }
-
     void led_off() {
         PORTD |= _BV(LED_PIN);
     }

@@ -24,11 +24,12 @@ message(STATUS "Target MCU: ${AVR_MCU}")
 message(STATUS "MCU Speed: ${AVR_MCU_SPEED}")
 message(STATUS "Programmer: ${AVR_PROGRAMMER}")
 
-# Collect source files
+# Collect source files (exclude standalone test programs)
 file(GLOB_RECURSE SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
 )
+list(FILTER SOURCES EXCLUDE REGEX ".*spi_slave\\.cpp$")
 
 # Create executable
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -136,4 +137,63 @@ add_custom_target(disassemble
     COMMAND ${CMAKE_OBJDUMP} -h -S $<TARGET_FILE:${PROJECT_NAME}> > ${PROJECT_NAME}.lst
     DEPENDS ${PROJECT_NAME}
     COMMENT "Generating disassembly listing"
+)
+
+# =============================================================================
+# SPI Test Firmware - minimal SPI slave for testing BBC communication
+# =============================================================================
+
+add_executable(spitest
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/spi_slave.cpp
+)
+
+target_include_directories(spitest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_compile_definitions(spitest PRIVATE
+    F_CPU=${AVR_MCU_SPEED}
+)
+
+target_compile_options(spitest PRIVATE
+    -mmcu=${AVR_MCU}
+    -fpack-struct
+    -fshort-enums
+    -funsigned-char
+    -funsigned-bitfields
+    -ffunction-sections
+    -fdata-sections
+    -Wall
+    -Wextra
+    -Werror
+    -pedantic
+    -std=c++17
+    -fno-exceptions
+    -fno-rtti
+    $<$<CONFIG:Release>:-Os>
+    $<$<CONFIG:Debug>:-Og -g -gdwarf-3>
+)
+
+target_link_options(spitest PRIVATE
+    -mmcu=${AVR_MCU}
+    -Wl,--gc-sections
+    -Wl,-Map,spitest.map
+)
+
+set_target_properties(spitest PROPERTIES
+    OUTPUT_NAME spitest
+    SUFFIX ".elf"
+)
+
+add_custom_command(TARGET spitest POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O ihex -R .eeprom $<TARGET_FILE:spitest> spitest.hex
+    COMMAND ${CMAKE_SIZE} --mcu=${AVR_MCU} -C $<TARGET_FILE:spitest>
+    COMMENT "Generating spitest.hex"
+)
+
+add_custom_target(upload_spitest
+    COMMAND avrdude -c ${AVR_PROGRAMMER} -p m1284p ${AVRDUDE_OPTIONS}
+        -U flash:w:spitest.hex:i
+    DEPENDS spitest
+    COMMENT "Uploading spitest.hex to ${AVR_MCU}"
 )

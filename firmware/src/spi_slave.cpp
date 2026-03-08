@@ -60,6 +60,8 @@ int main() {
     }
     led_off();
 
+    uint32_t idle_counter = 0;
+
     while (true) {
         // Wait for SPI transfer complete
         if (SPSR & _BV(SPIF)) {
@@ -72,6 +74,13 @@ int main() {
 
             // Toggle LED to show activity
             led_toggle();
+            idle_counter = 0;
+        }
+
+        // Slow heartbeat blink while idle
+        if (++idle_counter >= 200000) {
+            led_toggle();
+            idle_counter = 0;
         }
     }
 }

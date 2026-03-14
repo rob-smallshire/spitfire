@@ -13,7 +13,7 @@ EXEC_ADDR = 1900
 
 # Output files
 BINARY = $(BUILD_DIR)/$(PROG_NAME)
-INF = $(BUILD_DIR)/$(PROG_NAME).INF
+INF = $(BUILD_DIR)/$(PROG_NAME).inf
 
 .PHONY: all clean
 

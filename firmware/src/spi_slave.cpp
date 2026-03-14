@@ -21,18 +21,20 @@ namespace {
     // LED on PD7 (active-low) for status indication
     constexpr uint8_t LED_PIN = PD7;
 
-    // Test response byte
-    constexpr uint8_t RESPONSE_BYTE = 0xAA;
+    // Transform: XOR received byte with this value
+    constexpr uint8_t XOR_PATTERN = 0x55;
 
     void init_spi_slave() {
         // MISO (PB6) as output, others as input
         DDRB = (DDRB & ~(_BV(PB4) | _BV(PB5) | _BV(PB7))) | _BV(PB6);
 
-        // Enable SPI, slave mode, mode 0 (CPOL=0, CPHA=0), MSB first
-        SPCR = _BV(SPE);
+        // Enable SPI, slave mode, mode 1 (CPOL=0, CPHA=1), MSB first
+        // Mode 1: data changes on rising edge, sampled on falling edge
+        // This matches 6522 shift register which samples CB2 on falling CB1
+        SPCR = _BV(SPE) | _BV(CPHA);
 
-        // Pre-load response byte
-        SPDR = RESPONSE_BYTE;
+        // Pre-load initial response (0x00 XOR pattern)
+        SPDR = XOR_PATTERN;
     }
 
     void init_led() {
@@ -60,27 +62,17 @@ int main() {
     }
     led_off();
 
-    uint32_t idle_counter = 0;
-
     while (true) {
-        // Wait for SPI transfer complete
-        if (SPSR & _BV(SPIF)) {
-            // Read received byte (clears SPIF)
-            volatile uint8_t received = SPDR;
-            (void)received;  // Ignore for now
+        // Tight poll for SPI transfer complete
+        while (!(SPSR & _BV(SPIF)));
 
-            // Load next response byte
-            SPDR = RESPONSE_BYTE;
+        // Read received byte (clears SPIF)
+        uint8_t received = SPDR;
 
-            // Toggle LED to show activity
-            led_toggle();
-            idle_counter = 0;
-        }
+        // Load response: received XOR pattern
+        SPDR = received ^ XOR_PATTERN;
 
-        // Slow heartbeat blink while idle
-        if (++idle_counter >= 200000) {
-            led_toggle();
-            idle_counter = 0;
-        }
+        // Toggle LED to show activity
+        led_toggle();
     }
 }

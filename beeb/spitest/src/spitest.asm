@@ -1,7 +1,6 @@
-; SPItFIRE SPI Test Program
-; Minimal test: clock 8 bits, receive response, print it
-;
-; Uses VIA shift register mode 2 for receive (same as MMFS)
+; SPItFIRE SPI Soak Test
+; Sends incrementing bytes, verifies AVR returns byte XOR &55
+; Displays running count of good/bad transfers
 
 ORG &1900
 
@@ -21,52 +20,182 @@ SS   = %00000100            ; PB2
 ; Inverted masks for AND operations
 NOT_SS   = %11111011
 NOT_SCK  = %11111101
-NOT_MOSI = %11111110
+
+; XOR pattern (must match AVR)
+XOR_PATTERN = &55
 
 ; OS calls
 OSWRCH = &FFEE
 OSNEWL = &FFE7
+OSBYTE = &FFF4
+
+; Zero page variables
+send_byte = &70
+expected  = &71
+received  = &72
+good_lo   = &73             ; 24-bit good counter
+good_mid  = &74
+good_hi   = &75
+bad_lo    = &76             ; 24-bit bad counter
+bad_mid   = &77
+bad_hi    = &78
+spi_temp  = &79             ; Temp for spi_transfer
 
 .start
     JSR init_via
+    JSR init_counters
 
     ; Print intro
     LDX #0
 .print_intro
     LDA intro_msg, X
-    BEQ do_test
+    BEQ main_loop
     JSR OSWRCH
     INX
     BNE print_intro
 
-.do_test
-    ; Assert SS (drive low)
+.main_loop
+    ; Calculate expected response
+    LDA send_byte
+    EOR #XOR_PATTERN
+    STA expected
+
+    ; Assert SS
     LDA IORB
     AND #NOT_SS
     STA IORB
 
-    ; Do SPI transfer - sends &FF, receives response
-    JSR spi_read_byte
-    STA result
+    ; Small delay for AVR
+    NOP
+    NOP
+    NOP
+    NOP
 
-    ; Deassert SS (drive high)
+    ; First transfer: send the test byte (ignore response - it's stale)
+    LDA send_byte
+    JSR spi_transfer
+
+    ; Second transfer: send dummy, receive actual response
+    LDA #&FF
+    JSR spi_transfer
+    STA received
+
+    ; Deassert SS
     LDA IORB
     ORA #SS
     STA IORB
 
-    ; Print result
-    LDX #0
-.print_result_msg
-    LDA result_msg, X
-    BEQ print_hex
-    JSR OSWRCH
-    INX
-    BNE print_result_msg
+    ; Compare and update counters
+    LDA received
+    CMP expected
+    BNE bad_transfer
 
-.print_hex
-    LDA result
+    ; Good transfer - increment 16-bit good counter
+    INC good_lo
+    BNE print_result
+    INC good_hi
+    JMP print_result
+
+.bad_transfer
+    ; Bad transfer - increment 16-bit bad counter
+    INC bad_lo
+    BNE print_result
+    INC bad_hi
+
+.print_result
+    ; Print: sent expected received good bad
+    LDA send_byte
+    JSR print_hex_byte
+    LDA #' '
+    JSR OSWRCH
+    LDA expected
+    JSR print_hex_byte
+    LDA #' '
+    JSR OSWRCH
+    LDA received
+    JSR print_hex_byte
+    LDA #' '
+    JSR OSWRCH
+    LDA good_hi
+    JSR print_hex_byte
+    LDA good_lo
+    JSR print_hex_byte
+    LDA #' '
+    JSR OSWRCH
+    LDA bad_hi
+    JSR print_hex_byte
+    LDA bad_lo
     JSR print_hex_byte
     JSR OSNEWL
+
+    ; Next byte
+    INC send_byte
+
+    ; Check Escape flag at &FF (bit 7 set = Escape pressed)
+    BIT &FF
+    BMI done
+
+    JMP main_loop
+
+.done
+    ; Clear Escape condition
+    LDA #&7E
+    JSR OSBYTE
+
+    JSR OSNEWL
+    RTS
+
+; Initialise counters
+.init_counters
+    LDA #0
+    STA send_byte
+    STA good_lo
+    STA good_mid
+    STA good_hi
+    STA bad_lo
+    STA bad_mid
+    STA bad_hi
+    RTS
+
+; Update display with current counts
+.update_display
+    ; Cursor to start of line
+    LDA #13
+    JSR OSWRCH
+
+    ; Print good count
+    LDX #0
+.print_good_msg
+    LDA good_msg, X
+    BEQ print_good_count
+    JSR OSWRCH
+    INX
+    BNE print_good_msg
+
+.print_good_count
+    LDA good_hi
+    JSR print_hex_byte
+    LDA good_mid
+    JSR print_hex_byte
+    LDA good_lo
+    JSR print_hex_byte
+
+    ; Print bad count
+    LDX #0
+.print_bad_msg
+    LDA bad_msg, X
+    BEQ print_bad_count
+    JSR OSWRCH
+    INX
+    BNE print_bad_msg
+
+.print_bad_count
+    LDA bad_hi
+    JSR print_hex_byte
+    LDA bad_mid
+    JSR print_hex_byte
+    LDA bad_lo
+    JSR print_hex_byte
 
     RTS
 
@@ -84,51 +213,60 @@ OSNEWL = &FFE7
 
     ; Start in shift register mode 0 (disabled)
     LDA ACR
-    AND #%11100011          ; Clear SR mode bits
+    AND #%11100011
     STA ACR
 
     RTS
 
-; Read a byte via SPI using shift register mode 2
-; MOSI is held high (&FF sent), returns received byte in A
-; Based on MMFS approach
-.spi_read_byte
-    ; Ensure MOSI and SCK high before entering SR mode
-    LDA IORB
-    ORA #MOSI OR SCK
-    STA IORB
+; SPI transfer: send byte in A, return received byte in A
+; Bit-bang MOSI/SCK, SR captures MISO on falling CB1 edge
+; AVR Mode 1: outputs MISO on rising edge, samples MOSI on falling edge
+; So we: set MOSI, go HIGH (AVR outputs MISO), go LOW (we sample, AVR samples)
+.spi_transfer
+    STA spi_temp            ; Save byte to send
 
-    ; Enter shift register mode 2 (shift in under phi2)
-    ; PB1 becomes input (floats, but CB1 wire keeps it connected)
-    LDA DDRB
-    AND #NOT_SCK           ; PB1 as input
-    STA DDRB
-
-    LDA ACR
-    AND #%11100011          ; Clear SR mode bits
-    ORA #%00001000          ; Mode 2: shift in under phi2/CB1
-    STA ACR
-
-    ; Start the shift by reading SR
-    LDA SR
-
-    ; Wait for shift complete (IFR bit 2)
-    LDA #%00000100
-.wait_sr
-    BIT IFR
-    BEQ wait_sr
-
-    ; Return to mode 0 before reading (avoids extra byte)
+    ; Ensure mode 0
     LDA ACR
     AND #%11100011
     STA ACR
 
-    ; PB1 back to output
-    LDA DDRB
-    ORA #SCK
-    STA DDRB
+    ; Clear shift register
+    LDA SR
 
-    ; Read the received byte
+    ; Start with SCK low
+    LDA IORB
+    AND #NOT_SCK
+    STA IORB
+
+    LDX #8
+.spi_bit
+    ; Set MOSI based on MSB of spi_temp
+    LDA spi_temp
+    ASL A
+    STA spi_temp            ; Shift for next iteration
+
+    LDA IORB
+    AND #%11111110          ; Clear MOSI
+    BCC mosi_low
+    ORA #MOSI
+.mosi_low
+    STA IORB                ; MOSI set, SCK still low
+
+    ; Rising edge - AVR outputs new MISO bit
+    ORA #SCK
+    STA IORB
+
+    NOP                     ; Let it settle
+    NOP
+
+    ; Falling edge - 6522 captures MISO, AVR samples MOSI
+    AND #NOT_SCK
+    STA IORB
+
+    DEX
+    BNE spi_bit
+
+    ; Read received byte from shift register
     LDA SR
 
     RTS
@@ -148,20 +286,23 @@ OSNEWL = &FFE7
 .print_hex_nybble
     CMP #10
     BCC digit
-    ADC #6                  ; Adjust for A-F (carry is set)
+    ADC #6
 .digit
-    ADC #&30                ; Convert to ASCII
+    ADC #&30
     JMP OSWRCH
 
 .intro_msg
-    EQUS "SPItFIRE SPI Test", 13, 10
-    EQUS "Expecting &AA from AVR", 13, 10, 0
+    EQUS "SPItFIRE SPI Soak Test", 13, 10
+    EQUS "Press Escape to stop", 13, 10, 10, 0
 
-.result_msg
-    EQUS "Received: &", 0
+.good_msg
+    EQUS "Good: &", 0
 
-.result
-    EQUB 0
+.bad_msg
+    EQUS "  Bad: &", 0
+
+.final_msg
+    EQUS "Final - Good: &", 0
 
 .end
 

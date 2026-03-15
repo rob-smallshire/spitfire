@@ -10,6 +10,7 @@ IORB = VIA_BASE + &00       ; Port B I/O
 DDRB = VIA_BASE + &02       ; Port B data direction
 SR   = VIA_BASE + &0A       ; Shift register
 ACR  = VIA_BASE + &0B       ; Auxiliary control register
+PCR  = VIA_BASE + &0C       ; Peripheral control register
 IFR  = VIA_BASE + &0D       ; Interrupt flag register
 
 ; Port B bit assignments
@@ -201,20 +202,24 @@ spi_temp  = &79             ; Temp for spi_transfer
 
 ; Initialise VIA for SPI
 .init_via
+    ; Set PCR to known state: CB2 input, CB1 neg edge, CA2 input, CA1 neg edge
+    LDA #%00000000
+    STA PCR
+
+    ; Set ACR to known state: SR disabled, T1/T2 defaults, no latching
+    LDA #%00000000
+    STA ACR
+
     ; Set PB0 (MOSI), PB1 (SCK), PB2 (SS) as outputs
     LDA DDRB
     ORA #MOSI OR SCK OR SS
     STA DDRB
 
-    ; Set idle state: SS high, SCK high, MOSI high
+    ; Set idle state: SS high, SCK low (CPOL=0), MOSI high
     LDA IORB
-    ORA #MOSI OR SCK OR SS
+    ORA #MOSI OR SS
+    AND #NOT_SCK
     STA IORB
-
-    ; Start in shift register mode 0 (disabled)
-    LDA ACR
-    AND #%11100011
-    STA ACR
 
     RTS
 

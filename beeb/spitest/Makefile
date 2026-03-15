@@ -11,7 +11,7 @@ LOAD_ADDR = 1900
 EXEC_ADDR = 1900
 
 # Programs to build
-PROGRAMS = SPITEST SPIPERF
+PROGRAMS = SPITEST SPIPERF SPI256
 
 .PHONY: all clean $(PROGRAMS)
 
@@ -23,12 +23,16 @@ $(BUILD_DIR):
 # Pattern rule for building programs
 SPITEST: $(BUILD_DIR)/SPITEST $(BUILD_DIR)/SPITEST.inf
 SPIPERF: $(BUILD_DIR)/SPIPERF $(BUILD_DIR)/SPIPERF.inf
+SPI256: $(BUILD_DIR)/SPI256 $(BUILD_DIR)/SPI256.inf
 
 $(BUILD_DIR)/SPITEST: $(SRC_DIR)/spitest.asm | $(BUILD_DIR)
 	cd $(BUILD_DIR) && $(BEEBASM) -i ../$(SRC_DIR)/spitest.asm -v
 
 $(BUILD_DIR)/SPIPERF: $(SRC_DIR)/spiperf.asm | $(BUILD_DIR)
 	cd $(BUILD_DIR) && $(BEEBASM) -i ../$(SRC_DIR)/spiperf.asm -v
+
+$(BUILD_DIR)/SPI256: $(SRC_DIR)/spi256.asm | $(BUILD_DIR)
+	cd $(BUILD_DIR) && $(BEEBASM) -i ../$(SRC_DIR)/spi256.asm -v
 
 $(BUILD_DIR)/%.inf: | $(BUILD_DIR)
 	echo "0 FFFF$(LOAD_ADDR) FFFF$(EXEC_ADDR) 17" > $@

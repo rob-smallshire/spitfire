@@ -10,6 +10,7 @@ DDRB = VIA_BASE + &02
 SR   = VIA_BASE + &0A
 ACR  = VIA_BASE + &0B
 PCR  = VIA_BASE + &0C
+IER  = VIA_BASE + &0E
 
 ; Port B bits
 MOSI = %00000001
@@ -59,13 +60,6 @@ end_time   = &77    ; 5 bytes
 .transfer_loop
     LDA count
     JSR spi_transfer
-
-    ; Small delay between transfers
-    LDY #10
-.delay
-    DEY
-    BNE delay
-
     INC count
     BNE transfer_loop
 
@@ -113,6 +107,11 @@ end_time   = &77    ; 5 bytes
     RTS
 
 .init_via
+    ; Disable CB1/CB2 interrupts (bit 7=0 means clear, bits 3-4 = CB2/CB1)
+    ; This prevents IRQs on every SCK edge!
+    LDA #%00011000
+    STA IER
+
     ; Set PCR to known state: CB2 input, CB1 neg edge
     LDA #%00000000
     STA PCR
@@ -135,8 +134,8 @@ end_time   = &77    ; 5 bytes
     RTS
 
 .spi_transfer
+    ; Real SPI code preserved here for later
     STA spi_temp
-
     LDX #8
 .spi_bit
     LDA spi_temp
@@ -155,14 +154,9 @@ end_time   = &77    ; 5 bytes
 
     NOP
     NOP
-    NOP
-    NOP
 
     AND #NOT_SCK
     STA IORB
-
-    NOP
-    NOP
 
     DEX
     BNE spi_bit
@@ -187,7 +181,7 @@ end_time   = &77    ; 5 bytes
     JMP OSWRCH
 
 .intro_msg
-    EQUS "256-byte SPI test v9", 13, 10, 0
+    EQUS "256-byte SPI test v13", 13, 10, 0
 
 .done_msg
     EQUS "Elapsed: &", 0

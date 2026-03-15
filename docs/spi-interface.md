@@ -147,6 +147,80 @@ SCK  ───┘   └───┘   └───┘   └───┘   └─
 Data changes on falling edge, sampled on rising edge.
 ```
 
+## VIA Initialization Requirements
+
+Correct VIA initialization is critical for reliable SPI operation. The following
+registers must be explicitly set to known values before any SPI transfers.
+
+### CB1/CB2 Interrupts Must Be Disabled
+
+**This is the most critical step.** Because CB1 is wired to PB1 (SCK), every
+falling edge of the SPI clock triggers CB1. If the OS has left CB1 interrupts
+enabled in the IER, this causes an IRQ on every clock pulse.
+
+With 8 clock pulses per byte, a 256-byte transfer generates 2048 interrupts.
+Each interrupt handler invocation takes thousands of cycles, resulting in
+transfer speeds of ~6 bytes/second instead of the expected ~4000 bytes/second.
+
+```asm
+IER = &FE6E         ; User VIA Interrupt Enable Register
+
+; Disable CB1 and CB2 interrupts
+; Bit 7 = 0 means "clear the specified bits"
+; Bits 4,3 = CB1, CB2
+LDA #%00011000
+STA IER
+```
+
+### ACR and PCR Must Be Set to Known Values
+
+Previous code may have left the Auxiliary Control Register (ACR) or Peripheral
+Control Register (PCR) in unexpected states. Do not use AND/OR to modify these
+registers; set them to absolute values.
+
+```asm
+ACR = &FE6B         ; Auxiliary Control Register
+PCR = &FE6C         ; Peripheral Control Register
+
+; Set PCR: CB2 input, CB1 negative edge
+LDA #%00000000
+STA PCR
+
+; Set ACR: Shift register disabled
+LDA #%00000000
+STA ACR
+```
+
+### Complete VIA Initialization Sequence
+
+```asm
+.init_via
+    ; 1. Disable CB1/CB2 interrupts FIRST
+    LDA #%00011000
+    STA IER
+
+    ; 2. Set PCR to known state
+    LDA #%00000000
+    STA PCR
+
+    ; 3. Set ACR to known state (SR disabled)
+    LDA #%00000000
+    STA ACR
+
+    ; 4. Set port direction (PB0=MOSI, PB1=SCK, PB2=SS as outputs)
+    LDA DDRB
+    ORA #%00000111
+    STA DDRB
+
+    ; 5. Set idle state: SS high, SCK low (CPOL=0), MOSI high
+    LDA IORB
+    ORA #%00000101      ; SS and MOSI high
+    AND #%11111101      ; SCK low
+    STA IORB
+
+    RTS
+```
+
 ## Transfer Modes
 
 ### Bit-Bang Mode (Simple)

@@ -12,6 +12,7 @@ SR   = VIA_BASE + &0A       ; Shift register
 ACR  = VIA_BASE + &0B       ; Auxiliary control register
 PCR  = VIA_BASE + &0C       ; Peripheral control register
 IFR  = VIA_BASE + &0D       ; Interrupt flag register
+IER  = VIA_BASE + &0E       ; Interrupt enable register
 
 ; Port B bit assignments
 MOSI = %00000001            ; PB0
@@ -202,6 +203,11 @@ spi_temp  = &79             ; Temp for spi_transfer
 
 ; Initialise VIA for SPI
 .init_via
+    ; Disable CB1/CB2 interrupts (bit 7=0 means clear, bits 3-4 = CB2/CB1)
+    ; This prevents IRQs on every SCK edge!
+    LDA #%00011000
+    STA IER
+
     ; Set PCR to known state: CB2 input, CB1 neg edge, CA2 input, CA1 neg edge
     LDA #%00000000
     STA PCR

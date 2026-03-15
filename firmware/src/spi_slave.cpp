@@ -28,10 +28,9 @@ namespace {
         // MISO (PB6) as output, others as input
         DDRB = (DDRB & ~(_BV(PB4) | _BV(PB5) | _BV(PB7))) | _BV(PB6);
 
-        // Enable SPI, slave mode, mode 1 (CPOL=0, CPHA=1), MSB first
-        // Mode 1: data changes on rising edge, sampled on falling edge
-        // This matches 6522 shift register which samples CB2 on falling CB1
-        SPCR = _BV(SPE) | _BV(CPHA);
+        // Enable SPI, slave mode, mode 0 (CPOL=0, CPHA=0), MSB first
+        // Mode 0: data sampled on rising edge
+        SPCR = _BV(SPE);
 
         // Pre-load initial response (0x00 XOR pattern)
         SPDR = XOR_PATTERN;

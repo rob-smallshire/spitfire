@@ -38,7 +38,7 @@ elapsed_hi = &7E
 rate_lo    = &7F            ; bytes per second result
 rate_mid   = &80
 rate_hi    = &81
-div_tmp    = &82            ; division workspace (4 bytes)
+div_tmp    = &82            ; division workspace (5 bytes: 3 dividend + 2 remainder)
 
 .start
     JSR init_via
@@ -169,19 +169,20 @@ div_tmp    = &82            ; division workspace (4 bytes)
 
 ; Divide 6553600 (&640000) by elapsed_lo/hi
 ; Result in rate_lo/mid/hi
+; Uses 5-byte workspace: div_tmp+0:+1:+2 = dividend, div_tmp+3:+4 = remainder
 .divide_rate
-    ; Initialise dividend = &640000
+    ; Initialise dividend = &640000 (little-endian in +0:+1:+2)
     LDA #&00
     STA div_tmp
-    LDA #&00
     STA div_tmp + 1
     LDA #&64
     STA div_tmp + 2
+    ; Initialise remainder = 0 (in +3:+4)
     LDA #&00
-    STA div_tmp + 3         ; 32-bit workspace
+    STA div_tmp + 3
+    STA div_tmp + 4
 
     ; Clear result
-    LDA #0
     STA rate_lo
     STA rate_mid
     STA rate_hi
@@ -189,32 +190,33 @@ div_tmp    = &82            ; division workspace (4 bytes)
     ; 24-bit / 16-bit division
     LDX #24                 ; 24 bits to process
 .div_loop
-    ; Shift dividend left, MSB into carry
+    ; Shift dividend left, MSB into remainder
     ASL div_tmp
     ROL div_tmp + 1
     ROL div_tmp + 2
     ROL div_tmp + 3
+    ROL div_tmp + 4
 
-    ; Shift carry into result
-    ROL rate_lo
+    ; Shift result left (0 into bit 0, will set if subtraction succeeds)
+    ASL rate_lo
     ROL rate_mid
     ROL rate_hi
 
-    ; Try to subtract divisor from upper 16 bits of workspace
+    ; Try to subtract divisor from remainder (div_tmp+3:+4)
     SEC
-    LDA div_tmp + 2
+    LDA div_tmp + 3
     SBC elapsed_lo
     PHA
-    LDA div_tmp + 3
+    LDA div_tmp + 4
     SBC elapsed_hi
 
     ; If borrow, don't subtract (result bit stays 0)
     BCC div_no_sub
 
     ; Subtraction succeeded, store result and set bit
-    STA div_tmp + 3
+    STA div_tmp + 4
     PLA
-    STA div_tmp + 2
+    STA div_tmp + 3
     INC rate_lo             ; Set LSB of result
     JMP div_next
 
@@ -428,7 +430,7 @@ div_tmp    = &82            ; division workspace (4 bytes)
     JMP OSWRCH
 
 .intro_msg
-    EQUS "SPItFIRE SPI Performance Test", 13, 10
+    EQUS "SPItFIRE SPI Performance Test v2", 13, 10
     EQUS "Running 65536 transfers...", 13, 10, 0
 
 .done_msg

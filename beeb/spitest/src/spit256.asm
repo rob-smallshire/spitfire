@@ -1,4 +1,5 @@
-; SPItFIRE SPI 256-byte test
+; SPItFIRE Turbo 256-byte test
+; Uses VIA shift register mode for MISO capture
 ; Minimal test - just 256 transfers, print elapsed time
 
 ORG &1900
@@ -18,6 +19,9 @@ SCK  = %00000010
 SS   = %00000100
 NOT_SS  = %11111011
 NOT_SCK = %11111101
+
+; ACR shift register mode
+SR_IN_CB1 = %00001100       ; Mode 3: Shift in under CB1 control
 
 ; OS
 OSWRCH = &FFEE
@@ -58,8 +62,7 @@ end_time   = &77    ; 5 bytes
     LDA #0
     STA count
 .transfer_loop
-    LDA #&FF            ; Send 0xFF (read operation)
-    JSR spi_transfer    ; Full bit-bang
+    JSR spi_read_byte   ; Optimized read (clock-only, SR captures)
     INC count
     BNE transfer_loop
 
@@ -74,7 +77,7 @@ end_time   = &77    ; 5 bytes
     LDY #>end_time
     JSR OSWORD
 
-    ; Print elapsed (just low byte in hex)
+    ; Print elapsed
     LDX #0
 .print_done
     LDA done_msg, X
@@ -108,16 +111,15 @@ end_time   = &77    ; 5 bytes
 
 .init_via
     ; Disable CB1/CB2 interrupts (bit 7=0 means clear, bits 3-4 = CB2/CB1)
-    ; This prevents IRQs on every SCK edge!
     LDA #%00011000
     STA IER
 
-    ; Set PCR to known state: CB2 input, CB1 neg edge
+    ; Set PCR: CB2 input, CB1 negative edge
     LDA #%00000000
     STA PCR
 
-    ; Set ACR to known state: SR disabled
-    LDA #%00000000
+    ; Set ACR: SR mode 3 (shift in under CB1)
+    LDA #SR_IN_CB1
     STA ACR
 
     ; Set PB0 (MOSI), PB1 (SCK), PB2 (SS) as outputs
@@ -133,9 +135,39 @@ end_time   = &77    ; 5 bytes
 
     RTS
 
+; Fast read-only transfer using shift register
+; Sends 0xFF (MOSI stays high), returns received byte in A
+; Much faster than full spi_transfer - no per-bit MOSI handling
+.spi_read_byte
+    LDA SR              ; Clear shift register
+
+    ; MOSI high (sending 0xFF) - set once, not per-bit
+    LDA IORB
+    ORA #MOSI
+    AND #NOT_SCK        ; Ensure SCK low
+    STA IORB
+
+    ; Just toggle SCK 8 times - SR captures MISO on falling edges
+    LDX #8
+.read_clock
+    LDA IORB
+    ORA #SCK            ; Rising edge
+    STA IORB
+    AND #NOT_SCK        ; Falling edge - SR captures
+    STA IORB
+    DEX
+    BNE read_clock
+
+    LDA SR              ; Read received byte
+    RTS
+
+; Full SPI transfer (for reference, not used in timing test)
 .spi_transfer
-    ; Real SPI code preserved here for later
     STA spi_temp
+
+    ; Clear shift register
+    LDA SR
+
     LDX #8
 .spi_bit
     LDA spi_temp
@@ -149,17 +181,22 @@ end_time   = &77    ; 5 bytes
 .mosi_low
     STA IORB
 
+    ; Rising edge - AVR outputs MISO
     ORA #SCK
     STA IORB
 
     NOP
     NOP
 
+    ; Falling edge - SR captures MISO via CB1
     AND #NOT_SCK
     STA IORB
 
     DEX
     BNE spi_bit
+
+    ; Read received byte from shift register
+    LDA SR
 
     RTS
 
@@ -181,7 +218,7 @@ end_time   = &77    ; 5 bytes
     JMP OSWRCH
 
 .intro_msg
-    EQUS "256-byte SPI test v14", 13, 10, 0
+    EQUS "256-byte turbo test v2", 13, 10, 0
 
 .done_msg
     EQUS "Elapsed: &", 0
@@ -191,4 +228,4 @@ end_time   = &77    ; 5 bytes
 
 .end
 
-SAVE "SPI256", start, end
+SAVE "SPIT256", start, end

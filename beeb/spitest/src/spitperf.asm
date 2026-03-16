@@ -1,4 +1,5 @@
-; SPItFIRE SPI Performance Test
+; SPItFIRE Turbo Performance Test
+; Uses VIA shift register mode for MISO capture
 ; Runs 65536 transfers, measures elapsed time in centiseconds
 ; Reports transfer rate
 
@@ -21,6 +22,9 @@ SS   = %00000100            ; PB2
 ; Inverted masks for AND operations
 NOT_SS   = %11111011
 NOT_SCK  = %11111101
+
+; ACR shift register mode
+SR_IN_CB1 = %00001100       ; Mode 3: Shift in under CB1 control
 
 ; OS calls
 OSWRCH = &FFEE
@@ -70,9 +74,8 @@ div_tmp    = &82            ; division workspace (5 bytes: 3 dividend + 2 remain
     STA IORB
 
 .transfer_loop
-    ; Send 0xFF (read operation - MOSI high)
-    LDA #&FF
-    JSR spi_transfer
+    ; Fast read using shift register
+    JSR spi_read_byte
 
     ; Increment 16-bit counter
     INC count_lo
@@ -336,19 +339,19 @@ div_tmp    = &82            ; division workspace (5 bytes: 3 dividend + 2 remain
 .skip_zero
     RTS
 
-; Initialise VIA for SPI
+; Initialise VIA for SPI with shift register mode
 .init_via
     ; Disable CB1/CB2 interrupts (bit 7=0 means clear, bits 3-4 = CB2/CB1)
     ; This prevents IRQs on every SCK edge!
     LDA #%00011000
     STA IER
 
-    ; Set PCR to known state: CB2 input, CB1 neg edge, CA2 input, CA1 neg edge
+    ; Set PCR to known state: CB2 input, CB1 neg edge
     LDA #%00000000
     STA PCR
 
-    ; Set ACR to known state: SR disabled, T1/T2 defaults, no latching
-    LDA #%00000000
+    ; Set ACR: SR mode 3 (shift in under CB1)
+    LDA #SR_IN_CB1
     STA ACR
 
     ; Set PB0 (MOSI), PB1 (SCK), PB2 (SS) as outputs
@@ -364,50 +367,30 @@ div_tmp    = &82            ; division workspace (5 bytes: 3 dividend + 2 remain
 
     RTS
 
-; SPI transfer: send byte in A, return received byte in A
-.spi_transfer
-    STA spi_temp
+; Fast read-only transfer using shift register
+; Sends 0xFF (MOSI stays high), returns received byte in A
+; Much faster than full spi_transfer - no per-bit MOSI handling
+.spi_read_byte
+    LDA SR              ; Clear shift register
 
-    ; Set ACR to known state: SR disabled, no latching
-    LDA #%00000000
-    STA ACR
-
-    ; Clear shift register
-    LDA SR
-
-    ; Start with SCK low
+    ; MOSI high (sending 0xFF) - set once, not per-bit
     LDA IORB
-    AND #NOT_SCK
-    STA IORB
-
-    LDX #8
-.spi_bit
-    LDA spi_temp
-    ASL A
-    STA spi_temp
-
-    LDA IORB
-    AND #%11111110          ; Clear MOSI
-    BCC mosi_low
     ORA #MOSI
-.mosi_low
-    STA IORB                ; MOSI set, SCK still low
-
-    ; Rising edge
-    ORA #SCK
+    AND #NOT_SCK        ; Ensure SCK low
     STA IORB
 
-    NOP
-    NOP
-
-    ; Falling edge
-    AND #NOT_SCK
+    ; Just toggle SCK 8 times - SR captures MISO on falling edges
+    LDX #8
+.read_clock
+    LDA IORB
+    ORA #SCK            ; Rising edge
     STA IORB
-
+    AND #NOT_SCK        ; Falling edge - SR captures
+    STA IORB
     DEX
-    BNE spi_bit
+    BNE read_clock
 
-    LDA SR
+    LDA SR              ; Read received byte
     RTS
 
 ; Print A as two hex digits
@@ -430,7 +413,7 @@ div_tmp    = &82            ; division workspace (5 bytes: 3 dividend + 2 remain
     JMP OSWRCH
 
 .intro_msg
-    EQUS "SPItFIRE SPI Performance Test v3", 13, 10
+    EQUS "SPItFIRE Turbo Performance Test v1", 13, 10
     EQUS "Running 65536 transfers...", 13, 10, 0
 
 .done_msg
@@ -447,4 +430,4 @@ div_tmp    = &82            ; division workspace (5 bytes: 3 dividend + 2 remain
 
 .end
 
-SAVE "SPIPERF", start, end
+SAVE "SPITPERF", start, end

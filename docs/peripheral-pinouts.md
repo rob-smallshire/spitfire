@@ -11,6 +11,23 @@ The SPItFIRE has a **male DE-9 Peripheral port** to support connection of the fo
 
 Port D of the AVR is connected to the Peripheral DE-9 and configured under software control to support these different device classes.
 
+## AVR Port D Mapping
+
+| DE-9 Pin | AVR Pin | Function | Notes |
+|----------|---------|----------|-------|
+| 1 | PD0 | RXD0 / GPIO | UART RX for IC232TTL; GPIO for mice/joystick |
+| 2 | PD1 | TXD0 / GPIO | UART TX for IC232TTL; GPIO for mice/joystick |
+| 3 | PD2 | GPIO | |
+| 4 | PD3 | GPIO | |
+| 5 | PD4 | GPIO | |
+| 6 | PD5 | GPIO | |
+| 7 | — | +5V | Hardwired, no AVR pin |
+| 8 | — | GND | Hardwired, no AVR pin |
+| 9 | PD6 | GPIO | |
+| LED | PD7 | GPIO | Status LED, active on prototype |
+
+The UART pins (PD0/PD1) are constrained by AVR hardware to map to Peripheral DE-9 pins 1/2, which conveniently aligns with the IC232TTL's RXD/TXD pins. For mouse and joystick modes, PD0/PD1 are reconfigured as standard GPIO inputs.
+
 ## Pinout Table
 
 | Pin | Compact Mouse | Joystick | Amiga Mouse | Atari Mouse | MS Bus Mouse | IC232TTL |

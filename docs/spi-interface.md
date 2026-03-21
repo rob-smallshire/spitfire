@@ -225,27 +225,158 @@ STA ACR
 
 ### Bit-Bang Mode (Simple)
 
-Write to PB0/PB1 to toggle MOSI and SCK. Read CB2 for MISO.
-Suitable for initial bring-up and low-speed operation.
+The simplest approach: toggle PB0 (MOSI) and PB1 (SCK) directly, shifting out
+one bit at a time. Read CB2 for MISO if needed (or use shift register to
+capture incoming data).
 
-### Shift Register Mode (Fast Reads)
+```asm
+; Full bit-bang SPI transfer
+; Send byte in A, returns received byte in A
+.spi_transfer
+    STA spi_temp
 
-Leverages VIA shift register mode 2:
-- CB1 (wired to PB1) provides clock to shift register
-- CB2 receives serial data into shift register
-- Write to PB1 to generate clock pulses
-- Read shift register for received byte
+    ; Clear shift register
+    LDA SR
 
-This matches MMFS "turbo read" mode for high-speed data transfer.
+    ; Start with SCK low
+    LDA IORB
+    AND #NOT_SCK
+    STA IORB
+
+    LDX #8
+.spi_bit
+    ; Shift out next bit
+    LDA spi_temp
+    ASL A
+    STA spi_temp
+
+    ; Set MOSI based on carry
+    LDA IORB
+    AND #%11111110      ; Clear MOSI
+    BCC mosi_low
+    ORA #MOSI
+.mosi_low
+    STA IORB            ; MOSI set, SCK still low
+
+    ; Rising edge - slave samples MOSI, outputs MISO
+    ORA #SCK
+    STA IORB
+
+    NOP                 ; Setup time
+    NOP
+
+    ; Falling edge - shift register captures MISO via CB1
+    AND #NOT_SCK
+    STA IORB
+
+    DEX
+    BNE spi_bit
+
+    LDA SR              ; Read received byte
+    RTS
+```
+
+Measured performance: **~4,100 bytes/second** (65536 transfers in 15.9 seconds).
+
+### Shift Register Mode (Turbo Reads)
+
+For read-heavy operations (like polling joystick/mouse), the shift register
+provides significant acceleration. This leverages VIA shift register **mode 3**
+(shift in under external CB1 control).
+
+Because CB1 is wired to PB1, toggling SCK automatically clocks data into the
+shift register. MISO (on CB2) is captured on each falling edge of CB1/SCK.
+
+**Key insight:** When reading (sending 0xFF), MOSI stays high for all 8 bits.
+We can set MOSI once and then just toggle SCK, eliminating per-bit branching.
+
+#### VIA Configuration for Turbo Mode
+
+```asm
+SR_IN_CB1 = %00001100   ; ACR mode 3: Shift in under CB1 control
+
+.init_via_turbo
+    ; Disable CB1/CB2 interrupts
+    LDA #%00011000
+    STA IER
+
+    ; CB2 input, CB1 negative edge
+    LDA #%00000000
+    STA PCR
+
+    ; Enable shift register mode 3
+    LDA #SR_IN_CB1
+    STA ACR
+
+    ; Set port direction
+    LDA DDRB
+    ORA #MOSI OR SCK OR SS
+    STA DDRB
+
+    ; Idle state: SS high, SCK low, MOSI high
+    LDA IORB
+    ORA #MOSI OR SS
+    AND #NOT_SCK
+    STA IORB
+
+    RTS
+```
+
+#### Optimized Turbo Read Routine
+
+```asm
+; Fast read-only transfer using shift register
+; Sends 0xFF (MOSI stays high), returns received byte in A
+; Much faster than full spi_transfer - no per-bit MOSI handling
+.spi_read_byte
+    LDA SR              ; Clear shift register
+
+    ; MOSI high (sending 0xFF) - set once, not per-bit
+    LDA IORB
+    ORA #MOSI
+    AND #NOT_SCK        ; Ensure SCK low
+    STA IORB
+
+    ; Just toggle SCK 8 times - SR captures MISO on falling edges
+    LDX #8
+.read_clock
+    LDA IORB
+    ORA #SCK            ; Rising edge
+    STA IORB
+    AND #NOT_SCK        ; Falling edge - SR captures
+    STA IORB
+    DEX
+    BNE read_clock
+
+    LDA SR              ; Read received byte
+    RTS
+```
+
+Measured performance: **~7,400 bytes/second** (65536 transfers in 8.9 seconds).
+
+### Performance Comparison
+
+| Mode | Technique | Rate | Relative |
+|------|-----------|------|----------|
+| Bit-bang | Full spi_transfer | 4,124 bytes/sec | 1.0x |
+| Turbo | spi_read_byte (SR mode 3) | 7,371 bytes/sec | 1.79x |
+
+The turbo mode is **79% faster** for read operations. The gains come from:
+1. No per-bit MOSI handling (just 8 clock toggles)
+2. No conditional branching in the inner loop
+3. Shift register captures data automatically
+
+For the joystick/mouse interface, which is read-biased, turbo mode is the
+clear choice. Writes (if needed) can fall back to bit-bang mode.
 
 ## Clock Speed Considerations
 
 - BBC Micro runs at 2 MHz
 - AVR runs at 18.432 MHz
-- Bit-bang: ~10-50 kHz practical
-- Shift register: potentially faster (limited by VIA timing)
-- Joystick updates at 25 Hz need only ~2-4 bytes per frame
-- Plenty of bandwidth for joystick, SD card, and additional devices
+- Measured bit-bang throughput: ~4,100 bytes/sec (~33 kHz bit rate)
+- Measured turbo read throughput: ~7,400 bytes/sec (~59 kHz bit rate)
+- Joystick updates at 50 Hz need only ~4-6 bytes per frame (~300 bytes/sec)
+- Plenty of bandwidth for joystick, mouse, and SD card access
 
 ## ATmega1284p SPI Slave
 

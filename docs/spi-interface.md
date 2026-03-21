@@ -104,38 +104,41 @@ Write a 3-bit device number to PB4:PB3:PB2 to select a device:
 
 ### Software Interface
 
-Device selection is now a 3-bit write rather than individual SS line control:
+Device selection uses pre-shifted constants for efficiency (no runtime shifting):
 
 ```asm
-; Device select constants
-DEV_NONE     = 0        ; Y0 - no device selected
-DEV_SPITFIRE = 1        ; Y1 - joystick/mouse interface
-DEV_2        = 2        ; Y2 - unassigned
-DEV_3        = 3        ; Y3 - unassigned
-DEV_4        = 4        ; Y4 - unassigned
-DEV_5        = 5        ; Y5 - unassigned
-DEV_6        = 6        ; Y6 - unassigned
-DEV_7        = 7        ; Y7 - unassigned
+; Port B bit assignments
+SEL_A0   = %00000100        ; PB2 - decoder A0
+SEL_A1   = %00001000        ; PB3 - decoder A1
+SEL_A2   = %00010000        ; PB4 - decoder A2
+SEL_MASK = %00011100        ; All decoder bits (PB2-PB4)
 
-; Select a device (value 0-7 in A)
-.select_device
-    AND #%00000111      ; Mask to 3 bits
-    STA spi_temp
+; Device constants (pre-shifted to PB2-4 position)
+DEV_NONE     = %00000000    ; Y0 - no device selected
+DEV_SPITFIRE = %00000100    ; Y1 - SPItFIRE (A0=1)
+DEV_2        = %00001000    ; Y2 - unassigned (A1=1)
+DEV_3        = %00001100    ; Y3 - unassigned (A1=1, A0=1)
+DEV_4        = %00010000    ; Y4 - unassigned (A2=1)
+DEV_5        = %00010100    ; Y5 - unassigned (A2=1, A0=1)
+DEV_6        = %00011000    ; Y6 - unassigned (A2=1, A1=1)
+DEV_7        = %00011100    ; Y7 - unassigned (A2=1, A1=1, A0=1)
+
+; Mask for clearing decoder bits
+NOT_SEL  = %11100011        ; Clear PB2, PB3, PB4
+
+; Select SPItFIRE
     LDA IORB
-    AND #%11100011      ; Clear PB2, PB3, PB4
-    ORA spi_temp        ; Set device number (assumes bits aligned)
-    ; Need to shift: PB2=bit0, PB3=bit1, PB4=bit2
-    ; Actually PB2-4 are bits 2-4, so shift left by 2
-    ASL spi_temp
-    ASL spi_temp
-    LDA IORB
-    AND #%11100011      ; Clear PB2, PB3, PB4
-    ORA spi_temp
+    AND #NOT_SEL            ; Clear decoder bits
+    ORA #DEV_SPITFIRE       ; Set device 1
     STA IORB
-    RTS
+
+; Deselect (idle)
+    LDA IORB
+    AND #NOT_SEL            ; Clear decoder bits (device 0)
+    STA IORB
 ```
 
-**Note:** This interface differs from MMFS which uses individual SS lines. SD card support would require a modified MMFS build.
+**Note:** This interface differs from MMFS which ties SS to ground (always selected). SD card support would require a custom MMC driver that controls device selection via the decoder.
 
 ## SPItFIRE As-Built Wiring
 

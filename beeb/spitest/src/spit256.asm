@@ -13,12 +13,21 @@ ACR  = VIA_BASE + &0B
 PCR  = VIA_BASE + &0C
 IER  = VIA_BASE + &0E
 
-; Port B bits
-MOSI = %00000001
-SCK  = %00000010
-SS   = %00000100
-NOT_SS  = %11111011
-NOT_SCK = %11111101
+; Port B bit assignments
+MOSI     = %00000001        ; PB0
+SCK      = %00000010        ; PB1
+SEL_A0   = %00000100        ; PB2 - decoder A0
+SEL_A1   = %00001000        ; PB3 - decoder A1
+SEL_A2   = %00010000        ; PB4 - decoder A2
+SEL_MASK = %00011100        ; All decoder bits (PB2-PB4)
+
+; Device numbers (accent directly via 74HC138)
+DEV_NONE     = %00000000    ; Y0 - no device
+DEV_SPITFIRE = %00000100    ; Y1 - SPItFIRE (A0=1)
+
+; Inverted masks for AND operations
+NOT_SEL  = %11100011        ; Clear decoder bits
+NOT_SCK  = %11111101
 
 ; ACR shift register mode
 SR_IN_CB1 = %00001100       ; Mode 3: Shift in under CB1 control
@@ -53,9 +62,10 @@ end_time   = &77    ; 5 bytes
     LDY #>start_time
     JSR OSWORD
 
-    ; Assert SS for entire transfer block
+    ; Select SPItFIRE (device 1)
     LDA IORB
-    AND #NOT_SS
+    AND #NOT_SEL
+    ORA #DEV_SPITFIRE
     STA IORB
 
     ; Do 256 transfers
@@ -66,9 +76,9 @@ end_time   = &77    ; 5 bytes
     INC count
     BNE transfer_loop
 
-    ; Deassert SS
+    ; Deselect (device 0)
     LDA IORB
-    ORA #SS
+    AND #NOT_SEL
     STA IORB
 
     ; Read end time
@@ -122,15 +132,15 @@ end_time   = &77    ; 5 bytes
     LDA #SR_IN_CB1
     STA ACR
 
-    ; Set PB0 (MOSI), PB1 (SCK), PB2 (SS) as outputs
+    ; Set PB0 (MOSI), PB1 (SCK), PB2-4 (decoder) as outputs
     LDA DDRB
-    ORA #MOSI OR SCK OR SS
+    ORA #MOSI OR SCK OR SEL_MASK
     STA DDRB
 
-    ; Set idle state: SS high, SCK low (CPOL=0), MOSI high
+    ; Set idle state: device 0 (none), SCK low (CPOL=0), MOSI high
     LDA IORB
-    ORA #MOSI OR SS
-    AND #NOT_SCK
+    AND #NOT_SEL AND NOT_SCK
+    ORA #MOSI
     STA IORB
 
     RTS
@@ -218,7 +228,7 @@ end_time   = &77    ; 5 bytes
     JMP OSWRCH
 
 .intro_msg
-    EQUS "256-byte turbo test v2", 13, 10, 0
+    EQUS "256-byte turbo test v3", 13, 10, 0
 
 .done_msg
     EQUS "Elapsed: &", 0

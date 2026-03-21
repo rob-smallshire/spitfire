@@ -4,7 +4,9 @@ This document describes the SPI communication protocol between the BBC Master Co
 
 ## Overview
 
-The BBC Master Compact's Mouse/Joystick port exposes a 6522 VIA. The host software bit-bangs an SPI protocol on the VIA output lines to communicate with the ATMega1284p, which operates as an SPI slave.
+The BBC Master Compact connects to SPItFIRE via the **Host DE-9** connector, which exposes the 6522 VIA. The host software bit-bangs an SPI protocol on the VIA output lines to communicate with the ATMega1284p, which operates as an SPI slave.
+
+See [spi-interface.md](spi-interface.md) for connector terminology and physical layer details.
 
 ## Physical Layer
 

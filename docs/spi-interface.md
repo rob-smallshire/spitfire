@@ -6,9 +6,22 @@ SPItFIRE uses SPI to communicate between the BBC Master Compact and an ATmega128
 
 The design uses CB1 wired to PB1 externally to enable both bit-banged and shift-register-accelerated transfers (following the MMFS approach). A 74HC138 3-to-8 decoder expands three VIA output pins into seven independent chip select lines, allowing up to seven SPI devices on the bus.
 
-## BBC Master Compact DE-9 Pinout
+## Connector Terminology
 
-The DE-9 Mouse/Joystick port exposes User VIA pins:
+SPItFIRE has two DE-9 connectors with distinct roles:
+
+| Connector | Description |
+|-----------|-------------|
+| **Host DE-9** | Connects to the BBC Master Compact Mouse/Joystick port. Carries SPI signals (MOSI, MISO, SCK) and device selection via the 74HC138 decoder. The BBC is the SPI master. |
+| **Peripheral DE-9** | Directly connects input devices to SPItFIRE. Directly accepts quadrature mice, switched joysticks, or other peripherals. Connected to AVR Port D. |
+
+This naming convention is used consistently throughout the documentation:
+- "Host" = toward the BBC Master Compact (SPI master side)
+- "Peripheral" = toward input devices (directly connected to AVR)
+
+## Host DE-9 Pinout
+
+The Host DE-9 connects to the BBC Master Compact's Mouse/Joystick port, which exposes User VIA pins:
 
 | DE-9 Pin | VIA Signal | SPI Function | Direction |
 |----------|------------|--------------|-----------|
@@ -66,8 +79,8 @@ The enable pins are hard-wired so one output is always active:
 ### Full System Wiring
 
 ```
-DE-9 Connector              74HC138                 Devices
-──────────────              ───────                 ───────
+Host DE-9                   74HC138                 Devices
+─────────                   ───────                 ───────
 Pin 2 (PB2) ─────────────────→ A0
 Pin 1 (PB3) ─────────────────→ A1
 Pin 4 (PB4) ─────────────────→ A2
@@ -142,12 +155,12 @@ NOT_SEL  = %11100011        ; Clear PB2, PB3, PB4
 
 ## SPItFIRE As-Built Wiring
 
-Connection from female DE-9 breakout board via 74HC138 decoder to ATmega1284p,
-using a straight-through DE-9 cable from the Master Compact:
+Connection from Host DE-9 (directly via female breakout board) through 74HC138 decoder
+to ATmega1284p. A straight-through DE-9 cable connects to the Master Compact.
 
 ```
-Female DE-9 Breakout        74HC138             ATmega1284p
-────────────────────        ───────             ───────────
+Host DE-9                   74HC138             ATmega1284p
+─────────                   ───────             ───────────
 Pin 2 (PB2) ─────────────────→ A0
 Pin 1 (PB3) ─────────────────→ A1
 Pin 4 (PB4) ─────────────────→ A2
@@ -168,17 +181,17 @@ Pin 8 (GND)      ─────────────────────
 
 | Connection | From | To | Notes |
 |------------|------|-----|-------|
-| Decoder A0 | DE-9 pin 2 (PB2) | 74HC138 pin 1 | Device select bit 0 |
-| Decoder A1 | DE-9 pin 1 (PB3) | 74HC138 pin 2 | Device select bit 1 |
-| Decoder A2 | DE-9 pin 4 (PB4) | 74HC138 pin 3 | Device select bit 2 |
+| Decoder A0 | Host DE-9 pin 2 (PB2) | 74HC138 pin 1 | Device select bit 0 |
+| Decoder A1 | Host DE-9 pin 1 (PB3) | 74HC138 pin 2 | Device select bit 1 |
+| Decoder A2 | Host DE-9 pin 4 (PB4) | 74HC138 pin 3 | Device select bit 2 |
 | SS | 74HC138 Y1 (pin 14) | AVR PB4 | Via 1kΩ resistor |
-| SCK | DE-9 pin 3 (PB1) | AVR PB7 | Via 1kΩ resistor |
-| CB1 | DE-9 pin 5 | DE-9 pin 3 | Wire together |
-| MOSI | DE-9 pin 6 (PB0) | AVR PB5 | Via 1kΩ resistor |
-| MISO | AVR PB6 | DE-9 pin 9 (CB2) | Via 1kΩ resistor |
-| GND | DE-9 pin 8 | Common | All grounds connected |
+| SCK | Host DE-9 pin 3 (PB1) | AVR PB7 | Via 1kΩ resistor |
+| CB1 | Host DE-9 pin 5 | Host DE-9 pin 3 | Wire together |
+| MOSI | Host DE-9 pin 6 (PB0) | AVR PB5 | Via 1kΩ resistor |
+| MISO | AVR PB6 | Host DE-9 pin 9 (CB2) | Via 1kΩ resistor |
+| GND | Host DE-9 pin 8 | Common | All grounds connected |
 
-DE-9 pin 7 (+5V) is unused.
+Host DE-9 pin 7 (+5V) is currently unused.
 
 ## Series Resistors
 

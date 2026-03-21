@@ -7,7 +7,7 @@
 The Acorn BBC Master Compact lacks the analogue-to-digital converter (ADC) hardware found in other BBC Micro models, making it incompatible with standard analogue joysticks. SPItFIRE bridges this gap by providing:
 
 - **Analogue joystick support** via ADC sampling of potentiometer positions
-- **DE-9 quadrature mouse port** for connecting a standard mouse
+- **Peripheral DE-9 port** for connecting a quadrature mouse (or other devices)
 - **Keyboard matrix scanning** for joystick buttons
 
 The system uses an ATMega1284p microcontroller as an SPI slave device. The BBC Master Compact's Mouse/Joystick port (an exposed 6522 VIA) communicates with the microcontroller via a bit-banged SPI protocol.
@@ -15,6 +15,7 @@ The system uses an ATMega1284p microcontroller as an SPI slave device. The BBC M
 ## Architecture
 
 ```
+                               Host DE-9
 ┌─────────────────────┐         SPI          ┌──────────────────────┐
 │  BBC Master Compact │◄────────────────────►│     ATMega1284p      │
 │                     │   (bit-banged on     │                      │
@@ -25,12 +26,13 @@ The system uses an ATMega1284p microcontroller as an SPI slave device. The BBC M
                                              │  └────────────────┘  │
                                              └──────────────────────┘
                                                       │
-                              ┌────────────────┬──────┴───────┐
-                              ▼                ▼              ▼
-                        ┌──────────┐    ┌──────────┐   ┌────────────┐
-                        │ Joystick │    │  Keypad  │   │ DE-9 Mouse │
-                        │ (Analog) │    │  Matrix  │   │(Quadrature)│
-                        └──────────┘    └──────────┘   └────────────┘
+                       ┌──────────────────────┬───────┴───────┐
+                       ▼                      ▼               ▼
+                 ┌──────────┐          ┌──────────┐   ┌──────────────┐
+                 │ Joystick │          │  Keypad  │   │ Peripheral   │
+                 │ (Analog) │          │  Matrix  │   │    DE-9      │
+                 │  DA-15   │          │          │   │ Mouse/Serial │
+                 └──────────┘          └──────────┘   └──────────────┘
 ```
 
 ## Repository Structure
@@ -81,11 +83,16 @@ make
 
 The hardware design is created in KiCAD. See the `hardware/` directory for schematics and PCB layouts.
 
-### Connections
+### Connectors
 
-- **Mouse/Joystick Port**: Directly connected to BBC Master Compact's exposed 6522 VIA
-- **DE-9 Mouse Port**: Standard Atari/Amiga-style quadrature mouse connection
-- **Joystick Inputs**: Analogue potentiometer inputs via ADC channels
+SPItFIRE has two DE-9 connectors:
+
+- **Host DE-9**: Connects to BBC Master Compact's Mouse/Joystick port (exposes 6522 VIA). Carries SPI bus signals and device selection.
+- **Peripheral DE-9**: Directly connects input devices to SPItFIRE. Directly accepts quadrature mice, switched joysticks, or serial devices. Connected to AVR Port D.
+
+### Additional Connections
+
+- **Joystick Inputs**: Two DA-15 ports for analogue joysticks (directly via ADC channels)
 
 ## Protocol
 

@@ -4,7 +4,7 @@
 
 SPItFIRE uses SPI to communicate between the BBC Master Compact and an ATmega1284p microcontroller. The BBC acts as SPI master, bit-banging the protocol on its User VIA. The AVR acts as SPI slave using its hardware SPI peripheral.
 
-The design follows the proven MMFS approach, wiring CB1 to PB1 externally to enable both bit-banged and shift-register-accelerated transfers.
+The design uses CB1 wired to PB1 externally to enable both bit-banged and shift-register-accelerated transfers (following the MMFS approach). A 74HC138 3-to-8 decoder expands three VIA output pins into seven independent chip select lines, allowing up to seven SPI devices on the bus.
 
 ## BBC Master Compact DE-9 Pinout
 
@@ -12,10 +12,10 @@ The DE-9 Mouse/Joystick port exposes User VIA pins:
 
 | DE-9 Pin | VIA Signal | SPI Function | Direction |
 |----------|------------|--------------|-----------|
-| 1 | PB3 | SS (device 2) | Output |
-| 2 | PB2 | SS (SPItFIRE) | Output |
+| 1 | PB3 | Decoder A1 | Output |
+| 2 | PB2 | Decoder A0 | Output |
 | 3 | PB1 | SCK | Output |
-| 4 | PB4 | SS (device 3) | Output |
+| 4 | PB4 | Decoder A2 | Output |
 | 5 | CB1 | SCK | Input (wire to pin 3) |
 | 6 | PB0 | MOSI | Output |
 | 7 | +5V | Power | - |
@@ -30,87 +30,160 @@ Following MMFS conventions for MOSI, SCK, and MISO:
 |---------|--------------|-------|
 | PB0 | MOSI | Data to slave (same as MMFS) |
 | PB1 | SCK | Clock, wired to CB1 (same as MMFS) |
-| PB2 | AVR_SS | SPItFIRE chip select (active low) |
-| PB3 | (spare SS) | Available for SD card |
-| PB4 | (spare SS) | Available for third device |
+| PB2 | Decoder A0 | Device select bit 0 |
+| PB3 | Decoder A1 | Device select bit 1 |
+| PB4 | Decoder A2 | Device select bit 2 |
 | CB1 | SCK | Wired to PB1 for shift register clock |
 | CB2 | MISO | Data from slave (same as MMFS) |
 
 ## Multi-Device SPI Bus
 
-The DE-9 port provides three independent slave select lines, supporting up to three SPI devices without any external decoder:
+A 74HC138 3-to-8 decoder expands three VIA pins into seven chip select lines. The decoder outputs are active-low, directly compatible with SPI SS requirements.
 
-1. **PB2** - SPItFIRE (joystick/mouse)
-2. **PB3** - SD Card (mass storage, MMFS compatible)
-3. **PB4** - Future expansion
+### 74HC138 Connections
 
 ```
-DE-9 Connector                           Devices
-──────────────                           ───────
-Pin 6 (PB0) ─────────────────────┬─[1kΩ]──→ AVR PB5 (MOSI)
-                                 ├─────────→ SD MOSI
-                                 └─────────→ Dev3 MOSI
+                              74HC138
+                            ┌────┴────┐
+                        A0 ─┤1      16├─ VCC
+                        A1 ─┤2      15├─ Y0 (unconnected - no device)
+                        A2 ─┤3      14├─ Y1 → [1kΩ] → AVR PB4 (SS)
+                       ~G2A─┤4      13├─ Y2 (unassigned)
+                       ~G2B─┤5      12├─ Y3 (unassigned)
+                        G1 ─┤6      11├─ Y4 (unassigned)
+                        Y7 ─┤7      10├─ Y5 (unassigned)
+                       GND ─┤8       9├─ Y6 (unassigned)
+                            └─────────┘
+```
 
-Pin 3 (PB1) ──┬──────────────────┬─[1kΩ]──→ AVR PB7 (SCK)
-Pin 5 (CB1) ──┘ (wire together)  ├─────────→ SD SCK
-                                 └─────────→ Dev3 SCK
+### Decoder Enable Configuration
 
-Pin 9 (CB2) ←────────────────────┬─[1kΩ]─── AVR PB6 (MISO)
-                                 ├─────────── SD MISO
-                                 └─────────── Dev3 MISO
+The enable pins are hard-wired so one output is always active:
+- G1 = VCC (active high enable)
+- ~G2A = GND (active low enable)
+- ~G2B = GND (active low enable)
 
-Pin 2 (PB2) ─────────────────────────────────→ AVR PB4 (SS)
-Pin 1 (PB3) ─────────────────────────────────→ SD SS
-Pin 4 (PB4) ─────────────────────────────────→ Dev3 SS
-Pin 8 (0V)  ─────────────────────────────────── GND (common)
+### Full System Wiring
+
+```
+DE-9 Connector              74HC138                 Devices
+──────────────              ───────                 ───────
+Pin 2 (PB2) ─────────────────→ A0
+Pin 1 (PB3) ─────────────────→ A1
+Pin 4 (PB4) ─────────────────→ A2
+                               Y0 ─── (no connection)
+                               Y1 ───[1kΩ]──→ AVR PB4 (SS)
+                               Y2 ─── (unassigned)
+                               Y3 ─── (unassigned)
+                               Y4 ─── (unassigned)
+                               Y5 ─── (unassigned)
+                               Y6 ─── (unassigned)
+                               Y7 ─── (unassigned)
+
+Pin 6 (PB0) ─────────[1kΩ]───────────────→ AVR PB5 (MOSI)
+Pin 3 (PB1) ──┬──────[1kΩ]───────────────→ AVR PB7 (SCK)
+Pin 5 (CB1) ──┘ (wire together)
+Pin 9 (CB2) ←────────[1kΩ]─────────────── AVR PB6 (MISO)
+Pin 8 (0V)  ───────────────────────────── GND (common)
 ```
 
 ### Device Selection
 
-directly select one device at a time by driving its SS line low:
+Write a 3-bit device number to PB4:PB3:PB2 to select a device:
 
-| PB4 | PB3 | PB2 | Selected Device |
-|-----|-----|-----|-----------------|
-| 1 | 1 | 1 | None (all deselected) |
-| 1 | 1 | 0 | SPItFIRE |
-| 1 | 0 | 1 | SD Card |
-| 0 | 1 | 1 | Device 3 |
+| A2 (PB4) | A1 (PB3) | A0 (PB2) | Value | Active Output | Device |
+|----------|----------|----------|-------|---------------|--------|
+| 0 | 0 | 0 | 0 | Y0 | None (idle) |
+| 0 | 0 | 1 | 1 | Y1 | SPItFIRE |
+| 0 | 1 | 0 | 2 | Y2 | (unassigned) |
+| 0 | 1 | 1 | 3 | Y3 | (unassigned) |
+| 1 | 0 | 0 | 4 | Y4 | (unassigned) |
+| 1 | 0 | 1 | 5 | Y5 | (unassigned) |
+| 1 | 1 | 0 | 6 | Y6 | (unassigned) |
+| 1 | 1 | 1 | 7 | Y7 | (unassigned) |
+
+### Software Interface
+
+Device selection is now a 3-bit write rather than individual SS line control:
+
+```asm
+; Device select constants
+DEV_NONE     = 0        ; Y0 - no device selected
+DEV_SPITFIRE = 1        ; Y1 - joystick/mouse interface
+DEV_2        = 2        ; Y2 - unassigned
+DEV_3        = 3        ; Y3 - unassigned
+DEV_4        = 4        ; Y4 - unassigned
+DEV_5        = 5        ; Y5 - unassigned
+DEV_6        = 6        ; Y6 - unassigned
+DEV_7        = 7        ; Y7 - unassigned
+
+; Select a device (value 0-7 in A)
+.select_device
+    AND #%00000111      ; Mask to 3 bits
+    STA spi_temp
+    LDA IORB
+    AND #%11100011      ; Clear PB2, PB3, PB4
+    ORA spi_temp        ; Set device number (assumes bits aligned)
+    ; Need to shift: PB2=bit0, PB3=bit1, PB4=bit2
+    ; Actually PB2-4 are bits 2-4, so shift left by 2
+    ASL spi_temp
+    ASL spi_temp
+    LDA IORB
+    AND #%11100011      ; Clear PB2, PB3, PB4
+    ORA spi_temp
+    STA IORB
+    RTS
+```
+
+**Note:** This interface differs from MMFS which uses individual SS lines. SD card support would require a modified MMFS build.
 
 ## SPItFIRE As-Built Wiring
 
-Connection from female DE-9 breakout board to ATmega1284p, using a straight-through
-DE-9 cable from the Master Compact:
+Connection from female DE-9 breakout board via 74HC138 decoder to ATmega1284p,
+using a straight-through DE-9 cable from the Master Compact:
 
 ```
-Female DE-9 Breakout        ATmega1284p
-────────────────────        ───────────
-Pin 2 (PB2/SS)   ─────────────────────→ PB4 (SS)
-Pin 3 (PB1/SCK)  ──┬───────[1kΩ]──────→ PB7 (SCK)
+Female DE-9 Breakout        74HC138             ATmega1284p
+────────────────────        ───────             ───────────
+Pin 2 (PB2) ─────────────────→ A0
+Pin 1 (PB3) ─────────────────→ A1
+Pin 4 (PB4) ─────────────────→ A2
+                               Y1 ────[1kΩ]────→ PB4 (SS)
+Pin 3 (PB1/SCK)  ──┬─────────[1kΩ]─────────────→ PB7 (SCK)
 Pin 5 (CB1)      ──┘ (wire together)
-Pin 6 (PB0/MOSI) ──────────[1kΩ]──────→ PB5 (MOSI)
-Pin 9 (CB2/MISO) ←─────────[1kΩ]─────── PB6 (MISO)
-Pin 8 (GND)      ─────────────────────── GND
+Pin 6 (PB0/MOSI) ────────────[1kΩ]─────────────→ PB5 (MOSI)
+Pin 9 (CB2/MISO) ←───────────[1kΩ]───────────── PB6 (MISO)
+Pin 8 (GND)      ──────────────────────────────── GND
+
+74HC138 power and enable:
+  Pin 16 (VCC) ── +5V
+  Pin 8 (GND)  ── GND
+  Pin 6 (G1)   ── +5V (enable)
+  Pin 4 (~G2A) ── GND (enable)
+  Pin 5 (~G2B) ── GND (enable)
 ```
 
-| DE-9 Pin | Signal | Resistor | AVR Pin |
-|----------|--------|----------|---------|
-| 2 | SS | direct | PB4 |
-| 3 | SCK | 1kΩ | PB7 |
-| 5 | CB1 | wire to pin 3 | - |
-| 6 | MOSI | 1kΩ | PB5 |
-| 8 | GND | direct | GND |
-| 9 | MISO | 1kΩ | PB6 |
+| Connection | From | To | Notes |
+|------------|------|-----|-------|
+| Decoder A0 | DE-9 pin 2 (PB2) | 74HC138 pin 1 | Device select bit 0 |
+| Decoder A1 | DE-9 pin 1 (PB3) | 74HC138 pin 2 | Device select bit 1 |
+| Decoder A2 | DE-9 pin 4 (PB4) | 74HC138 pin 3 | Device select bit 2 |
+| SS | 74HC138 Y1 (pin 14) | AVR PB4 | Via 1kΩ resistor |
+| SCK | DE-9 pin 3 (PB1) | AVR PB7 | Via 1kΩ resistor |
+| CB1 | DE-9 pin 5 | DE-9 pin 3 | Wire together |
+| MOSI | DE-9 pin 6 (PB0) | AVR PB5 | Via 1kΩ resistor |
+| MISO | AVR PB6 | DE-9 pin 9 (CB2) | Via 1kΩ resistor |
+| GND | DE-9 pin 8 | Common | All grounds connected |
 
-Pins 1, 4, 7 unused (spare SS lines and +5V).
+DE-9 pin 7 (+5V) is unused.
 
 ## Series Resistors
 
 1kΩ series resistors serve two purposes:
 
-**ISP programming compatibility (MOSI, SCK):** The BBC VIA and ISP programmer both
-drive these lines to the AVR. The resistors allow the programmer to override the
-BBC's signals during programming. SS does not need a resistor because the ISP
-programmer uses RESET, not SS, to enter programming mode.
+**ISP programming compatibility (MOSI, SCK, SS):** The BBC VIA (via the decoder)
+and ISP programmer both drive these lines to the AVR. The resistors allow the
+programmer to override the BBC's signals during programming.
 
 **Protection (MISO):** Although only the AVR drives MISO, a series resistor is
 included for general protection.
@@ -124,8 +197,8 @@ SCK  ──────────────────────→ PB7 (
 RESET ─────────────────────→ RESET
 ```
 
-SD card connections do not need resistors as they don't conflict with the AVR
-programmer (different device on shared bus).
+Future SPI devices on other decoder outputs (Y2-Y7) would also benefit from
+series resistors if they share pins with an ISP header.
 
 ## SPI Protocol Parameters
 
@@ -194,6 +267,14 @@ STA ACR
 ### Complete VIA Initialization Sequence
 
 ```asm
+; Port B bit assignments
+MOSI     = %00000001    ; PB0
+SCK      = %00000010    ; PB1
+SEL_A0   = %00000100    ; PB2 - decoder A0
+SEL_A1   = %00001000    ; PB3 - decoder A1
+SEL_A2   = %00010000    ; PB4 - decoder A2
+SEL_MASK = %00011100    ; All decoder bits
+
 .init_via
     ; 1. Disable CB1/CB2 interrupts FIRST
     LDA #%00011000
@@ -207,15 +288,15 @@ STA ACR
     LDA #%00000000
     STA ACR
 
-    ; 4. Set port direction (PB0=MOSI, PB1=SCK, PB2=SS as outputs)
+    ; 4. Set port direction (PB0=MOSI, PB1=SCK, PB2-4=decoder as outputs)
     LDA DDRB
-    ORA #%00000111
+    ORA #MOSI OR SCK OR SEL_MASK
     STA DDRB
 
-    ; 5. Set idle state: SS high, SCK low (CPOL=0), MOSI high
+    ; 5. Set idle state: device 0 (none), SCK low (CPOL=0), MOSI high
     LDA IORB
-    ORA #%00000101      ; SS and MOSI high
-    AND #%11111101      ; SCK low
+    AND #%11100001      ; Clear SCK and decoder bits
+    ORA #MOSI           ; MOSI high
     STA IORB
 
     RTS

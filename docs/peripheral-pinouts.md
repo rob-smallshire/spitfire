@@ -126,3 +126,81 @@ The key difference between Amiga and Atari mice is the quadrature signal routing
 | 4   | XB    | YB    |
 
 Pins 1, 3, and 4 differ. This is why mice with an "Amiga/Atari" switch exist.
+
+
+# BBC Micro User Port Connector
+
+The SPItFIRE unit is intended for the Master Compact mouse/joystick port. This machine
+lacks the traditional User Port sported by all other models of BBC Micro and Master.
+The User Port exposed all 10 data signals of the User VIA of the BBC Micro, CB1, CB2 and PB0 to PB7
+inclusive. The user port was used for many peripherals, perhaps most notably the Marconi RB2
+trackerball, the AMX Mouse and other mouses such as the Nidd Valley DigiMouse. The various mouses
+seem to follow a common pinout, but the Marconi Trackerball is different.
+
+The User Port used a 20 way 2x10 pin header connector with male on the machine and a female IDC
+connector on the peripheral cable.
+
+## Mouse and Trackerball User Port Pinouts
+
+| Pin | VIA | Mouse | Trackerball |
+|-----|-----|-------|-------------|
+|  2  | CB1 |  XA   | XA          |
+|  4  | CB2 |  YA   | YB          |
+|  6  | PB0 |  XB   | LB          |
+|  8  | PB1 |       | MB          |
+| 10  | PB2 |  YB   | RB          |
+| 12  | PB3 |       | XB          |
+| 14  | PB4 |       | YA          |
+| 16  | PB5 |  LB   |             |
+| 18  | PB6 |  MB   |             |
+| 20  | PB7 |  RB   |             |
+
+The Marconi RB2 documentation uses X1/X2/Y1/Y2 notation (X1=XA, X2=XB, Y1=YA, Y2=YB).
+Note that CB2 carries YA for mice but YB for the trackerball - the devices are not identical.
+
+References:
+- Mouse: [mdfs.net BBC Mouse](https://mdfs.net/Info/Comp/BBC/Mouse/)
+- Trackerball: [Marconi RB2 User Guide (PDF)](https://www.domesday86.com/wp-content/uploads/2017/01/Marconi-RB2-User-Guide-BBC-Model-B.pdf)
+
+These two devices cover all 10 signal pins of the user port, so we don't have
+enough available signals on AVR Port D (7 bits, one reserved for status LED)
+to individually service all ten User Port pins.
+
+## User Port to DE-9 Adapter
+
+A small adapter PCB can convert User Port mice and trackerballs to SPItFIRE's
+Peripheral DE-9. The adapter merges signals from both device types onto the
+seven available DE-9 signal pins, since only one device is connected at a time.
+
+**Note:** This adapter is SPItFIRE-specific. It cannot be used to connect User
+Port devices directly to the Master Compact's mouse port due to pinout conflicts.
+
+### Adapter Connectors
+
+- **Input:** Female 20-way (2x10) IDC shrouded header (accepts User Port cable)
+- **Output:** Male DE-9 (plugs into SPItFIRE Peripheral DE-9)
+
+### Adapter Wiring
+
+| IDC Pin | VIA | Mouse | Trackerball | DE-9 Pin |
+|---------|-----|-------|-------------|----------|
+|  2  | CB1 |  XA   | XA          | 1    |
+|  4  | CB2 |  YA   | YB          | 2    |
+|  6  | PB0 |  XB   | LB          | 3    |
+|  8  | PB1 |       | MB          | 4    |
+| 10  | PB2 |  YB   | RB          | 5    |
+| 12  | PB3 |       | XB          | 6    |
+| 14  | PB4 |       | YA          | 9    |
+| 16  | PB5 |  LB   |             | 4    |
+| 18  | PB6 |  MB   |             | 6    |
+| 20  | PB7 |  RB   |             | 9    |
+| 1/3 |     | +5V   | +5V         | 7    |
+| odd |     | GND   | GND         | 8    |
+
+Merged connections (directly wire both IDC pins to the same DE-9 pin):
+- DE-9 pin 4: IDC pins 8 + 16
+- DE-9 pin 6: IDC pins 12 + 18
+- DE-9 pin 9: IDC pins 14 + 20
+
+This works because the unused pins on each device are physically unconnected
+inside the peripheral, so no signal conflict occurs.

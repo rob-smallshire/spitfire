@@ -13,18 +13,18 @@ Port D of the AVR is connected to the Peripheral DE-9 and configured under softw
 
 ## AVR Port D Mapping
 
-| DE-9 Pin | AVR Pin | Function | Notes |
-|----------|---------|----------|-------|
-| 1 | PD0 | RXD0 / GPIO | UART RX for IC232TTL; GPIO for mice/joystick |
-| 2 | PD1 | TXD0 / GPIO | UART TX for IC232TTL; GPIO for mice/joystick |
-| 3 | PD2 | GPIO | |
-| 4 | PD3 | GPIO | |
-| 5 | PD4 | GPIO | |
-| 6 | PD5 | GPIO | |
-| 7 | — | +5V | Hardwired, no AVR pin |
-| 8 | — | GND | Hardwired, no AVR pin |
-| 9 | PD6 | GPIO | |
-| LED | PD7 | GPIO | Status LED, active on prototype |
+| DE-9 Pin | AVR Pin | Function    | Notes                                        |
+|----------|---------|-------------|----------------------------------------------|
+| 1        | PD0     | RXD0 / GPIO | UART RX for IC232TTL; GPIO for mice/joystick |
+| 2        | PD1     | TXD0 / GPIO | UART TX for IC232TTL; GPIO for mice/joystick |
+| 3        | PD2     | GPIO        |                                              |
+| 4        | PD3     | GPIO        |                                              |
+| 5        | PD4     | GPIO        |                                              |
+| 6        | PD5     | GPIO        |                                              |
+| 7        | —       | +5V         | Hardwired, no AVR pin                        |
+| 8        | —       | GND         | Hardwired, no AVR pin                        |
+| 9        | PD6     | GPIO        |                                              |
+| LED      | PD7     | GPIO        | Status LED, active on prototype              |
 
 The UART pins (PD0/PD1) are constrained by AVR hardware to map to Peripheral DE-9 pins 1/2, which conveniently aligns with the IC232TTL's RXD/TXD pins. For mouse and joystick modes, PD0/PD1 are reconfigured as standard GPIO inputs.
 
@@ -65,14 +65,14 @@ When B leads A by 90°: negative direction (left/up)
 
 The SPItFIRE Peripheral port is **male DE-9**. Standard mice and joysticks have female DE-9 plugs and connect directly. The following devices have male DE-9 plugs and require a **female-to-female gender changer**:
 
-| Device | Connector | Gender Changer Required |
-|--------|-----------|------------------------|
-| Compact Mouse | Female DE-9 | No - direct connection |
-| Amiga Mouse | Female DE-9 | No - direct connection |
-| Atari Mouse | Female DE-9 | No - direct connection |
-| Atari/Compact Joystick | Female DE-9 | No - direct connection |
-| Microsoft Bus Mouse | Male DE-9 | **Yes - F-F adapter** |
-| StarTech IC232TTL | Male DE-9 | **Yes - F-F adapter** |
+| Device                 | Connector   | Gender Changer Required  |
+|------------------------|-------------|--------------------------|
+| Compact Mouse          | Female DE-9 | No - direct connection   |
+| Amiga Mouse            | Female DE-9 | No - direct connection   |
+| Atari Mouse            | Female DE-9 | No - direct connection   |
+| Atari/Compact Joystick | Female DE-9 | No - direct connection   |
+| Microsoft Bus Mouse    | Male DE-9   | **Yes - F-F adapter**    |
+| StarTech IC232TTL      | Male DE-9   | **Yes - F-F adapter**    |
 
 ## Device-Specific Notes
 
@@ -189,20 +189,20 @@ since only one device is connected at a time.
 
 ### Adapter Wiring
 
-| IDC Pin | VIA | Mouse | Trackerball | DE-9 Pin | Compact Signal |
-|---------|-----|-------|-------------|----------|----------------|
-|  2  | CB1 |  XA   | XA          | 5    | XA (Xaxis) |
-|  4  | CB2 |  YA   | YB          | 9    | YA (Yaxis) |
-|  6  | PB0 |  XB   | LB          | 1    | XB (Xdir)  |
-|  8  | PB1 |       | MB          | 3    | Middle Btn |
-| 10  | PB2 |  YB   | RB          | 4    | YB (Ydir)  |
-| 12  | PB3 |       | XB          | 6    | Left Btn   |
-| 14  | PB4 |       | YA          | 2    | Right Btn  |
-| 16  | PB5 |  LB   |             | 6    | Left Btn   |
-| 18  | PB6 |  MB   |             | 3    | Middle Btn |
-| 20  | PB7 |  RB   |             | 2    | Right Btn  |
-| 1/3 |     | +5V   | +5V         | 7    | +5V        |
-| odd |     | GND   | GND         | 8    | 0V         |
+| IDC Pin | VIA | Mouse | Trackerball | DE-9 Pin | Compact Signal | AVR Pin |
+|---------|-----|-------|-------------|----------|----------------|---------|
+|  2      | CB1 |  XA   | XA          | 5        | XA (Xaxis)     | PD4     |
+|  4      | CB2 |  YA   | YB          | 9        | YA (Yaxis)     | PD6     |
+|  6      | PB0 |  XB   | LB          | 1        | XB (Xdir)      | PD0     |
+|  8      | PB1 |       | MB          | 3        | Middle Btn     | PD2     |
+| 10      | PB2 |  YB   | RB          | 4        | YB (Ydir)      | PD3     |
+| 12      | PB3 |       | XB          | 6        | Left Btn       | PD5     |
+| 14      | PB4 |       | YA          | 2        | Right Btn      | PD1     |
+| 16      | PB5 |  LB   |             | 6        | Left Btn       | PD5     |
+| 18      | PB6 |  MB   |             | 3        | Middle Btn     | PD2     |
+| 20      | PB7 |  RB   |             | 2        | Right Btn      | PD1     |
+| 1/3     |     | +5V   | +5V         | 7        | +5V            | —       |
+| odd     |     | GND   | GND         | 8        | 0V             | —       |
 
 Merged connections (wire both IDC pins to the same DE-9 pin):
 - DE-9 pin 2: IDC pins 14 + 20
@@ -223,27 +223,27 @@ the mouse, so they float harmlessly on the merged DE-9 lines.
 When a Marconi RB2 trackerball is connected via the adapter, SPItFIRE sees:
 
 | DE-9 Pin | AVR Pin | Trackerball Signal |
-|----------|---------|-------------------|
-| 1 | PD0 | LB |
-| 2 | PD1 | YA |
-| 3 | PD2 | MB |
-| 4 | PD3 | RB |
-| 5 | PD4 | XA |
-| 6 | PD5 | XB |
-| 9 | PD6 | YB |
+|----------|---------|--------------------|
+| 1        | PD0     | LB                 |
+| 2        | PD1     | YA                 |
+| 3        | PD2     | MB                 |
+| 4        | PD3     | RB                 |
+| 5        | PD4     | XA                 |
+| 6        | PD5     | XB                 |
+| 9        | PD6     | YB                 |
 
 This requires a dedicated "User Port Trackerball" firmware mode. No additional
 mode is needed for the AMX Mouse since it appears identical to a Compact Mouse.
 
 ### Firmware Modes Summary
 
-| Mode | Device | Source |
-|------|--------|--------|
-| Compact Mouse | Master Compact Mouse (DE-9) | Direct |
-| Compact Mouse | AMX Mouse (via adapter) | Via adapter |
-| Amiga Mouse | Amiga Mouse (DE-9) | Direct |
-| Atari Mouse | Atari ST Mouse (DE-9) | Direct |
-| Bus Mouse | Microsoft Bus Mouse (DE-9) | Direct |
-| Joystick | Switched joystick (DE-9) | Direct |
-| **User Port Trackerball** | **Marconi RB2 (via adapter)** | **Via adapter** |
-| Serial | IC232TTL (DE-9) | Direct |
+| Mode                  | Device                      | Source      |
+|-----------------------|-----------------------------|-------------|
+| Compact Mouse         | Master Compact Mouse (DE-9) | Direct      |
+| Compact Mouse         | AMX Mouse (via adapter)     | Via adapter |
+| Amiga Mouse           | Amiga Mouse (DE-9)          | Direct      |
+| Atari Mouse           | Atari ST Mouse (DE-9)       | Direct      |
+| Bus Mouse             | Microsoft Bus Mouse (DE-9)  | Direct      |
+| Joystick              | Switched joystick (DE-9)    | Direct      |
+| User Port Trackerball | Marconi RB2 (via adapter)   | Via adapter |
+| Serial                | IC232TTL (DE-9)             | Direct      |

@@ -168,39 +168,82 @@ to individually service all ten User Port pins.
 
 ## User Port to DE-9 Adapter
 
-A small adapter PCB can convert User Port mice and trackerballs to SPItFIRE's
-Peripheral DE-9. The adapter merges signals from both device types onto the
-seven available DE-9 signal pins, since only one device is connected at a time.
+A small adapter PCB can convert User Port mice and trackerballs for use with
+SPItFIRE's Peripheral DE-9. The adapter uses the **Master Compact Mouse pinout**
+on the DE-9 end, which gives it dual-purpose capability:
 
-**Note:** This adapter is SPItFIRE-specific. It cannot be used to connect User
-Port devices directly to the Master Compact's mouse port due to pinout conflicts.
+- **AMX Mouse (and compatibles):** Works with SPItFIRE (Compact Mouse mode)
+  **and** directly with the Master Compact's mouse port (no SPItFIRE required).
+- **Marconi RB2 Trackerball:** Works with SPItFIRE only (requires dedicated
+  trackerball firmware mode). Not directly compatible with the Master Compact
+  due to pinout differences.
+
+The adapter merges signals from both device types onto seven DE-9 signal pins,
+since only one device is connected at a time.
 
 ### Adapter Connectors
 
 - **Input:** Female 20-way (2x10) IDC shrouded header (accepts User Port cable)
-- **Output:** Male DE-9 (plugs into SPItFIRE Peripheral DE-9)
+- **Output:** Male DE-9 (plugs into SPItFIRE Peripheral DE-9 or Master Compact
+  Mouse/Joystick port)
 
 ### Adapter Wiring
 
-| IDC Pin | VIA | Mouse | Trackerball | DE-9 Pin |
-|---------|-----|-------|-------------|----------|
-|  2  | CB1 |  XA   | XA          | 1    |
-|  4  | CB2 |  YA   | YB          | 2    |
-|  6  | PB0 |  XB   | LB          | 3    |
-|  8  | PB1 |       | MB          | 4    |
-| 10  | PB2 |  YB   | RB          | 5    |
-| 12  | PB3 |       | XB          | 6    |
-| 14  | PB4 |       | YA          | 9    |
-| 16  | PB5 |  LB   |             | 4    |
-| 18  | PB6 |  MB   |             | 6    |
-| 20  | PB7 |  RB   |             | 9    |
-| 1/3 |     | +5V   | +5V         | 7    |
-| odd |     | GND   | GND         | 8    |
+| IDC Pin | VIA | Mouse | Trackerball | DE-9 Pin | Compact Signal |
+|---------|-----|-------|-------------|----------|----------------|
+|  2  | CB1 |  XA   | XA          | 5    | XA (Xaxis) |
+|  4  | CB2 |  YA   | YB          | 9    | YA (Yaxis) |
+|  6  | PB0 |  XB   | LB          | 1    | XB (Xdir)  |
+|  8  | PB1 |       | MB          | 3    | Middle Btn |
+| 10  | PB2 |  YB   | RB          | 4    | YB (Ydir)  |
+| 12  | PB3 |       | XB          | 6    | Left Btn   |
+| 14  | PB4 |       | YA          | 2    | Right Btn  |
+| 16  | PB5 |  LB   |             | 6    | Left Btn   |
+| 18  | PB6 |  MB   |             | 3    | Middle Btn |
+| 20  | PB7 |  RB   |             | 2    | Right Btn  |
+| 1/3 |     | +5V   | +5V         | 7    | +5V        |
+| odd |     | GND   | GND         | 8    | 0V         |
 
-Merged connections (directly wire both IDC pins to the same DE-9 pin):
-- DE-9 pin 4: IDC pins 8 + 16
-- DE-9 pin 6: IDC pins 12 + 18
-- DE-9 pin 9: IDC pins 14 + 20
+Merged connections (wire both IDC pins to the same DE-9 pin):
+- DE-9 pin 2: IDC pins 14 + 20
+- DE-9 pin 3: IDC pins 8 + 18
+- DE-9 pin 6: IDC pins 12 + 16
 
 This works because the unused pins on each device are physically unconnected
 inside the peripheral, so no signal conflict occurs.
+
+### Why AMX Mouse Works Directly with the Master Compact
+
+The AMX Mouse signals map exactly to the Master Compact Mouse pinout through
+the adapter. The trackerball-only IDC pins (8, 12, 14) are not connected inside
+the mouse, so they float harmlessly on the merged DE-9 lines.
+
+### Trackerball via SPItFIRE
+
+When a Marconi RB2 trackerball is connected via the adapter, SPItFIRE sees:
+
+| DE-9 Pin | AVR Pin | Trackerball Signal |
+|----------|---------|-------------------|
+| 1 | PD0 | LB |
+| 2 | PD1 | YA |
+| 3 | PD2 | MB |
+| 4 | PD3 | RB |
+| 5 | PD4 | XA |
+| 6 | PD5 | XB |
+| 9 | PD6 | YB |
+
+This requires a dedicated "User Port Trackerball" firmware mode. No additional
+mode is needed for the AMX Mouse since it appears identical to a Compact Mouse.
+
+### Firmware Modes Summary
+
+| Mode | Device | Source |
+|------|--------|--------|
+| Compact Mouse | Master Compact Mouse (DE-9) | Direct |
+| Compact Mouse | AMX Mouse (via adapter) | Via adapter |
+| Amiga Mouse | Amiga Mouse (DE-9) | Direct |
+| Atari Mouse | Atari ST Mouse (DE-9) | Direct |
+| Bus Mouse | Microsoft Bus Mouse (DE-9) | Direct |
+| Joystick | Switched joystick (DE-9) | Direct |
+| **User Port Trackerball** | **Marconi RB2 (via adapter)** | **Via adapter** |
+| Serial | IC232TTL (DE-9) | Direct |

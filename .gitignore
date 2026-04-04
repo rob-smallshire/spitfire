@@ -25,6 +25,9 @@ cmake-build-*/
 *.swo
 *~
 
+# Python
+__pycache__/
+
 # macOS
 .DS_Store
 

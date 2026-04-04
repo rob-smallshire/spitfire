@@ -30,6 +30,7 @@ file(GLOB_RECURSE SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
 )
 list(FILTER SOURCES EXCLUDE REGEX ".*spi_slave\\.cpp$")
+list(FILTER SOURCES EXCLUDE REGEX ".*mouse\\.cpp$")
 
 # Create executable
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -196,4 +197,63 @@ add_custom_target(upload_spitest
         -U flash:w:spitest.hex:i
     DEPENDS spitest
     COMMENT "Uploading spitest.hex to ${AVR_MCU}"
+)
+
+# =============================================================================
+# Mouse Firmware - quadrature mouse decoder with SPI reporting
+# =============================================================================
+
+add_executable(spimouse
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/mouse.cpp
+)
+
+target_include_directories(spimouse PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_compile_definitions(spimouse PRIVATE
+    F_CPU=${AVR_MCU_SPEED}
+)
+
+target_compile_options(spimouse PRIVATE
+    -mmcu=${AVR_MCU}
+    -fpack-struct
+    -fshort-enums
+    -funsigned-char
+    -funsigned-bitfields
+    -ffunction-sections
+    -fdata-sections
+    -Wall
+    -Wextra
+    -Werror
+    -pedantic
+    -std=c++17
+    -fno-exceptions
+    -fno-rtti
+    $<$<CONFIG:Release>:-Os>
+    $<$<CONFIG:Debug>:-Og -g -gdwarf-3>
+)
+
+target_link_options(spimouse PRIVATE
+    -mmcu=${AVR_MCU}
+    -Wl,--gc-sections
+    -Wl,-Map,spimouse.map
+)
+
+set_target_properties(spimouse PROPERTIES
+    OUTPUT_NAME spimouse
+    SUFFIX ".elf"
+)
+
+add_custom_command(TARGET spimouse POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O ihex -R .eeprom $<TARGET_FILE:spimouse> spimouse.hex
+    COMMAND ${CMAKE_SIZE} --mcu=${AVR_MCU} -C $<TARGET_FILE:spimouse>
+    COMMENT "Generating spimouse.hex"
+)
+
+add_custom_target(upload_spimouse
+    COMMAND avrdude -c ${AVR_PROGRAMMER} -p m1284p ${AVRDUDE_OPTIONS}
+        -U flash:w:spimouse.hex:i
+    DEPENDS spimouse
+    COMMENT "Uploading spimouse.hex to ${AVR_MCU}"
 )

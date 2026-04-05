@@ -45,6 +45,7 @@ _autosave-*
 *-save.kicad_pcb
 *.000
 *.tmp
+.history/
 \#auto_saved_files\#
 
 # Lock files

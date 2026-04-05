@@ -23,31 +23,31 @@ This naming convention is used consistently throughout the documentation:
 
 The Host DE-9 connects to the BBC Master Compact's Mouse/Joystick port, which exposes User VIA pins:
 
-| DE-9 Pin | VIA Signal | SPI Function | Direction |
-|----------|------------|--------------|-----------|
-| 1 | PB3 | Decoder A1 | Output |
-| 2 | PB2 | Decoder A0 | Output |
-| 3 | PB1 | SCK | Output |
-| 4 | PB4 | Decoder A2 | Output |
-| 5 | CB1 | SCK | Input (wire to pin 3) |
-| 6 | PB0 | MOSI | Output |
-| 7 | +5V | Power | - |
-| 8 | 0V | GND | - |
-| 9 | CB2 | MISO | Input |
+| DE-9 Pin | VIA Signal | SPI Function | Direction             |
+|----------|------------|--------------|-----------------------|
+| 1        | PB3        | Decoder A1   | Output                |
+| 2        | PB2        | Decoder A0   | Output                |
+| 3        | PB1        | SCK          | Output                |
+| 4        | PB4        | Decoder A2   | Output                |
+| 5        | CB1        | SCK          | Input (wire to pin 3) |
+| 6        | PB0        | MOSI         | Output                |
+| 7        | +5V        | Power        | -                     |
+| 8        | 0V         | GND          | -                     |
+| 9        | CB2        | MISO         | Input                 |
 
 ## SPI Signal Assignment
 
 Following MMFS conventions for MOSI, SCK, and MISO:
 
-| VIA Pin | SPI Function | Notes |
-|---------|--------------|-------|
-| PB0 | MOSI | Data to slave (same as MMFS) |
-| PB1 | SCK | Clock, wired to CB1 (same as MMFS) |
-| PB2 | Decoder A0 | Device select bit 0 |
-| PB3 | Decoder A1 | Device select bit 1 |
-| PB4 | Decoder A2 | Device select bit 2 |
-| CB1 | SCK | Wired to PB1 for shift register clock |
-| CB2 | MISO | Data from slave (same as MMFS) |
+| VIA Pin | SPI Function | Notes                                 |
+|---------|--------------|---------------------------------------|
+| PB0     | MOSI         | Data to slave (same as MMFS)          |
+| PB1     | SCK          | Clock, wired to CB1 (same as MMFS)    |
+| PB2     | Decoder A0   | Device select bit 0                   |
+| PB3     | Decoder A1   | Device select bit 1                   |
+| PB4     | Decoder A2   | Device select bit 2                   |
+| CB1     | SCK          | Wired to PB1 for shift register clock |
+| CB2     | MISO         | Data from slave (same as MMFS)        |
 
 ## Multi-Device SPI Bus
 

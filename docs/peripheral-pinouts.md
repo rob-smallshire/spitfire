@@ -30,17 +30,17 @@ The UART pins (PD0/PD1) are constrained by AVR hardware to map to Peripheral DE-
 
 ## Pinout Table
 
-| Pin | Compact Mouse | Joystick | Amiga Mouse | Atari Mouse | MS Bus Mouse | IC232TTL |
-|-----|---------------|----------|-------------|-------------|--------------|----------|
-| 1   | XB            | Up       | YA          | XB          | NC           | RXD      |
-| 2   | Right Btn     | Down     | XA          | XA          | XA           | TXD      |
-| 3   | Middle Btn    | Left     | YB          | YA          | XB           | NC       |
-| 4   | YB            | Right    | XB          | YB          | YA           | NC       |
-| 5   | XA            | NC       | Middle Btn  | NC          | YB           | 0V       |
-| 6   | Left Btn      | Fire     | Left Btn    | Left Btn    | Button 1     | NC*      |
-| 7   | +5V           | NC       | +5V         | +5V         | (B3)*        | NC       |
-| 8   | 0V            | 0V       | 0V          | 0V          | Button 2     | NC       |
-| 9   | YA            | NC       | Right Btn   | Right Btn   | 0V           | NC       |
+| Pin | AVR Pin | Compact Mouse | Joystick | Amiga Mouse | Atari Mouse | MS Bus Mouse | IC232TTL |
+|-----|---------|---------------|----------|-------------|-------------|--------------|----------|
+| 1   | PD0     | XB            | Up       | YB          | XB          | NC           | RXD      |
+| 2   | PD1     | Right Btn     | Down     | XA          | XA          | XA           | TXD      |
+| 3   | PD2     | Middle Btn    | Left     | YA          | YA          | XB           | NC       |
+| 4   | PD3     | YB            | Right    | XB          | YB          | YA           | NC       |
+| 5   | PD4     | XA            | NC       | Middle Btn  | NC          | YB           | 0V       |
+| 6   | PD5     | Left Btn      | Fire     | Left Btn    | Left Btn    | Button 1     | NC*      |
+| 7   | —       | +5V           | NC       | +5V         | +5V         | (B3)*        | NC       |
+| 8   | —       | 0V            | 0V       | 0V          | 0V          | Button 2     | NC       |
+| 9   | PD6     | YA            | NC       | Right Btn   | Right Btn   | 0V           | NC       |
 
 **Notes:**
 - NC* = Pin 6 on IC232TTL is a 5V *output* (device powered from RS232 side). Configure as Hi-Z.
@@ -85,7 +85,7 @@ Reference: [mdfs.net BBC Mouse](https://mdfs.net/Info/Comp/BBC/Mouse/)
 ### Amiga Mouse
 
 The Amiga uses V-pulse/VQ-pulse (vertical) and H-pulse/HQ-pulse (horizontal) naming:
-- V-pulse = YA, VQ-pulse = YB
+- V-pulse = YB, VQ-pulse = YA
 - H-pulse = XA, HQ-pulse = XB
 
 Pin 5 supports middle button/scroll wheel on three-button mice.
@@ -120,9 +120,9 @@ The key difference between Amiga and Atari mice is the quadrature signal routing
 
 | Pin | Amiga | Atari |
 |-----|-------|-------|
-| 1   | YA    | XB    |
+| 1   | YB    | XB    |
 | 2   | XA    | XA    |
-| 3   | YB    | YA    |
+| 3   | YA    | YA    |
 | 4   | XB    | YB    |
 
 Pins 1, 3, and 4 differ. This is why mice with an "Amiga/Atari" switch exist.

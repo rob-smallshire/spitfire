@@ -47,7 +47,7 @@ table is copied to SRAM for fast ISR access. Switching mouse type is a one-time
 | Mode | XA | XB | YA | YB | Left | Right | Middle |
 |------|----|----|----|----|------|-------|--------|
 | Compact Mouse | PD4 | PD0 | PD6 | PD3 | PD5 | PD1 | PD2 |
-| Amiga Mouse | PD1 | PD3 | PD0 | PD2 | PD5 | PD6 | PD4 |
+| Amiga Mouse | PD1 | PD3 | PD2 | PD0 | PD5 | PD6 | PD4 |
 | Atari Mouse | PD1 | PD0 | PD2 | PD3 | PD5 | PD6 | n/a |
 | Bus Mouse | PD1 | PD2 | PD3 | PD4 | PD5 | n/a | n/a |
 | Trackerball (adapter) | PD4 | PD5 | PD1 | PD6 | PD0 | PD3 | PD2 |

@@ -179,7 +179,7 @@ int main() {
 
             case CMD_MODE_AMIGA:
                 load_quadrature_mode(remap_amiga, btn_remap_amiga,
-                                     PD1, PD3, PD0, PD2);
+                                     PD1, PD3, PD2, PD0);
                 response = 0x02;
                 break;
 

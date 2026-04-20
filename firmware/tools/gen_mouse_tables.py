@@ -43,9 +43,9 @@ PINOUTS = [
     # XA/YA are pulse signals (from CB1/CB2), XB/YB are direction signals
     MousePinout("compact", xa=4, xb=0, ya=6, yb=3, left=5, right=1, middle=2),
 
-    # Amiga Mouse (true quadrature): Pin1=YA, Pin2=XA, Pin3=YB, Pin4=XB,
+    # Amiga Mouse (true quadrature): Pin1=YB, Pin2=XA, Pin3=YA, Pin4=XB,
     #   Pin5=MiddleBtn, Pin6=LeftBtn, Pin9=RightBtn
-    MousePinout("amiga", xa=1, xb=3, ya=0, yb=2, left=5, right=6, middle=4,
+    MousePinout("amiga", xa=1, xb=3, ya=2, yb=0, left=5, right=6, middle=4,
                 quadrature=True),
 
     # Atari Mouse (true quadrature): Pin1=XB, Pin2=XA, Pin3=YA, Pin4=YB,

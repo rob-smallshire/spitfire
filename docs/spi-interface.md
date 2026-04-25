@@ -61,9 +61,9 @@ A 74HC138 3-to-8 decoder expands three VIA pins into seven chip select lines. Th
                         A0 ─┤1      16├─ VCC
                         A1 ─┤2      15├─ Y0 (unconnected - no device)
                         A2 ─┤3      14├─ Y1 → [1kΩ] → AVR PB4 (SS)
-                       ~G2A─┤4      13├─ Y2 (unassigned)
-                       ~G2B─┤5      12├─ Y3 (unassigned)
-                        G1 ─┤6      11├─ Y4 (unassigned)
+                       ~G0 ─┤4      13├─ Y2 (unassigned)
+                       ~G1 ─┤5      12├─ Y3 (unassigned)
+                        G2 ─┤6      11├─ Y4 (unassigned)
                         Y7 ─┤7      10├─ Y5 (unassigned)
                        GND ─┤8       9├─ Y6 (unassigned)
                             └─────────┘
@@ -72,9 +72,9 @@ A 74HC138 3-to-8 decoder expands three VIA pins into seven chip select lines. Th
 ### Decoder Enable Configuration
 
 The enable pins are hard-wired so one output is always active:
-- G1 = VCC (active high enable)
-- ~G2A = GND (active low enable)
-- ~G2B = GND (active low enable)
+- G2 (pin 6) = VCC (active high enable)
+- ~G0 (pin 4) = GND (active low enable)
+- ~G1 (pin 5) = GND (active low enable)
 
 ### Full System Wiring
 
@@ -174,9 +174,9 @@ Pin 8 (GND)      ─────────────────────
 74HC138 power and enable:
   Pin 16 (VCC) ── +5V
   Pin 8 (GND)  ── GND
-  Pin 6 (G1)   ── +5V (enable)
-  Pin 4 (~G2A) ── GND (enable)
-  Pin 5 (~G2B) ── GND (enable)
+  Pin 6 (G2)   ── +5V (enable)
+  Pin 4 (~G0)  ── GND (enable)
+  Pin 5 (~G1)  ── GND (enable)
 ```
 
 | Connection | From | To | Notes |

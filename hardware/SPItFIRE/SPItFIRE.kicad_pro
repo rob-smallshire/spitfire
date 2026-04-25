@@ -36,7 +36,12 @@
     "equivalence_files": []
   },
   "erc": {
-    "erc_exclusions": [],
+    "erc_exclusions": [
+      [
+        "power_pin_not_driven|952500|482600|bad2883a-7d93-4966-b9c0-e608d36e970e|00000000-0000-0000-0000-000000000000|/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df|/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df|",
+        "Correct"
+      ]
+    ],
     "meta": {
       "version": 0
     },
@@ -312,7 +317,7 @@
     "page_layout_descr_file": ""
   },
   "schematic": {
-    "annotate_start_num": 0,
+    "annotate_start_num": 300,
     "annotation": {
       "method": 0,
       "sort_order": 1
@@ -437,7 +442,7 @@
         "uuid": "148e0ceb-efca-48fe-9d35-9803ba402dc8"
       }
     ],
-    "used_designators": "J14",
+    "used_designators": "#FLG301-303,R1-6,J1-14,J101,J201,J301,3BT_SW10M_LEFT1,3BT_RV_Y_LEFT1,L1,D1-2,#PWR1-22,#PWR301-302,C1-10,3BT_SW10R_LEFT1,U1-2,Y1,3BS_J301,14B_SW10L1,14B_SW10L101,14B_J101,14B_SW10M1,14B_SW10M101,14B_SW10R1,14B_SW10R101,3BS_RV_X1,3BS_RV_Y1,3BS_SW13L1,3BS_SW13R1,3BT_SW10L_LEFT1,3BT_RV_X_LEFT1,3BT_SW10L_RIGHT1,3BT_RV_X_RIGHT1,3BT_SW10M_RIGHT1,3BT_SW10M_RIGHT201,3BT_RV_Y_RIGHT1,14B_SW101-111,3BT_SW10R_RIGHT1,RV_X101,RV_Y101,RV101-102,RV201-204,RV301-302,SW101-114,SW201-206,SW301-303",
     "variants": []
   },
   "sheets": [

@@ -1116,7 +1116,7 @@
 	)
 	(text "AGND"
 		(exclude_from_sim no)
-		(at 84.074 156.718 0)
+		(at 78.994 156.464 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1138,7 +1138,7 @@
 	)
 	(text "CH2"
 		(exclude_from_sim no)
-		(at 84.328 112.014 0)
+		(at 79.248 111.76 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1161,7 +1161,7 @@
 	)
 	(text "VREF"
 		(exclude_from_sim no)
-		(at 84.582 100.838 0)
+		(at 79.502 100.584 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1173,7 +1173,7 @@
 	)
 	(text "VREF"
 		(exclude_from_sim no)
-		(at 84.836 137.414 0)
+		(at 79.756 137.16 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1185,7 +1185,7 @@
 	)
 	(text "0V"
 		(exclude_from_sim no)
-		(at 84.328 94.234 0)
+		(at 79.248 93.98 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1208,7 +1208,7 @@
 	)
 	(text "CH0"
 		(exclude_from_sim no)
-		(at 84.328 150.368 0)
+		(at 79.248 150.114 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1231,7 +1231,7 @@
 	)
 	(text "OV"
 		(exclude_from_sim no)
-		(at 85.598 81.788 0)
+		(at 80.518 81.534 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1264,7 +1264,7 @@
 	)
 	(text "CH3"
 		(exclude_from_sim no)
-		(at 84.582 105.664 0)
+		(at 79.502 105.41 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1320,7 +1320,7 @@
 	)
 	(text "0V"
 		(exclude_from_sim no)
-		(at 84.582 131.064 0)
+		(at 79.502 130.81 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1332,7 +1332,7 @@
 	)
 	(text "PB0"
 		(exclude_from_sim no)
-		(at 84.582 124.714 0)
+		(at 79.502 124.46 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1355,7 +1355,7 @@
 	)
 	(text "CH1"
 		(exclude_from_sim no)
-		(at 84.582 143.764 0)
+		(at 79.502 143.51 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1378,7 +1378,7 @@
 	)
 	(text "PB1"
 		(exclude_from_sim no)
-		(at 85.344 87.884 0)
+		(at 80.264 87.63 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1390,7 +1390,7 @@
 	)
 	(text "AGND"
 		(exclude_from_sim no)
-		(at 84.836 118.11 0)
+		(at 79.756 117.856 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1433,7 +1433,7 @@
 	)
 	(text "LPSTB"
 		(exclude_from_sim no)
-		(at 85.344 75.184 0)
+		(at 80.264 74.93 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1478,7 +1478,7 @@
 	)
 	(text "+5V"
 		(exclude_from_sim no)
-		(at 85.09 68.834 0)
+		(at 80.01 68.58 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1551,6 +1551,30 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "f8883fe1-633d-4c43-8fd2-06a21d160ed4")
+	)
+	(no_connect
+		(at 86.36 101.6)
+		(uuid "169cf359-0d33-40d9-8ee6-e91d151a95ae")
+	)
+	(no_connect
+		(at 86.36 69.85)
+		(uuid "268a5215-d6b8-4a82-9f1e-01162c817fc0")
+	)
+	(no_connect
+		(at 86.36 76.2)
+		(uuid "4f946986-747f-4b49-8756-7cd0c972f106")
+	)
+	(no_connect
+		(at 86.36 132.08)
+		(uuid "7af60ba7-dcd2-44a5-ae83-ad40f0f537fd")
+	)
+	(no_connect
+		(at 86.36 82.55)
+		(uuid "a2d4c300-64a4-4899-a218-d6042700140a")
+	)
+	(no_connect
+		(at 86.36 119.38)
+		(uuid "db7a0ed6-f68b-446d-94e7-6ae492a3cfae")
 	)
 	(wire
 		(pts
@@ -2342,203 +2366,185 @@
 		)
 		(uuid "fbbf4e5b-6575-4af1-8d5a-e3a47c9e6a60")
 	)
-	(hierarchical_label "COL1"
-		(shape output)
-		(at 86.36 95.25 0)
+	(label "X_RIGHT"
+		(at 173.99 119.38 270)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right bottom)
 		)
-		(uuid "02131956-d61a-44a7-be26-815a018c373a")
+		(uuid "0f8c1244-9357-4045-92d3-36a8339be3ac")
 	)
-	(hierarchical_label "X_LEFT"
-		(shape output)
-		(at 166.37 119.38 90)
+	(label "X_RIGHT"
+		(at 86.36 113.03 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right bottom)
 		)
-		(uuid "243e8b10-c8b8-4070-9a3e-b77d2a1da7b4")
+		(uuid "1227f124-4174-4bfe-b3cc-9d679f968d52")
 	)
-	(hierarchical_label "COL1"
-		(shape input)
-		(at 189.23 63.5 90)
+	(label "Y_LEFT"
+		(at 86.36 144.78 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right bottom)
 		)
-		(uuid "2cbbf802-12bf-48ac-bdb0-8ff6e57b4804")
+		(uuid "493569cf-34e5-496e-8d79-536a670462d1")
 	)
-	(hierarchical_label "VREF"
-		(shape passive)
-		(at 181.61 120.65 90)
+	(label "Y_LEFT"
+		(at 132.08 160.02 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify left bottom)
 		)
-		(uuid "34b6d357-710f-4828-be38-35d0e3316505")
+		(uuid "4ed37fb4-be0a-4429-a600-f6393a848d35")
 	)
-	(hierarchical_label "X_RIGHT"
-		(shape output)
-		(at 173.99 119.38 90)
+	(label "ROW3"
+		(at 140.97 105.41 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify left bottom)
 		)
-		(uuid "3ba06698-2261-49d0-9a6d-cb8be5f10dec")
+		(uuid "526e99d3-7d6f-4c53-8261-59a4b369c43a")
 	)
-	(hierarchical_label "X_RIGHT"
-		(shape input)
-		(at 86.36 113.03 0)
+	(label "COL1"
+		(at 189.23 63.5 270)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right bottom)
 		)
-		(uuid "49d5e81d-98ab-4dea-b4ea-8f65e2e84bcf")
+		(uuid "5cdb1673-585a-456a-bbe3-3f84f7dc97b2")
 	)
-	(hierarchical_label "VREF"
-		(shape passive)
-		(at 86.36 138.43 0)
+	(label "AGND"
+		(at 86.36 157.48 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right bottom)
 		)
-		(uuid "8650c854-b94c-4575-bde7-3ca5f1abc70f")
+		(uuid "6cc7a36b-3716-4a2b-9023-aa662db057fd")
 	)
-	(hierarchical_label "ROW3"
-		(shape output)
-		(at 140.97 105.41 180)
+	(label "X_LEFT"
+		(at 166.37 119.38 270)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right)
+			(justify right bottom)
 		)
-		(uuid "a2daac6b-60b2-48e2-92aa-7dffa439173d")
+		(uuid "77f5aeac-df2b-41fc-99f5-95dc210dc4f7")
 	)
-	(hierarchical_label "Y_LEFT"
-		(shape input)
-		(at 86.36 144.78 0)
+	(label "ROW4"
+		(at 140.97 87.63 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify left bottom)
 		)
-		(uuid "a382ef76-9718-40a8-a0ff-b71a8d24b300")
+		(uuid "7f856d91-88a0-40e6-b4e7-8bf500b6e640")
 	)
-	(hierarchical_label "Y_RIGHT"
-		(shape output)
-		(at 132.08 149.86 180)
+	(label "X_LEFT"
+		(at 86.36 151.13 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right)
+			(justify right bottom)
 		)
-		(uuid "a507f5d5-a697-458a-96f3-9e4cb2be7433")
+		(uuid "855fa054-5226-4237-b765-874c77bfd6aa")
 	)
-	(hierarchical_label "ROW4"
-		(shape output)
-		(at 140.97 87.63 180)
+	(label "VREF"
+		(at 86.36 138.43 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right)
+			(justify right bottom)
 		)
-		(uuid "a5b27230-35dc-4bf6-97d1-39260df6d416")
+		(uuid "902dcf4a-7e66-402f-ad88-173089f84f62")
 	)
-	(hierarchical_label "X_LEFT"
-		(shape input)
-		(at 86.36 151.13 0)
+	(label "Y_RIGHT"
+		(at 132.08 149.86 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify left bottom)
 		)
-		(uuid "b4026fdf-1868-4519-9e61-cf426445921a")
+		(uuid "956c803b-3fa8-4be2-9e97-d1c71dd78160")
 	)
-	(hierarchical_label "AGND"
-		(shape passive)
-		(at 158.75 119.38 90)
+	(label "COL1"
+		(at 86.36 95.25 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right bottom)
 		)
-		(uuid "b9a3f5a4-d03b-4e39-a366-e345ebd0d2a0")
+		(uuid "965edc2d-1ac6-46f3-9780-25b082bcf476")
 	)
-	(hierarchical_label "Y_RIGHT"
-		(shape input)
-		(at 86.36 106.68 0)
+	(label "Y_RIGHT"
+		(at 86.36 106.68 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right bottom)
 		)
-		(uuid "bb26c3ea-d9fa-4c1a-95e0-0ddb8b7272b1")
+		(uuid "a1538426-4c01-44b6-8683-c55cb79c8e2b")
 	)
-	(hierarchical_label "AGND"
-		(shape passive)
-		(at 86.36 157.48 0)
+	(label "AGND"
+		(at 158.75 119.38 270)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right bottom)
 		)
-		(uuid "bb91b130-ebca-4a67-913d-d39b58e9d308")
+		(uuid "b10503c8-90d5-4cf3-87dc-79a1c9f2ea47")
 	)
-	(hierarchical_label "Y_LEFT"
-		(shape passive)
-		(at 132.08 160.02 180)
+	(label "ROW3"
+		(at 86.36 88.9 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right)
+			(justify right bottom)
 		)
-		(uuid "c4819f2a-570f-49dd-ade2-96a3a2d9219e")
+		(uuid "d4595ed9-5b6b-457e-b0f9-3da6ca3422ae")
 	)
-	(hierarchical_label "ROW4"
-		(shape input)
-		(at 86.36 125.73 0)
+	(label "ROW4"
+		(at 86.36 125.73 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right bottom)
 		)
-		(uuid "cec64ace-700c-4bfe-9791-05183b33742f")
+		(uuid "de52cba0-33e3-4605-bee5-b3372b5d4219")
 	)
-	(hierarchical_label "ROW3"
-		(shape input)
-		(at 86.36 88.9 0)
+	(label "VREF"
+		(at 181.61 120.65 270)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left)
+			(justify right bottom)
 		)
-		(uuid "eb0a5fdf-12a2-48c7-9f5f-99f15e144f24")
+		(uuid "df352419-084d-4dad-b693-bc3eaa89baf2")
 	)
 	(symbol
 		(lib_id "Connector:DA15_Pins")
@@ -2552,7 +2558,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "10ba72e3-04f2-4208-9626-8bcfd22c608b")
-		(property "Reference" "3BS_J1"
+		(property "Reference" "J301"
 			(at 57.4675 87.63 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2653,7 +2659,7 @@
 		(instances
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/1cc94f17-3819-4fc0-9e35-99596cc7197b"
-					(reference "3BS_J1")
+					(reference "J301")
 					(unit 1)
 				)
 			)
@@ -2677,8 +2683,8 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "604b6637-390c-4e39-a5d8-9aaf350fdabe")
-		(property "Reference" "3BS_RV_Y"
-			(at 141.986 150.114 0)
+		(property "Reference" "RV302"
+			(at 154.178 153.162 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2744,7 +2750,7 @@
 		(instances
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/1cc94f17-3819-4fc0-9e35-99596cc7197b"
-					(reference "3BS_RV_Y")
+					(reference "RV302")
 					(unit 1)
 				)
 			)
@@ -2768,7 +2774,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "8677acb2-44a0-471d-b5ea-6eccaa4906be")
-		(property "Reference" "3BS_SW13L"
+		(property "Reference" "SW301"
 			(at 159.766 78.486 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2778,9 +2784,8 @@
 				)
 			)
 		)
-		(property "Value" "SW_Push_45deg"
-			(at 163.83 77.47 0)
-			(hide yes)
+		(property "Value" "13L"
+			(at 166.116 84.836 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2831,7 +2836,7 @@
 		(instances
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/1cc94f17-3819-4fc0-9e35-99596cc7197b"
-					(reference "3BS_SW13L")
+					(reference "SW301")
 					(unit 1)
 				)
 			)
@@ -2855,8 +2860,8 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a2c565f9-e053-44df-8466-b00ffdff2fdf")
-		(property "Reference" "3BS_RV_X"
-			(at 174.498 138.43 90)
+		(property "Reference" "RV301"
+			(at 173.482 138.43 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2922,7 +2927,7 @@
 		(instances
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/1cc94f17-3819-4fc0-9e35-99596cc7197b"
-					(reference "3BS_RV_X")
+					(reference "RV301")
 					(unit 1)
 				)
 			)
@@ -2946,7 +2951,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "b6d7b49d-57f0-48db-9cf7-4ae7282132b0")
-		(property "Reference" "3BS_SW10"
+		(property "Reference" "SW303"
 			(at 180.086 96.266 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2956,9 +2961,8 @@
 				)
 			)
 		)
-		(property "Value" "SW_Push_45deg"
-			(at 184.15 95.25 0)
-			(hide yes)
+		(property "Value" "SW10"
+			(at 187.706 102.616 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -3009,7 +3013,7 @@
 		(instances
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/1cc94f17-3819-4fc0-9e35-99596cc7197b"
-					(reference "3BS_SW10")
+					(reference "SW303")
 					(unit 1)
 				)
 			)
@@ -3033,7 +3037,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f7706d43-75f7-40bc-9149-e9c9db86b86f")
-		(property "Reference" "3BS_SW13R"
+		(property "Reference" "SW302"
 			(at 201.676 78.486 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3043,9 +3047,8 @@
 				)
 			)
 		)
-		(property "Value" "SW_Push_45deg"
-			(at 205.74 77.47 0)
-			(hide yes)
+		(property "Value" "13R"
+			(at 208.026 84.836 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -3096,7 +3099,7 @@
 		(instances
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/1cc94f17-3819-4fc0-9e35-99596cc7197b"
-					(reference "3BS_SW13R")
+					(reference "SW302")
 					(unit 1)
 				)
 			)

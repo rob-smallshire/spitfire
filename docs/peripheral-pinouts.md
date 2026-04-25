@@ -127,6 +127,14 @@ The key difference between Amiga and Atari mice is the quadrature signal routing
 
 Pins 1 and 4 differ. This is why mice with an "Amiga/Atari" switch exist.
 
+**Note on MDFS pinout labelling:** The Amiga and Atari mouse pinouts shown on
+[mdfs.net](https://mdfs.net/Info/Comp/BBC/Mouse/) have the Y-axis signal
+designations (YA/YB) reversed with respect to native Amiga and Atari
+conventions. The MDFS assignments are correct for BBC Micro use - the Y-axis
+labels are swapped to make the mouse coordinate system handedness match BBC
+Micro software conventions. The X-axis labels are not affected. The pinout
+table in this document uses the native Amiga/Atari conventions, not the
+MDFS/BBC-adapted labelling.
 
 # BBC Micro User Port Connector
 

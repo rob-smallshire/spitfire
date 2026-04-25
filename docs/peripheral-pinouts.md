@@ -125,7 +125,7 @@ The key difference between Amiga and Atari mice is the quadrature signal routing
 | 3   | YA    | YA    |
 | 4   | XB    | YB    |
 
-Pins 1, 3, and 4 differ. This is why mice with an "Amiga/Atari" switch exist.
+Pins 1 and 4 differ. This is why mice with an "Amiga/Atari" switch exist.
 
 
 # BBC Micro User Port Connector

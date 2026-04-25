@@ -81,34 +81,48 @@ Two universal 256-byte tables (`dx_table`, `dy_table`) in PROGMEM decode
 both axes simultaneously. The index is `(prev_state << 4) | curr_state`
 where each state is the 4-bit packed nibble from the remap table.
 
-The 4x4 decode table per axis:
+The 4x4 decode table per axis (numerical index order):
 
 ```
-         curr: 00  01  11  10
-prev 00:    0  +1   0  -1
-     01:   -1   0  +1   0
-     11:    0  -1   0  +1
-     10:   +1   0  -1   0
+         curr: 00  01  10  11
+prev 00:    0  +1  -1   0
+     01:   -1   0   0  +1
+     10:   +1   0   0  -1
+     11:    0  -1  +1   0
 ```
+
+Note: the columns and rows must be in numerical order (00, 01, 10, 11), not
+Gray code order (00, 01, 11, 10), since the table is indexed numerically
+by `(prev << 2) | curr`.
 
 Invalid transitions (skipped states) return 0, providing natural debouncing.
 
 ### ISR Implementation
 
 ```cpp
-ISR(PCINT2_vect) {
-    uint8_t raw = PIND & 0x7F;            // Mask off PD7 (LED)
-    uint8_t curr = remap[raw];             // SRAM lookup: pins → nibble
+ISR(PCINT3_vect) {
+    uint8_t curr = remap[PIND & 0x7F];     // SRAM lookup: pins → nibble
     uint8_t idx = (prev_state << 4) | curr;
-    dx_accum += (int8_t)pgm_read_byte(&dx_table[idx]);  // PROGMEM
-    dy_accum += (int8_t)pgm_read_byte(&dy_table[idx]);  // PROGMEM
+    dx_accum += (int8_t)pgm_read_byte(&dx_table_ptr[idx]);  // PROGMEM
+    dy_accum += (int8_t)pgm_read_byte(&dy_table_ptr[idx]);  // PROGMEM
     prev_state = curr;
-    buttons = btn_remap[raw];              // SRAM lookup: pins → buttons
 }
 ```
 
-The ISR fires on any edge change on PD0-PD6 (PCINT2 vector, PCMSK2 = 0x7F).
-At 18.432 MHz, this executes in approximately 2-3 us.
+Buttons are read directly from PIND in the SPI command handler, not in the ISR.
+
+**Important:** Port D on the ATMega1284P uses PCINT24-PCINT31, which is the
+**PCINT3** group (PCMSK3/PCIE3/PCINT3_vect), NOT PCINT2 as one might assume
+from the port letter. The mapping is:
+
+| PCINT Group | Register | Vector | Port |
+|-------------|----------|--------|------|
+| PCINT0 | PCMSK0 | PCINT0_vect | Port B |
+| PCINT1 | PCMSK1 | PCINT1_vect | Port C |
+| PCINT2 | PCMSK2 | PCINT2_vect | Port A |
+| PCINT3 | PCMSK3 | PCINT3_vect | Port D |
+
+At 18.432 MHz, the ISR executes in approximately 2-3 us.
 
 ## Accumulator Model (Drain-on-Read)
 
@@ -159,6 +173,13 @@ Uses existing commands from [protocol.md](protocol.md):
 | MOUSE_X | 0x30 | int8 | Clamped dX, drains accumulator |
 | MOUSE_Y | 0x31 | int8 | Clamped dY, drains accumulator |
 | MOUSE_BTN | 0x32 | uint8 | Button state (bit0=L, bit1=R, bit2=M) |
+| MODE_AMX | 0xF1 | 0x01 | Switch to AMX/Compact pinout |
+| MODE_AMIGA | 0xF2 | 0x02 | Switch to Amiga pinout |
+| MODE_ATARI | 0xF3 | 0x03 | Switch to Atari pinout |
+
+Mode switching loads the appropriate remap and button tables from flash to
+SRAM and reconfigures the PCINT3 mask for the new quadrature pin assignments.
+Accumulators are reset on mode change.
 
 ### Transaction Sequence
 

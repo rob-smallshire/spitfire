@@ -35,6 +35,11 @@ CMD_MOUSE_X   = &30
 CMD_MOUSE_Y   = &31
 CMD_MOUSE_BTN = &32
 
+; SPI config commands
+CMD_MODE_AMX   = &F1
+CMD_MODE_AMIGA = &F2
+CMD_MODE_ATARI = &F3
+
 ; OS calls
 OSWRCH = &FFEE
 OSNEWL = &FFE7
@@ -52,6 +57,7 @@ total_y_lo  = &76           ; 16-bit accumulated Y (signed)
 total_y_hi  = &77
 display_cnt = &78           ; Down-counter for display update
 last_time   = &79           ; Last centisecond tick (low byte)
+mouse_mode  = &7A           ; Current mode (1=AMX, 2=Amiga, 3=Atari)
 
 .start
     JSR init_via
@@ -67,6 +73,9 @@ last_time   = &79           ; Last centisecond tick (low byte)
 
     ; Accumulate deltas into totals
     JSR accumulate
+
+    ; Check for mode switch keys (1/2/3)
+    JSR check_keys
 
     ; Display update every 10th poll (10 Hz)
     DEC display_cnt
@@ -89,7 +98,7 @@ last_time   = &79           ; Last centisecond tick (low byte)
     ; Move cursor below display area
     LDA #31 : JSR OSWRCH
     LDA #0  : JSR OSWRCH
-    LDA #10 : JSR OSWRCH
+    LDA #12 : JSR OSWRCH
     JSR OSNEWL
     RTS
 
@@ -108,6 +117,8 @@ last_time   = &79           ; Last centisecond tick (low byte)
     STA display_cnt
     LDA #0
     STA last_time
+    LDA #1
+    STA mouse_mode          ; Default: AMX
     RTS
 
 .init_display
@@ -241,13 +252,64 @@ last_time   = &79           ; Last centisecond tick (low byte)
     STA total_y_hi
     RTS
 
+; ------ Key Handling ------
+
+; Check for mode switch keys 1/2/3
+.check_keys
+    LDA #&81                ; OSBYTE 129 = INKEY
+    LDX #0                  ; Timeout low = 0
+    LDY #0                  ; Timeout high = 0 (non-blocking)
+    JSR OSBYTE
+    BCS no_key              ; Carry set = no key available
+    CPX #'1'
+    BEQ set_mode_amx
+    CPX #'2'
+    BEQ set_mode_amiga
+    CPX #'3'
+    BEQ set_mode_atari
+.no_key
+    RTS
+
+.set_mode_amx
+    LDA #CMD_MODE_AMX
+    LDX #1
+    BNE send_mode           ; Always branches
+.set_mode_amiga
+    LDA #CMD_MODE_AMIGA
+    LDX #2
+    BNE send_mode
+.set_mode_atari
+    LDA #CMD_MODE_ATARI
+    LDX #3
+
+.send_mode
+    STX mouse_mode
+    PHA                     ; Save command
+    ; Reset totals on mode switch
+    LDX #0
+    STX total_x_lo
+    STX total_x_hi
+    STX total_y_lo
+    STX total_y_hi
+    ; Send mode command to AVR
+    JSR select_device
+    PLA                     ; Restore command
+    JSR spi_transfer        ; Send command
+    LDA #&00
+    JSR spi_transfer        ; Send dummy, receive confirmation
+    JSR deselect_device
+    ; Force display update
+    LDA #1
+    STA display_cnt
+    RTS
+
 ; ------ Display ------
 
 .update_display
-    ; Row 2: Delta values
+    ; Row 3: Delta values
     LDA #31 : JSR OSWRCH
     LDA #0  : JSR OSWRCH
-    LDA #2  : JSR OSWRCH
+    LDA #3  : JSR OSWRCH
 
     LDX #0
 .print_dx_label
@@ -278,10 +340,10 @@ last_time   = &79           ; Last centisecond tick (low byte)
     JSR OSWRCH
     JSR OSWRCH
 
-    ; Row 4: Accumulated totals
+    ; Row 5: Accumulated totals
     LDA #31 : JSR OSWRCH
     LDA #0  : JSR OSWRCH
-    LDA #4  : JSR OSWRCH
+    LDA #5  : JSR OSWRCH
 
     LDX #0
 .print_tx_label
@@ -313,10 +375,44 @@ last_time   = &79           ; Last centisecond tick (low byte)
     LDA total_y_lo
     JSR print_hex_byte
 
-    ; Row 6: Buttons
+    ; Row 6: Mode
     LDA #31 : JSR OSWRCH
     LDA #0  : JSR OSWRCH
     LDA #6  : JSR OSWRCH
+
+    LDX #0
+.print_mode_label
+    LDA mode_label, X
+    BEQ print_mode_val
+    JSR OSWRCH
+    INX
+    BNE print_mode_label
+.print_mode_val
+    LDA mouse_mode
+    CMP #1 : BNE not_mode_1
+    LDX #0 : BEQ print_mode_name   ; Always branches
+.not_mode_1
+    CMP #2 : BNE not_mode_2
+    LDX #4 : BNE print_mode_name
+.not_mode_2
+    LDX #10
+.print_mode_name
+    LDA mode_names, X
+    BEQ mode_name_done
+    JSR OSWRCH
+    INX
+    BNE print_mode_name
+.mode_name_done
+    ; Pad with spaces
+    LDA #' '
+    JSR OSWRCH
+    JSR OSWRCH
+    JSR OSWRCH
+
+    ; Row 8: Buttons
+    LDA #31 : JSR OSWRCH
+    LDA #0  : JSR OSWRCH
+    LDA #8  : JSR OSWRCH
 
     LDX #0
 .print_btn_label
@@ -340,19 +436,6 @@ last_time   = &79           ; Last centisecond tick (low byte)
     LDA #' '
     JSR OSWRCH
 
-    ; Right button (bit 1)
-    LDA mouse_btn
-    AND #&02
-    BEQ btn_r_off
-    LDA #'R'
-    JMP btn_r_done
-.btn_r_off
-    LDA #'-'
-.btn_r_done
-    JSR OSWRCH
-    LDA #' '
-    JSR OSWRCH
-
     ; Middle button (bit 2)
     LDA mouse_btn
     AND #&04
@@ -362,6 +445,19 @@ last_time   = &79           ; Last centisecond tick (low byte)
 .btn_m_off
     LDA #'-'
 .btn_m_done
+    JSR OSWRCH
+    LDA #' '
+    JSR OSWRCH
+
+    ; Right button (bit 1)
+    LDA mouse_btn
+    AND #&02
+    BEQ btn_r_off
+    LDA #'R'
+    JMP btn_r_done
+.btn_r_off
+    LDA #'-'
+.btn_r_done
     JSR OSWRCH
     LDA #' '
     JSR OSWRCH
@@ -486,7 +582,8 @@ last_time   = &79           ; Last centisecond tick (low byte)
 ; ------ String Data ------
 
 .header_msg
-    EQUS "SPItFIRE Mouse Test", 13, 10, 0
+    EQUS "SPItFIRE Mouse Test", 13, 10
+    EQUS "1=AMX  2=Amiga  3=Atari", 13, 10, 0
 
 .dx_label
     EQUS "dX=", 0
@@ -499,6 +596,14 @@ last_time   = &79           ; Last centisecond tick (low byte)
 
 .ty_label
     EQUS "Y=", 0
+
+.mode_label
+    EQUS "Mode: ", 0
+
+.mode_names
+    EQUS "AMX", 0           ; offset 0 (mode 1)
+    EQUS "Amiga", 0         ; offset 4 (mode 2)
+    EQUS "Atari", 0         ; offset 10 (mode 3)
 
 .btn_label
     EQUS "Buttons: ", 0

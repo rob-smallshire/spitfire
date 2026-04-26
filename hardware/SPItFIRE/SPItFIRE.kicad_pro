@@ -40,6 +40,46 @@
       [
         "power_pin_not_driven|952500|482600|bad2883a-7d93-4966-b9c0-e608d36e970e|00000000-0000-0000-0000-000000000000|/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df|/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df|",
         "Correct"
+      ],
+      [
+        "wire_dangling|1892300|1155700|230fa674-bb32-4a23-ae54-fb1651ff0956|31016e07-c2a1-4c5d-ab3a-3a2a3ace5bbb|/148e0ceb-efca-48fe-9d35-9803ba402dc8/845d2646-4b7e-4131-baf5-32413a5be084||",
+        "Connects unused matrix positions"
+      ],
+      [
+        "wire_dangling|1993900|1257300|d11dbedf-14a7-419c-9793-e9d79a935efb|8d7f33f6-3059-46a7-8fe9-82fd9c355a72|/148e0ceb-efca-48fe-9d35-9803ba402dc8/845d2646-4b7e-4131-baf5-32413a5be084||",
+        "Connects unused matrix positions"
+      ],
+      [
+        "wire_dangling|2019300|1054100|0e62fae8-9367-494b-a648-cdc7205b2ce7|06e45b0b-0202-4224-86af-8e3f9f5bee9e|/148e0ceb-efca-48fe-9d35-9803ba402dc8/845d2646-4b7e-4131-baf5-32413a5be084||",
+        "Connects unused matrix positions"
+      ],
+      [
+        "wire_dangling|2019300|1409700|363e4bbd-d2fb-4cf0-8192-08563b2e221c|d81b69e4-a0ee-4693-85db-ceed354f62ba|/148e0ceb-efca-48fe-9d35-9803ba402dc8/845d2646-4b7e-4131-baf5-32413a5be084||",
+        "Connects unused matrix positions"
+      ],
+      [
+        "wire_dangling|2311400|1155700|2ccfdf78-64d3-4963-a27e-85838fcd4129|316b3b20-b0ca-464c-935c-0362eecc401f|/148e0ceb-efca-48fe-9d35-9803ba402dc8/845d2646-4b7e-4131-baf5-32413a5be084||",
+        "Connects unused matrix positions"
+      ],
+      [
+        "wire_dangling|2984500|774700|09a11ee3-114f-4a2b-90b9-21c6909cd063|246b2b0a-da84-4467-9612-24f96f0f5c06|/148e0ceb-efca-48fe-9d35-9803ba402dc8/845d2646-4b7e-4131-baf5-32413a5be084||",
+        "Connects unused matrix positions"
+      ],
+      [
+        "wire_dangling|3086100|1409700|3d31cf9b-35de-461f-8e3c-1fcded0d9486|19617d4f-093e-48b7-b7e4-1161ca768a55|/148e0ceb-efca-48fe-9d35-9803ba402dc8/845d2646-4b7e-4131-baf5-32413a5be084||",
+        "Connects unused matrix positions"
+      ],
+      [
+        "wire_dangling|3327400|1028700|0b818bc2-99ed-41d6-a416-e864c1556129|16bd39d4-7d19-4bbb-acf4-a2cc8838cb59|/148e0ceb-efca-48fe-9d35-9803ba402dc8/845d2646-4b7e-4131-baf5-32413a5be084||",
+        "Connects unused matrix positions"
+      ],
+      [
+        "wire_dangling|3327400|1206500|3c992ae3-d385-4f86-8eda-2fc9d090479c|fac7cc16-4b39-4c6a-96f7-f6745355c3bb|/148e0ceb-efca-48fe-9d35-9803ba402dc8/845d2646-4b7e-4131-baf5-32413a5be084||",
+        "Connects unused matrix positions"
+      ],
+      [
+        "wire_dangling|3378200|1333500|2bde383e-1785-480f-a0bf-c68133a0c72e|32665473-2660-47c0-9bff-ae73db9caac6|/148e0ceb-efca-48fe-9d35-9803ba402dc8/845d2646-4b7e-4131-baf5-32413a5be084||",
+        "Connects unused matrix positions"
       ]
     ],
     "meta": {

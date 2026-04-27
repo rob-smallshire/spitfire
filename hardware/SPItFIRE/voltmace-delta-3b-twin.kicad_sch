@@ -1623,6 +1623,12 @@
 		(uuid "1d5513a4-7ed5-4914-8eb1-a22b179149b7")
 	)
 	(junction
+		(at 288.29 140.97)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "1f66e8e9-7895-425f-af47-30416b361c5f")
+	)
+	(junction
 		(at 199.39 90.17)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1777,12 +1783,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "aa90eb85-4e1a-40ef-810b-7ddd92ce65d0")
-	)
-	(junction
-		(at 288.29 140.97)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "bb6c0793-4f08-4a61-a1d5-60137553fda8")
 	)
 	(junction
 		(at 209.55 115.57)
@@ -4053,42 +4053,42 @@
 		(uuid "fe322ff6-74f7-47cd-8aee-60abfe9a55ce")
 	)
 	(label "AGND_RIGHT"
-		(at 106.68 104.14 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "0a863c89-16e7-432e-b7f5-0255ce99943c")
-	)
-	(label "ROW3_RIGHT"
-		(at 270.51 87.63 0)
+		(at 106.68 104.14 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "1063368e-a290-40d7-ad4f-38dc3e721347")
+		(uuid "0a863c89-16e7-432e-b7f5-0255ce99943c")
 	)
-	(label "AGND_LEFT"
-		(at 106.68 142.24 180)
+	(label "ROW3_RIGHT"
+		(at 270.51 87.63 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify right bottom)
 		)
-		(uuid "3ad22c71-9300-4c39-a6b8-48c759b47daa")
+		(uuid "1063368e-a290-40d7-ad4f-38dc3e721347")
 	)
-	(label "VREF"
-		(at 209.55 171.45 270)
+	(label "AGND_LEFT"
+		(at 106.68 142.24 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
+		)
+		(uuid "3ad22c71-9300-4c39-a6b8-48c759b47daa")
+	)
+	(label "VREF"
+		(at 209.55 171.45 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
 		)
 		(uuid "5e46bb2c-2995-4924-ab4c-6188ae462861")
 	)
@@ -4103,192 +4103,192 @@
 		(uuid "7accb466-b764-4d85-9dd8-6e73c6fad8a9")
 	)
 	(label "X_LEFT"
-		(at 106.68 135.89 180)
+		(at 106.68 135.89 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "7b1b5664-9256-45ff-a060-53bf4d978c45")
 	)
 	(label "X_RIGHT"
-		(at 106.68 97.79 180)
+		(at 106.68 97.79 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "7b21c3c2-4248-468b-a778-e6da70093460")
 	)
 	(label "VREF_LEFT"
-		(at 106.68 123.19 180)
+		(at 106.68 123.19 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "85a43642-35c0-46c6-869e-9cc5ca33b643")
 	)
 	(label "ROW3_LEFT"
-		(at 161.29 90.17 0)
+		(at 161.29 90.17 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left bottom)
+			(justify right bottom)
 		)
 		(uuid "92919347-ec3c-42c9-8863-ada490ffb820")
 	)
 	(label "VREF_RIGHT"
-		(at 106.68 86.36 180)
+		(at 106.68 86.36 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "a25e9f12-2e0e-425f-896b-67f5f848bc5a")
 	)
 	(label "COL1_LEFT"
-		(at 106.68 110.49 180)
+		(at 106.68 110.49 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "a5213bb9-778c-4bb0-8fb4-439d4d73ea8a")
 	)
 	(label "COL1_LEFT"
-		(at 209.55 48.26 270)
+		(at 209.55 48.26 90)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "a59a1c6a-cd03-4ee8-9e95-bef2a27f841d")
 	)
 	(label "ROW3_RIGHT"
-		(at 106.68 80.01 180)
+		(at 106.68 80.01 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "a81f64f1-b126-4cad-b540-994d842b602b")
 	)
 	(label "AGND"
-		(at 186.69 170.18 270)
+		(at 186.69 170.18 90)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "be0260c3-371f-4066-8996-dfaa6219a717")
 	)
 	(label "Y_RIGHT"
-		(at 106.68 91.44 180)
+		(at 106.68 91.44 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "c21fa26e-5306-4387-8b4a-a39253abb4eb")
 	)
 	(label "Y"
-		(at 273.05 203.2 0)
+		(at 273.05 203.2 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left bottom)
+			(justify right bottom)
 		)
 		(uuid "cb93096d-796d-462e-b7d9-19e22100cdb3")
 	)
 	(label "AGND"
-		(at 295.91 167.64 270)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "d61113fd-edee-4086-b753-f9afe7ae4cff")
-	)
-	(label "Y_LEFT"
-		(at 106.68 129.54 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "dcb82a10-b756-492a-8cb0-0875f8e76cd4")
-	)
-	(label "Y"
-		(at 163.83 205.74 0)
+		(at 295.91 167.64 90)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "dcbb87e0-6a66-4804-a45e-a82e9c56a709")
+		(uuid "d61113fd-edee-4086-b753-f9afe7ae4cff")
 	)
-	(label "X"
-		(at 307.34 168.91 270)
+	(label "Y_LEFT"
+		(at 106.68 129.54 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "dcb82a10-b756-492a-8cb0-0875f8e76cd4")
+	)
+	(label "Y"
+		(at 163.83 205.74 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify right bottom)
+		)
+		(uuid "dcbb87e0-6a66-4804-a45e-a82e9c56a709")
+	)
+	(label "X"
+		(at 307.34 168.91 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
 		)
 		(uuid "f572b569-483a-48a2-8bff-03f1de1417f1")
 	)
 	(label "COL1_RIGHT"
-		(at 318.77 45.72 270)
+		(at 318.77 45.72 90)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "f6020697-929b-4991-9d77-bdec758f19fb")
 	)
 	(label "COL1_RIGHT"
-		(at 106.68 73.66 180)
+		(at 106.68 73.66 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "f696c9b7-d602-46a5-b6dd-ac5e54333687")
 	)
 	(label "VREF"
-		(at 318.77 168.91 270)
+		(at 318.77 168.91 90)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "f9713c96-d32a-432e-9b1b-1efb39e47765")
 	)
 	(label "ROW3_LEFT"
-		(at 106.68 116.84 180)
+		(at 106.68 116.84 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "fc3bd7d2-ed3c-4228-b5f2-31ab9c0cc8c0")
 	)
@@ -4361,6 +4361,39 @@
 		)
 		(property "Axis" "X"
 			(at 307.34 184.15 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Device" "R"
+			(at 307.34 184.15 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Type" "POT"
+			(at 307.34 184.15 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Pins" "1=r0 2=wiper 3=r1"
+			(at 307.34 184.15 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -4642,6 +4675,39 @@
 				)
 			)
 		)
+		(property "Sim.Device" "R"
+			(at 180.34 205.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Type" "POT"
+			(at 180.34 205.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Pins" "1=r0 2=wiper 3=r1"
+			(at 180.34 205.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "3"
 			(uuid "507a8d1d-f42c-497b-a76a-2fca819b37c4")
 		)
@@ -4829,6 +4895,39 @@
 				)
 			)
 		)
+		(property "Sim.Device" "R"
+			(at 289.56 203.2 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Type" "POT"
+			(at 289.56 203.2 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Pins" "1=r0 2=wiper 3=r1"
+			(at 289.56 203.2 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "3"
 			(uuid "e46cf251-15a3-4bcf-b9f5-d58cb06cce83")
 		)
@@ -4922,6 +5021,39 @@
 		)
 		(property "Axis" "X"
 			(at 198.12 186.69 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Device" "R"
+			(at 198.12 186.69 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Type" "POT"
+			(at 198.12 186.69 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Pins" "1=r0 2=wiper 3=r1"
+			(at 198.12 186.69 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects

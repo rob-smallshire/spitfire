@@ -1094,7 +1094,7 @@
 	)
 	(text "orange"
 		(exclude_from_sim no)
-		(at 165.354 122.174 90)
+		(at 165.862 119.634 90)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1254,7 +1254,7 @@
 	)
 	(text "black"
 		(exclude_from_sim no)
-		(at 175.26 123.698 90)
+		(at 175.26 122.428 90)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1287,7 +1287,7 @@
 	)
 	(text "light blue"
 		(exclude_from_sim no)
-		(at 182.88 121.92 90)
+		(at 182.88 120.904 90)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1456,7 +1456,7 @@
 	)
 	(text "green"
 		(exclude_from_sim no)
-		(at 157.226 128.27 90)
+		(at 159.766 125.222 90)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1467,7 +1467,7 @@
 	)
 	(text "blue"
 		(exclude_from_sim no)
-		(at 133.858 148.59 0)
+		(at 132.588 151.638 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -1598,7 +1598,7 @@
 	)
 	(wire
 		(pts
-			(xy 64.77 113.03) (xy 86.36 113.03)
+			(xy 64.77 113.03) (xy 87.63 113.03)
 		)
 		(stroke
 			(width 0)
@@ -2118,7 +2118,7 @@
 	)
 	(wire
 		(pts
-			(xy 166.37 128.27) (xy 170.18 128.27)
+			(xy 165.1 128.27) (xy 170.18 128.27)
 		)
 		(stroke
 			(width 0)
@@ -2198,7 +2198,7 @@
 	)
 	(wire
 		(pts
-			(xy 166.37 119.38) (xy 166.37 128.27)
+			(xy 165.1 119.38) (xy 165.1 128.27)
 		)
 		(stroke
 			(width 0)
@@ -2358,7 +2358,7 @@
 	)
 	(wire
 		(pts
-			(xy 72.39 106.68) (xy 86.36 106.68)
+			(xy 72.39 106.68) (xy 87.63 106.68)
 		)
 		(stroke
 			(width 0)
@@ -2367,182 +2367,182 @@
 		(uuid "fbbf4e5b-6575-4af1-8d5a-e3a47c9e6a60")
 	)
 	(label "X_RIGHT"
-		(at 173.99 119.38 270)
+		(at 173.99 119.38 90)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "0f8c1244-9357-4045-92d3-36a8339be3ac")
 	)
 	(label "X_RIGHT"
-		(at 86.36 113.03 180)
+		(at 87.63 113.03 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
-		(uuid "1227f124-4174-4bfe-b3cc-9d679f968d52")
+		(uuid "10015146-89f4-4aa7-9d42-e7c73fd124c7")
 	)
 	(label "Y_LEFT"
-		(at 86.36 144.78 180)
+		(at 86.36 144.78 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "493569cf-34e5-496e-8d79-536a670462d1")
 	)
 	(label "Y_LEFT"
-		(at 132.08 160.02 0)
+		(at 132.08 160.02 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left bottom)
+			(justify right bottom)
 		)
 		(uuid "4ed37fb4-be0a-4429-a600-f6393a848d35")
 	)
 	(label "ROW3"
-		(at 140.97 105.41 0)
+		(at 140.97 105.41 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left bottom)
+			(justify right bottom)
 		)
 		(uuid "526e99d3-7d6f-4c53-8261-59a4b369c43a")
 	)
 	(label "COL1"
-		(at 189.23 63.5 270)
+		(at 189.23 63.5 90)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "5cdb1673-585a-456a-bbe3-3f84f7dc97b2")
 	)
 	(label "AGND"
-		(at 86.36 157.48 180)
+		(at 86.36 157.48 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "6cc7a36b-3716-4a2b-9023-aa662db057fd")
 	)
 	(label "X_LEFT"
-		(at 166.37 119.38 270)
+		(at 165.1 119.38 90)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "77f5aeac-df2b-41fc-99f5-95dc210dc4f7")
 	)
 	(label "ROW4"
-		(at 140.97 87.63 0)
+		(at 140.97 87.63 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left bottom)
+			(justify right bottom)
 		)
 		(uuid "7f856d91-88a0-40e6-b4e7-8bf500b6e640")
 	)
 	(label "X_LEFT"
-		(at 86.36 151.13 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "855fa054-5226-4237-b765-874c77bfd6aa")
-	)
-	(label "VREF"
-		(at 86.36 138.43 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "902dcf4a-7e66-402f-ad88-173089f84f62")
-	)
-	(label "Y_RIGHT"
-		(at 132.08 149.86 0)
+		(at 86.36 151.13 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left bottom)
 		)
-		(uuid "956c803b-3fa8-4be2-9e97-d1c71dd78160")
+		(uuid "855fa054-5226-4237-b765-874c77bfd6aa")
 	)
-	(label "COL1"
-		(at 86.36 95.25 180)
+	(label "VREF"
+		(at 86.36 138.43 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "902dcf4a-7e66-402f-ad88-173089f84f62")
+	)
+	(label "Y_RIGHT"
+		(at 132.08 149.86 180)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify right bottom)
+		)
+		(uuid "956c803b-3fa8-4be2-9e97-d1c71dd78160")
+	)
+	(label "COL1"
+		(at 86.36 95.25 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
 		)
 		(uuid "965edc2d-1ac6-46f3-9780-25b082bcf476")
 	)
 	(label "Y_RIGHT"
-		(at 86.36 106.68 180)
+		(at 87.63 106.68 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "a1538426-4c01-44b6-8683-c55cb79c8e2b")
 	)
 	(label "AGND"
-		(at 158.75 119.38 270)
+		(at 158.75 119.38 90)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "b10503c8-90d5-4cf3-87dc-79a1c9f2ea47")
 	)
 	(label "ROW3"
-		(at 86.36 88.9 180)
+		(at 86.36 88.9 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "d4595ed9-5b6b-457e-b0f9-3da6ca3422ae")
 	)
 	(label "ROW4"
-		(at 86.36 125.73 180)
+		(at 86.36 125.73 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "de52cba0-33e3-4605-bee5-b3372b5d4219")
 	)
 	(label "VREF"
-		(at 181.61 120.65 270)
+		(at 181.61 120.65 90)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "df352419-084d-4dad-b693-bc3eaa89baf2")
 	)
@@ -2738,6 +2738,39 @@
 				)
 			)
 		)
+		(property "Sim.Device" "R"
+			(at 152.4 154.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Type" "POT"
+			(at 152.4 154.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Pins" "1=r0 2=wiper 3=r1"
+			(at 152.4 154.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "3"
 			(uuid "91909f3f-9f40-4bf6-873f-65a89993cdf7")
 		)
@@ -2905,6 +2938,39 @@
 			)
 		)
 		(property "Description" "Potentiometer"
+			(at 170.18 135.89 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Device" "R"
+			(at 170.18 135.89 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Type" "POT"
+			(at 170.18 135.89 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Pins" "1=r0 2=wiper 3=r1"
 			(at 170.18 135.89 0)
 			(hide yes)
 			(show_name no)

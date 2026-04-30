@@ -183,6 +183,42 @@ Note the dual button conventions:
   (= Left/Middle/Right) - this matches the raw IORB layout on a BBC/Master
   with buttons on PB5-PB7
 
+### Coordinate Systems
+
+The mouse driver returns positions in two coordinate systems:
+
+| Coordinate | Units | Range | Origin |
+|------------|-------|-------|--------|
+| Graphics X | Graphics units (GU) | 0-1279 | Bottom-left |
+| Graphics Y | Graphics units (GU) | 0-1023 | Bottom-left |
+| Text X | Character cells | 0-19 (MODE 7), 0-39 (MODE 1/4/5), 0-79 (MODE 0/3/6) | Top-left |
+| Text Y | Character cells | 0-24 (MODE 3/6), 0-31 (others) | Top-left |
+
+Important conventions inherited from BBC Micro / Acorn MOS:
+
+- **Graphics origin is bottom-left**: Y=0 at the bottom of the screen,
+  Y increases upward. This is opposite to many other systems (notably
+  modern displays, X11, Windows, etc. which place origin at top-left).
+- **Text origin is top-left**: text Y=0 at the top, increasing downward.
+- **Mouse Y increment direction**: when the mouse is moved upward (away
+  from the user), graphics Y increases, matching BBC graphics convention.
+- The graphics coordinate system is independent of screen MODE - it is
+  always 1280x1024 GU regardless of the actual pixel resolution. The MOS
+  scales graphics commands appropriately.
+
+The text coordinate ranges depend on the current screen MODE:
+
+| MODE | Text Width | Text Height |
+|------|-----------|-------------|
+| 0 | 80 columns | 32 rows |
+| 1 | 40 columns | 32 rows |
+| 2 | 20 columns | 32 rows |
+| 3 | 80 columns | 25 rows |
+| 4 | 40 columns | 32 rows |
+| 5 | 20 columns | 32 rows |
+| 6 | 40 columns | 25 rows |
+| 7 | 40 columns | 25 rows (teletext) |
+
 ### Standard commands not directly implemented
 The original AMX ROM provided pointer/icon/window helper commands and
 a `*SENSITIVITY sx [,sy]` command. We do not reimplement these in

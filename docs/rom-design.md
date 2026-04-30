@@ -116,13 +116,24 @@ periodic timer event instead of using CB1/CB2 IRQs.
 | `*MOUSE ON` | Enable mouse |
 | `*MOUSE OFF` | Disable mouse |
 | `*HELP MOUSE` | Show help text |
+| `ADVAL(5)` | Mouse X boundary (max X) |
+| `ADVAL(6)` | Mouse Y boundary (max Y) |
 | `ADVAL(7)` | X position (graphics units, 0-1279) |
 | `ADVAL(8)` | Y position (graphics units, 0-1023) |
-| `ADVAL(9)` | Buttons in `%rml` format |
+| `ADVAL(9)` | Buttons (b0=Left, b1=Middle, b2=Right) |
 | `INKEY-10` | Left button (-1 if pressed) |
 | `INKEY-11` | Middle button |
 | `INKEY-12` | Right button |
 | `OSWORD &40` | Full mouse state to user buffer |
+
+References:
+- [BeebWiki OSBYTE &80](https://beebwiki.mdfs.net/OSBYTE_%2680) - ADVAL details
+- ADVAL(9) bit ordering: BeebWiki says "b0=Left, b1=Middle, b2=Right";
+  JGH's `%rml` notation describes the same bits (binary digit positions:
+  r is highest, m middle, l lowest = b2,b1,b0).
+- BeebWiki notes: "Most mouse drivers do not implement calls 5, 6 and 9."
+  We should implement all of them for completeness since the AVR provides
+  the data cheaply.
 
 ### SPItFIRE-specific extensions
 | Command | Description |
@@ -311,6 +322,7 @@ Modules return claim status in A:
 
 ## References
 
+- [BeebWiki OSBYTE &80](https://beebwiki.mdfs.net/OSBYTE_%2680) - ADVAL details
 - [JGH's relocatable modules](https://mdfs.net/Software/BBC/Modules/)
 - [JGH's MouseROM source](https://mdfs.net/Software/CommandSrc/Mouse/ROMMouse.src)
 - [MDFS BBC Mouse documentation](https://mdfs.net/Info/Comp/BBC/Mouse/)

@@ -8069,195 +8069,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:Crystal"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "Y"
-				(at 0 3.81 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "Crystal"
-				(at 0 -3.81 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Two pin crystal"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "quartz ceramic resonator oscillator"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_fp_filters" "Crystal*"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "Crystal_0_1"
-				(polyline
-					(pts
-						(xy -2.54 0) (xy -1.905 0)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy -1.905 -1.27) (xy -1.905 1.27)
-					)
-					(stroke
-						(width 0.508)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.143 2.54)
-					(end 1.143 -2.54)
-					(stroke
-						(width 0.3048)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 1.905 -1.27) (xy 1.905 1.27)
-					)
-					(stroke
-						(width 0.508)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 0) (xy 1.905 0)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "Crystal_1_1"
-				(pin passive line
-					(at -3.81 0 0)
-					(length 1.27)
-					(name "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 3.81 0 180)
-					(length 1.27)
-					(name "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "Device:D"
 			(pin_numbers
 				(hide yes)
@@ -10065,6 +9876,300 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "SPItFIRE:Crystal_GND24"
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "Y"
+				(at 3.175 5.08 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "Crystal_GND24"
+				(at 3.175 3.175 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Four pin crystal, GND on pins 2 and 4"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property private "KLC_S3.3" "The rectangle is not a symbol body but a graphical element"
+				(at 0 -12.7 0)
+				(show_name yes)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property private "KLC_S4.1" "Some pins are on 50mil grid to make the symbol small"
+				(at 0 -15.24 0)
+				(show_name yes)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "quartz ceramic resonator oscillator"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "Crystal*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "Crystal_GND24_0_1"
+				(polyline
+					(pts
+						(xy -2.54 2.286) (xy -2.54 3.556) (xy 2.54 3.556) (xy 2.54 2.286)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 0) (xy -2.032 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 -2.286) (xy -2.54 -3.556) (xy 2.54 -3.556) (xy 2.54 -2.286)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.032 -1.27) (xy -2.032 1.27)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.27 -3.81) (xy -1.27 -3.556)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.143 2.54)
+					(end 1.143 -2.54)
+					(stroke
+						(width 0.3048)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 -3.81) (xy 1.27 -3.556)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.032 0) (xy 2.54 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.032 -1.27) (xy 2.032 1.27)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "Crystal_GND24_1_1"
+				(pin passive line
+					(at -3.81 0 0)
+					(length 1.27)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 1.27 -5.08 90)
+					(length 1.27)
+					(name "G"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 1.27)
+					(name "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -1.27 -5.08 90)
+					(length 1.27)
+					(name "G"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "power:+5V"
 			(power global)
 			(pin_numbers
@@ -11544,6 +11649,12 @@
 		(uuid "64cbd678-e66e-4efd-a078-a68dceecb153")
 	)
 	(junction
+		(at 181.61 177.8)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "6606ec03-d84d-460e-96f7-1e1a978c2b69")
+	)
+	(junction
 		(at 107.95 175.26)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -11602,6 +11713,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "7c1cf171-bf15-48a2-80c1-48e92ab57bf9")
+	)
+	(junction
+		(at 179.07 177.8)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "7c2b9a28-a4e4-4d1c-8dcc-71102b1941fc")
 	)
 	(junction
 		(at 265.43 270.51)
@@ -12073,6 +12190,16 @@
 	)
 	(wire
 		(pts
+			(xy 181.61 177.8) (xy 187.96 177.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0f72d3b7-2f36-40a9-ae50-f02ac1a8b91a")
+	)
+	(wire
+		(pts
 			(xy 184.15 165.1) (xy 187.96 165.1)
 		)
 		(stroke
@@ -12463,7 +12590,7 @@
 	)
 	(wire
 		(pts
-			(xy 172.72 177.8) (xy 180.34 177.8)
+			(xy 172.72 177.8) (xy 179.07 177.8)
 		)
 		(stroke
 			(width 0)
@@ -12620,6 +12747,16 @@
 			(type default)
 		)
 		(uuid "2f72e2a4-ee38-4ff0-8f18-f981b2c36e4a")
+	)
+	(wire
+		(pts
+			(xy 179.07 170.18) (xy 179.07 177.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "30040d2f-4e44-46f4-ba7b-4fd3446e6ec9")
 	)
 	(wire
 		(pts
@@ -13230,6 +13367,16 @@
 			(type default)
 		)
 		(uuid "51e308cc-c0ba-43b6-9085-88653120fefa")
+	)
+	(wire
+		(pts
+			(xy 179.07 177.8) (xy 180.34 177.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "52ed420d-5ea9-42d9-a354-6d0987ae31af")
 	)
 	(wire
 		(pts
@@ -14333,7 +14480,7 @@
 	)
 	(wire
 		(pts
-			(xy 180.34 177.8) (xy 187.96 177.8)
+			(xy 180.34 177.8) (xy 181.61 177.8)
 		)
 		(stroke
 			(width 0)
@@ -14560,6 +14707,16 @@
 			(type default)
 		)
 		(uuid "ae0f4095-681b-4382-bf29-d6bdf9569ed8")
+	)
+	(wire
+		(pts
+			(xy 181.61 170.18) (xy 181.61 177.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b146120b-ac5c-41ed-9fb0-f0682ef8272c")
 	)
 	(wire
 		(pts
@@ -18967,7 +19124,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Vertical"
 			(at 129.54 195.58 0)
 			(hide yes)
 			(show_name no)
@@ -19059,7 +19216,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x10_P2.54mm_Horizontal"
 			(at 25.4 135.89 0)
 			(hide yes)
 			(show_name no)
@@ -19195,7 +19352,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "SPItFIRE:DE9_Male_Horizontal_P2.74x2.84mm_EdgePinOffset10.40mm_Housed_MountingHolesOffset12.5mm_1"
 			(at 374.65 170.18 0)
 			(hide yes)
 			(show_name no)
@@ -19298,7 +19455,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "SPItFIRE:DA15_Female_Horizontal_P2.74x2.84mm_EdgePinOffset10.40mm_Housed_MountingHolesOffset16.66mm"
 			(at 374.65 54.61 0)
 			(hide yes)
 			(show_name no)
@@ -19651,7 +19808,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x10_P2.54mm_Horizontal"
 			(at 374.65 212.09 0)
 			(hide yes)
 			(show_name no)
@@ -19841,10 +19998,9 @@
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "3aeb3100-de91-417b-8463-3619563934a6")
 		(property "Reference" "C2"
-			(at 175.26 170.1862 0)
+			(at 168.148 169.672 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -19855,7 +20011,7 @@
 			)
 		)
 		(property "Value" "C_Small"
-			(at 175.26 172.7262 0)
+			(at 163.068 173.228 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -19947,7 +20103,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Vertical"
 			(at 129.54 234.95 0)
 			(hide yes)
 			(show_name no)
@@ -20461,7 +20617,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "SPItFIRE:DA15_Female_Horizontal_P2.74x2.84mm_EdgePinOffset10.40mm_Housed_MountingHolesOffset16.66mm"
 			(at 374.65 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -20582,7 +20738,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical"
 			(at 129.54 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -21598,7 +21754,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x10_P2.54mm_Vertical"
 			(at 64.77 135.89 0)
 			(hide yes)
 			(show_name no)
@@ -22503,7 +22659,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Vertical"
 			(at 129.54 215.9 0)
 			(hide yes)
 			(show_name no)
@@ -22596,7 +22752,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "SPItFIRE:DE9_Female_Horizontal_P2.74x2.84mm_EdgePinOffset10.40mm_Housed_MountingHolesOffset12.5mm"
 			(at 25.4 88.9 0)
 			(hide yes)
 			(show_name no)
@@ -22903,7 +23059,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:Crystal")
+		(lib_id "SPItFIRE:Crystal_GND24")
 		(at 180.34 165.1 0)
 		(unit 1)
 		(body_style 1)
@@ -22915,7 +23071,7 @@
 		(fields_autoplaced yes)
 		(uuid "c31cb362-2eb8-451a-b396-601beeada7df")
 		(property "Reference" "Y1"
-			(at 180.34 157.48 0)
+			(at 180.34 156.21 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -22925,7 +23081,7 @@
 			)
 		)
 		(property "Value" "Crystal"
-			(at 180.34 160.02 0)
+			(at 180.34 158.75 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -22934,7 +23090,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Crystal:Crystal_SMD_5032-4Pin_5.0x3.2mm"
 			(at 180.34 165.1 0)
 			(hide yes)
 			(show_name no)
@@ -22956,7 +23112,7 @@
 				)
 			)
 		)
-		(property "Description" "Two pin crystal"
+		(property "Description" "Four pin crystal, GND on pins 2 and 4"
 			(at 180.34 165.1 0)
 			(hide yes)
 			(show_name no)
@@ -22972,6 +23128,12 @@
 		)
 		(pin "2"
 			(uuid "42a12ba9-666d-4889-9ff1-e4ace33da5b3")
+		)
+		(pin "4"
+			(uuid "8c0279a7-4a3c-4ca4-b7bc-996cb46cb9dc")
+		)
+		(pin "3"
+			(uuid "02c603ed-a36f-4b95-bd3a-1d705d50cfff")
 		)
 		(instances
 			(project "SPItFIRE"
@@ -23275,7 +23437,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_SO:SOIC-16_3.9x9.9mm_P1.27mm"
 			(at 105.41 45.72 0)
 			(hide yes)
 			(show_name no)
@@ -23399,7 +23561,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x07_P2.54mm_Vertical"
 			(at 129.54 175.26 0)
 			(hide yes)
 			(show_name no)
@@ -23494,7 +23656,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Package_SO:SOIC-16_3.9x9.9mm_P1.27mm"
 			(at 267.97 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -24148,7 +24310,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Vertical"
 			(at 129.54 254 0)
 			(hide yes)
 			(show_name no)

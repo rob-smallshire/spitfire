@@ -1,0 +1,4 @@
+(fp_lib_table
+	(version 7)
+	(lib (name "SPItFIRE") (type "KiCad") (uri "C:/Users/rjs/dev/spitfire/hardware/SPItFIRE") (options "") (descr ""))
+)

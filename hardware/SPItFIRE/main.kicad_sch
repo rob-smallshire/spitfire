@@ -11691,6 +11691,12 @@
 		(uuid "706e19c2-cdc8-44f7-9860-2eafe1f353b5")
 	)
 	(junction
+		(at 275.59 236.22)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "70f6fa40-42f8-4aee-a6cc-4401203ca238")
+	)
+	(junction
 		(at 219.71 270.51)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -13037,6 +13043,16 @@
 			(type default)
 		)
 		(uuid "3c9d9ac3-90e8-4cd8-85af-a19004a9826f")
+	)
+	(wire
+		(pts
+			(xy 275.59 236.22) (xy 287.02 236.22)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3d5fa0a4-85b4-4fbe-bf15-5b5fb37786c9")
 	)
 	(wire
 		(pts
@@ -16188,6 +16204,16 @@
 		)
 		(uuid "d8d4b30c-13b5-4365-98ab-886183609f4e")
 	)
+	(label "AVCC"
+		(at 363.22 64.77 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "e71ba0e4-78b0-46f2-a443-304f5385651c")
+	)
 	(global_label "PD2"
 		(shape bidirectional)
 		(at 325.12 170.18 180)
@@ -16260,7 +16286,7 @@
 			)
 		)
 	)
-	(global_label "VREF"
+	(global_label "AVCC"
 		(shape passive)
 		(at 363.22 114.3 180)
 		(fields_autoplaced yes)
@@ -16272,7 +16298,7 @@
 		)
 		(uuid "07fcacd1-4d58-4889-8efc-e5f3ef40f1b1")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 356.7499 114.3 0)
+			(at 356.6289 114.3 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16452,7 +16478,7 @@
 			)
 		)
 	)
-	(global_label "VREF"
+	(global_label "AVCC"
 		(shape passive)
 		(at 363.22 129.54 180)
 		(fields_autoplaced yes)
@@ -16464,7 +16490,7 @@
 		)
 		(uuid "1a728e6b-aeb4-4525-bab9-223cb7c345ac")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 356.7499 129.54 0)
+			(at 356.6289 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16644,6 +16670,30 @@
 			)
 		)
 	)
+	(global_label "AVCC"
+		(shape passive)
+		(at 287.02 236.22 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "3609e92d-2123-45b3-abfa-9b89d9c0c1c1")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 293.6111 236.22 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+	)
 	(global_label "PC1"
 		(shape bidirectional)
 		(at 231.14 142.24 0)
@@ -16668,7 +16718,7 @@
 			)
 		)
 	)
-	(global_label "VREF"
+	(global_label "AVCC"
 		(shape passive)
 		(at 363.22 64.77 180)
 		(fields_autoplaced yes)
@@ -16680,7 +16730,7 @@
 		)
 		(uuid "420e3f6d-8a2e-4f40-b11a-161be3f02e28")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 356.7499 64.77 0)
+			(at 356.6289 64.77 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17244,7 +17294,7 @@
 			)
 		)
 	)
-	(global_label "VREF"
+	(global_label "AVCC"
 		(shape passive)
 		(at 363.22 49.53 180)
 		(fields_autoplaced yes)
@@ -17256,7 +17306,7 @@
 		)
 		(uuid "90648e04-005c-42a0-9eeb-0dd9d03573ff")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 356.7499 49.53 0)
+			(at 356.6289 49.53 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17364,7 +17414,7 @@
 			)
 		)
 	)
-	(global_label "AGND"
+	(global_label "GND"
 		(shape passive)
 		(at 363.22 72.39 180)
 		(fields_autoplaced yes)
@@ -17376,7 +17426,7 @@
 		)
 		(uuid "9f3b79e0-5a2d-4cf1-988e-970e263531b5")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 356.387 72.39 0)
+			(at 357.4756 72.39 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17964,7 +18014,7 @@
 			)
 		)
 	)
-	(global_label "AGND"
+	(global_label "GND"
 		(shape passive)
 		(at 363.22 137.16 180)
 		(fields_autoplaced yes)
@@ -17976,7 +18026,7 @@
 		)
 		(uuid "e52b2409-f146-4327-b599-e3208cfa6cc0")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 356.387 137.16 0)
+			(at 357.4756 137.16 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18262,7 +18312,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 235.712 186.69 90)
 			(hide yes)
 			(show_name no)
@@ -18420,7 +18470,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Inductor_SMD:L_0805_2012Metric_Pad1.05x1.20mm_HandSolder"
 			(at 256.54 236.22 0)
 			(hide yes)
 			(show_name no)
@@ -18502,7 +18552,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "LED_SMD:LED_0603_1608Metric_Pad1.05x0.95mm_HandSolder"
 			(at 237.49 196.85 0)
 			(hide yes)
 			(show_name no)
@@ -18883,7 +18933,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 287.9852 266.7 0)
 			(hide yes)
 			(show_name no)
@@ -18964,7 +19014,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 266.3952 256.54 0)
 			(hide yes)
 			(show_name no)
@@ -19216,7 +19266,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x10_P2.54mm_Horizontal"
+		(property "Footprint" "Connector_IDC:IDC-Header_2x10_P2.54mm_Latch_Horizontal"
 			(at 25.4 135.89 0)
 			(hide yes)
 			(show_name no)
@@ -19808,7 +19858,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x10_P2.54mm_Horizontal"
+		(property "Footprint" "Connector_IDC:IDC-Header_2x10_P2.54mm_Latch_Horizontal"
 			(at 374.65 212.09 0)
 			(hide yes)
 			(show_name no)
@@ -20021,7 +20071,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0201_0603Metric_Pad0.64x0.40mm_HandSolder"
 			(at 172.72 171.45 0)
 			(hide yes)
 			(show_name no)
@@ -21358,7 +21408,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 234.6452 256.54 0)
 			(hide yes)
 			(show_name no)
@@ -21674,7 +21724,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 147.0152 45.72 0)
 			(hide yes)
 			(show_name no)
@@ -21754,7 +21804,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x10_P2.54mm_Vertical"
+		(property "Footprint" "Connector_IDC:IDC-Header_2x10_P2.54mm_Vertical"
 			(at 64.77 135.89 0)
 			(hide yes)
 			(show_name no)
@@ -21889,7 +21939,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 210.5152 256.54 0)
 			(hide yes)
 			(show_name no)
@@ -22204,7 +22254,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 260.35 100.33 0)
 			(hide yes)
 			(show_name no)
@@ -22495,7 +22545,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 257.81 106.68 0)
 			(hide yes)
 			(show_name no)
@@ -22577,7 +22627,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 185.1152 107.95 0)
 			(hide yes)
 			(show_name no)
@@ -22854,7 +22904,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "LED_SMD:LED_0603_1608Metric_Pad1.05x0.95mm_HandSolder"
 			(at 174.9552 256.54 0)
 			(hide yes)
 			(show_name no)
@@ -23177,7 +23227,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Diode_SMD:D_SOD-123"
 			(at 179.07 83.82 0)
 			(hide yes)
 			(show_name no)
@@ -23656,7 +23706,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SO:SOIC-16_3.9x9.9mm_P1.27mm"
+		(property "Footprint" "Connector_IDC:IDC-Header_2x03_P2.54mm_Vertical"
 			(at 267.97 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -23749,7 +23799,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 252.73 120.65 0)
 			(hide yes)
 			(show_name no)
@@ -23908,7 +23958,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 187.6552 256.54 0)
 			(hide yes)
 			(show_name no)
@@ -23990,7 +24040,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0201_0603Metric_Pad0.64x0.40mm_HandSolder"
 			(at 187.96 171.45 0)
 			(hide yes)
 			(show_name no)
@@ -24228,7 +24278,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 187.452 83.82 90)
 			(hide yes)
 			(show_name no)
@@ -24481,7 +24531,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 255.27 114.3 0)
 			(hide yes)
 			(show_name no)

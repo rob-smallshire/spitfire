@@ -65,7 +65,6 @@ bom/
 out/
 
 # Claude Code
-CLAUDE.md
 CLAUDE.local.md
 .claude/
 beeb/spitest/build/

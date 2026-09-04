@@ -809,7 +809,7 @@
         "uuid": "148e0ceb-efca-48fe-9d35-9803ba402dc8"
       }
     ],
-    "used_designators": "Y301",
+    "used_designators": "Y301,H301-309,#PWR303-308",
     "variants": []
   },
   "sheets": [

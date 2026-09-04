@@ -4233,7 +4233,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Connector:DA15_Socket"
+		(symbol "Connector:DA15_Socket_MountingHoles"
 			(pin_names
 				(offset 1.016)
 				(hide yes)
@@ -4244,7 +4244,7 @@
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "J"
-				(at 0.508 21.59 0)
+				(at 0 24.13 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -4253,8 +4253,8 @@
 					)
 				)
 			)
-			(property "Value" "DA15_Socket"
-				(at 0 -22.225 0)
+			(property "Value" "DA15_Socket_MountingHoles"
+				(at 0 22.225 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -4285,7 +4285,7 @@
 					)
 				)
 			)
-			(property "Description" "15-pin D-SUB connector, socket (female) (low-density/2 columns)"
+			(property "Description" "15-pin D-SUB connector, socket (female) (low-density/2 columns), Mounting Hole"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -4318,7 +4318,7 @@
 					)
 				)
 			)
-			(symbol "DA15_Socket_0_1"
+			(symbol "DA15_Socket_MountingHoles_0_1"
 				(polyline
 					(pts
 						(xy -3.81 20.955) (xy 3.175 17.145) (xy 3.175 -17.145) (xy -3.81 -20.955) (xy -3.81 20.955)
@@ -4677,7 +4677,7 @@
 					)
 				)
 			)
-			(symbol "DA15_Socket_1_1"
+			(symbol "DA15_Socket_MountingHoles_1_1"
 				(pin passive line
 					(at -7.62 17.78 0)
 					(length 3.81)
@@ -4948,10 +4948,28 @@
 						)
 					)
 				)
+				(pin passive line
+					(at 0 -22.86 90)
+					(length 3.81)
+					(name "PAD"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "SH"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Connector:DE9_Pins"
+		(symbol "Connector:DE9_Pins_MountingHoles"
 			(pin_names
 				(offset 1.016)
 				(hide yes)
@@ -4962,7 +4980,7 @@
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "J"
-				(at 0 13.97 0)
+				(at 0 16.51 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -4971,8 +4989,8 @@
 					)
 				)
 			)
-			(property "Value" "DE9_Pins"
-				(at 0 -14.605 0)
+			(property "Value" "DE9_Pins_MountingHoles"
+				(at 0 14.605 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -5003,7 +5021,7 @@
 					)
 				)
 			)
-			(property "Description" "9-pin D-SUB connector, pins (male)"
+			(property "Description" "9-pin D-SUB connector, pins (male), Mounting Hole"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -5036,7 +5054,7 @@
 					)
 				)
 			)
-			(symbol "DE9_Pins_0_1"
+			(symbol "DE9_Pins_MountingHoles_0_1"
 				(polyline
 					(pts
 						(xy -3.81 10.16) (xy -2.54 10.16)
@@ -5257,7 +5275,7 @@
 					)
 				)
 			)
-			(symbol "DE9_Pins_1_1"
+			(symbol "DE9_Pins_MountingHoles_1_1"
 				(pin passive line
 					(at -7.62 -10.16 0)
 					(length 3.81)
@@ -5420,10 +5438,28 @@
 						)
 					)
 				)
+				(pin passive line
+					(at 0 -15.24 90)
+					(length 3.81)
+					(name "PAD"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "SH"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Connector:DE9_Socket"
+		(symbol "Connector:DE9_Socket_MountingHoles"
 			(pin_names
 				(offset 1.016)
 				(hide yes)
@@ -5434,7 +5470,7 @@
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "J"
-				(at 0 13.97 0)
+				(at 0 16.51 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -5443,8 +5479,8 @@
 					)
 				)
 			)
-			(property "Value" "DE9_Socket"
-				(at 0 -14.605 0)
+			(property "Value" "DE9_Socket_MountingHoles"
+				(at 0 14.605 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -5475,7 +5511,7 @@
 					)
 				)
 			)
-			(property "Description" "9-pin D-SUB connector, socket (female)"
+			(property "Description" "9-pin D-SUB connector, socket (female), Mounting Hole"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -5508,7 +5544,7 @@
 					)
 				)
 			)
-			(symbol "DE9_Socket_0_1"
+			(symbol "DE9_Socket_MountingHoles_0_1"
 				(polyline
 					(pts
 						(xy -3.81 13.335) (xy -3.81 -13.335) (xy 3.81 -9.525) (xy 3.81 9.525) (xy -3.81 13.335)
@@ -5729,7 +5765,7 @@
 					)
 				)
 			)
-			(symbol "DE9_Socket_1_1"
+			(symbol "DE9_Socket_MountingHoles_1_1"
 				(pin passive line
 					(at -7.62 10.16 0)
 					(length 3.81)
@@ -5885,6 +5921,24 @@
 						)
 					)
 					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -15.24 90)
+					(length 3.81)
+					(name "PAD"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "SH"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -8917,6 +8971,129 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Mechanical:MountingHole_Pad"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "H"
+				(at 0 6.35 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "MountingHole_Pad"
+				(at 0 4.445 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Mounting Hole with connection"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "mounting hole"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "MountingHole*Pad*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "MountingHole_Pad_0_1"
+				(circle
+					(center 0 1.27)
+					(radius 1.27)
+					(stroke
+						(width 1.27)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "MountingHole_Pad_1_1"
+				(pin input line
+					(at 0 -2.54 90)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "SPItFIRE:ATmega1284P-A"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -11439,6 +11616,12 @@
 		(uuid "0d73364f-5382-4a06-8603-91a6630e196d")
 	)
 	(junction
+		(at 40.64 264.16)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0f34f831-a900-4856-ad4d-b63e3e1d6864")
+	)
+	(junction
 		(at 127 63.5)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -11469,6 +11652,12 @@
 		(uuid "15776265-a423-4886-8b30-60d3057d5420")
 	)
 	(junction
+		(at 374.65 146.05)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "17fe65c2-0864-4528-8bc8-df4975a3c5a0")
+	)
+	(junction
 		(at 92.71 50.8)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -11497,6 +11686,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "2d7a2820-c30e-4f2b-9c6e-c1aaf635e0cc")
+	)
+	(junction
+		(at 44.45 264.16)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "2f4fea09-31b0-46d0-ab75-ba3fac252ae3")
 	)
 	(junction
 		(at 337.82 175.26)
@@ -11533,6 +11728,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "3b82786b-39d2-42be-86c8-5d138653415a")
+	)
+	(junction
+		(at 35.56 264.16)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "40857832-bce9-41db-b1bb-fa89124c2a62")
 	)
 	(junction
 		(at 340.36 170.18)
@@ -11769,6 +11970,12 @@
 		(uuid "9351ed22-914b-4abc-875a-3a7cfacb47f4")
 	)
 	(junction
+		(at 152.4 148.59)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "96424831-8b40-4dc7-8aa3-d5d81459210d")
+	)
+	(junction
 		(at 41.91 128.27)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -11859,6 +12066,12 @@
 		(uuid "bf2b1de0-fe80-4086-ab64-0917b8140151")
 	)
 	(junction
+		(at 142.24 148.59)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "bf39a659-7931-4a33-bcaa-185360c1af11")
+	)
+	(junction
 		(at 172.72 165.1)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -11893,6 +12106,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "c70770ff-b4f5-4c67-8754-8f67f8354876")
+	)
+	(junction
+		(at 148.59 148.59)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c7a2bf80-e2c8-4b42-a94b-1c11a7e057b5")
 	)
 	(junction
 		(at 107.95 190.5)
@@ -12116,6 +12335,16 @@
 	)
 	(wire
 		(pts
+			(xy 374.65 77.47) (xy 374.65 81.28)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "075c598f-273d-4c69-828a-8724591d47ae")
+	)
+	(wire
+		(pts
 			(xy 91.44 153.67) (xy 105.41 153.67)
 		)
 		(stroke
@@ -12163,6 +12392,16 @@
 			(type default)
 		)
 		(uuid "0cfd3b16-687b-4101-81f8-65a041e114d0")
+	)
+	(wire
+		(pts
+			(xy 148.59 148.59) (xy 152.4 148.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0dc6a0b6-0efd-481c-9249-2bfbcdd6d4b6")
 	)
 	(wire
 		(pts
@@ -12243,6 +12482,16 @@
 			(type default)
 		)
 		(uuid "11fa0c27-8d72-4c25-aeed-b069f33151fd")
+	)
+	(wire
+		(pts
+			(xy 25.4 104.14) (xy 25.4 107.95)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "12555d8e-7344-4e8f-a232-fd7d5bf43f5a")
 	)
 	(wire
 		(pts
@@ -12696,6 +12945,16 @@
 	)
 	(wire
 		(pts
+			(xy 374.65 142.24) (xy 374.65 146.05)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2c6bdbaf-1a86-4eb1-b99d-732f02a0e7fc")
+	)
+	(wire
+		(pts
 			(xy 184.15 74.93) (xy 189.23 74.93)
 		)
 		(stroke
@@ -12796,6 +13055,16 @@
 	)
 	(wire
 		(pts
+			(xy 53.34 264.16) (xy 53.34 260.35)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "323321cf-8bb3-4ec3-96af-11979ba3320d")
+	)
+	(wire
+		(pts
 			(xy 255.27 134.62) (xy 262.89 134.62)
 		)
 		(stroke
@@ -12813,6 +13082,16 @@
 			(type default)
 		)
 		(uuid "33ff9d76-1e97-4c94-a1eb-04d2fee275ac")
+	)
+	(wire
+		(pts
+			(xy 152.4 148.59) (xy 154.94 148.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "343a978f-7fd9-4377-9233-9adaf1beba90")
 	)
 	(wire
 		(pts
@@ -12946,6 +13225,16 @@
 	)
 	(wire
 		(pts
+			(xy 40.64 267.97) (xy 40.64 264.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "39bf7b22-e90d-4ba0-9d28-a3dd7a444db2")
+	)
+	(wire
+		(pts
 			(xy 363.22 62.23) (xy 367.03 62.23)
 		)
 		(stroke
@@ -12983,6 +13272,16 @@
 			(type default)
 		)
 		(uuid "3afab6e5-2515-45b3-ae53-c4c71f47758d")
+	)
+	(wire
+		(pts
+			(xy 374.65 185.42) (xy 374.65 187.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3b050cb3-cae9-418d-b308-e6faad1e154e")
 	)
 	(wire
 		(pts
@@ -13073,6 +13372,16 @@
 			(type default)
 		)
 		(uuid "3e7de283-c695-42bd-a511-92941bc3dc54")
+	)
+	(wire
+		(pts
+			(xy 154.94 148.59) (xy 154.94 147.32)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3f5cc0ea-adaf-4d67-bf54-a743677fb455")
 	)
 	(wire
 		(pts
@@ -13716,6 +14025,16 @@
 	)
 	(wire
 		(pts
+			(xy 44.45 260.35) (xy 44.45 264.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "66782d25-618c-4fb7-ae7c-6a99739db8e6")
+	)
+	(wire
+		(pts
 			(xy 54.61 140.97) (xy 57.15 140.97)
 		)
 		(stroke
@@ -13886,6 +14205,16 @@
 	)
 	(wire
 		(pts
+			(xy 35.56 260.35) (xy 35.56 264.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6eb1f52f-183e-4207-aacf-b6d9c1b0aac6")
+	)
+	(wire
+		(pts
 			(xy 233.68 236.22) (xy 243.84 236.22)
 		)
 		(stroke
@@ -13913,6 +14242,16 @@
 			(type default)
 		)
 		(uuid "6f53f103-f30a-46da-8da7-89710c7d1912")
+	)
+	(wire
+		(pts
+			(xy 25.4 260.35) (xy 25.4 264.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6f6b7e81-d9f1-4e23-b9c0-02287ac4e907")
 	)
 	(wire
 		(pts
@@ -13983,6 +14322,16 @@
 			(type default)
 		)
 		(uuid "756fe323-d8dc-427e-888b-b213cf9288e6")
+	)
+	(wire
+		(pts
+			(xy 142.24 148.59) (xy 148.59 148.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "75790225-768d-4056-954e-8260391f1381")
 	)
 	(wire
 		(pts
@@ -14206,6 +14555,16 @@
 	)
 	(wire
 		(pts
+			(xy 35.56 264.16) (xy 40.64 264.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8a3790bf-8adb-4649-8547-c9979ba9e94c")
+	)
+	(wire
+		(pts
 			(xy 105.41 254) (xy 105.41 234.95)
 		)
 		(stroke
@@ -14373,6 +14732,16 @@
 			(type default)
 		)
 		(uuid "9518feda-c788-4329-8527-0344bcfa8e0b")
+	)
+	(wire
+		(pts
+			(xy 135.89 147.32) (xy 135.89 148.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "959c7b04-8629-4b8b-b32e-3dcd7619a3bc")
 	)
 	(wire
 		(pts
@@ -14723,6 +15092,26 @@
 			(type default)
 		)
 		(uuid "ae0f4095-681b-4382-bf29-d6bdf9569ed8")
+	)
+	(wire
+		(pts
+			(xy 44.45 264.16) (xy 53.34 264.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ae1190e4-b8fc-45b5-94a8-37b21a2b0913")
+	)
+	(wire
+		(pts
+			(xy 40.64 264.16) (xy 44.45 264.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "af62cff8-7ba6-44e2-9e75-eb95a3ca960e")
 	)
 	(wire
 		(pts
@@ -15086,6 +15475,16 @@
 	)
 	(wire
 		(pts
+			(xy 135.89 148.59) (xy 142.24 148.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c2401cf7-ba7f-46c1-b15a-dc221196552f")
+	)
+	(wire
+		(pts
 			(xy 105.41 25.4) (xy 127 25.4)
 		)
 		(stroke
@@ -15176,6 +15575,16 @@
 	)
 	(wire
 		(pts
+			(xy 374.65 146.05) (xy 374.65 147.32)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c996b28d-36d4-4899-b901-eaccc35ae523")
+	)
+	(wire
+		(pts
 			(xy 172.72 173.99) (xy 172.72 177.8)
 		)
 		(stroke
@@ -15256,6 +15665,16 @@
 	)
 	(wire
 		(pts
+			(xy 152.4 151.13) (xy 152.4 148.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cda4b3a0-99f8-4883-88a0-f8a3fd443738")
+	)
+	(wire
+		(pts
 			(xy 69.85 133.35) (xy 73.66 133.35)
 		)
 		(stroke
@@ -15263,6 +15682,16 @@
 			(type default)
 		)
 		(uuid "cda79846-d7c0-4386-9488-a2a548cefc16")
+	)
+	(wire
+		(pts
+			(xy 142.24 147.32) (xy 142.24 148.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cf5a9dba-56d0-4efa-b6ce-ac6d89143c13")
 	)
 	(wire
 		(pts
@@ -15566,6 +15995,16 @@
 	)
 	(wire
 		(pts
+			(xy 148.59 147.32) (xy 148.59 148.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "df8cade2-cc2c-4d7e-a231-0e426aef1cbe")
+	)
+	(wire
+		(pts
 			(xy 278.13 134.62) (xy 275.59 134.62)
 		)
 		(stroke
@@ -15713,6 +16152,16 @@
 			(type default)
 		)
 		(uuid "eac670da-2312-4b6a-bb3e-8f9c0b131eab")
+	)
+	(wire
+		(pts
+			(xy 25.4 264.16) (xy 35.56 264.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eb2f8a7a-1643-442e-bdcd-cdd23a77856f")
 	)
 	(wire
 		(pts
@@ -19369,7 +19818,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector:DE9_Pins")
+		(lib_id "Connector:DE9_Pins_MountingHoles")
 		(at 374.65 170.18 0)
 		(unit 1)
 		(body_style 1)
@@ -19424,7 +19873,7 @@
 				)
 			)
 		)
-		(property "Description" "9-pin D-SUB connector, pins (male)"
+		(property "Description" "9-pin D-SUB connector, pins (male), Mounting Hole"
 			(at 374.65 170.18 0)
 			(hide yes)
 			(show_name no)
@@ -19462,6 +19911,9 @@
 		(pin "5"
 			(uuid "11d614db-0d6d-40ee-a922-3c9837d26eec")
 		)
+		(pin "SH"
+			(uuid "3b8a015b-b91e-4723-943e-b12b2346526d")
+		)
 		(instances
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
@@ -19472,7 +19924,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector:DA15_Socket")
+		(lib_id "Connector:DA15_Socket_MountingHoles")
 		(at 374.65 54.61 0)
 		(unit 1)
 		(body_style 1)
@@ -19527,7 +19979,7 @@
 				)
 			)
 		)
-		(property "Description" "15-pin D-SUB connector, socket (female) (low-density/2 columns)"
+		(property "Description" "15-pin D-SUB connector, socket (female) (low-density/2 columns), Mounting Hole"
 			(at 374.65 54.61 0)
 			(hide yes)
 			(show_name no)
@@ -19582,6 +20034,9 @@
 		)
 		(pin "7"
 			(uuid "6faf0c8b-517c-4e30-b2f5-9471a6f2b0a9")
+		)
+		(pin "SH"
+			(uuid "ccd3d5f9-d2a3-4a01-8790-279a6b262b5a")
 		)
 		(instances
 			(project "SPItFIRE"
@@ -19749,6 +20204,84 @@
 		)
 	)
 	(symbol
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 142.24 144.78 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "25ebb4ac-cfbd-4263-9cfc-29e859c57bf6")
+		(property "Reference" "H306"
+			(at 139.7 140.462 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MountingHole_Pad"
+			(at 133.35 135.636 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "MountingHole:MountingHole_2.2mm_M2_DIN965_Pad"
+			(at 142.24 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 142.24 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Mounting Hole with connection"
+			(at 142.24 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "bef6b679-4568-4361-b4f1-40e4459a75ef")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "H306")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:+5V")
 		(at 228.6 231.14 0)
 		(unit 1)
@@ -19821,6 +20354,84 @@
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
 					(reference "#PWR012")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 374.65 146.05 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "2b749795-acf8-465c-aea5-cf090e517258")
+		(property "Reference" "#PWR0305"
+			(at 374.65 152.4 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 374.65 151.13 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 374.65 146.05 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 374.65 146.05 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 374.65 146.05 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "6f1677c0-fedf-488f-b94c-943bda865a57")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "#PWR0305")
 					(unit 1)
 				)
 			)
@@ -19961,6 +20572,84 @@
 		)
 	)
 	(symbol
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 135.89 144.78 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "35a38863-4a82-4c69-92eb-b0473a846504")
+		(property "Reference" "H305"
+			(at 132.842 140.462 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MountingHole_Pad"
+			(at 126.492 137.922 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "MountingHole:MountingHole_2.2mm_M2_DIN965_Pad"
+			(at 135.89 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 135.89 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Mounting Hole with connection"
+			(at 135.89 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "bef6b679-4568-4361-b4f1-40e4459a75ef")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "H305")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 96.52 266.7 0)
 		(unit 1)
@@ -20033,6 +20722,84 @@
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
 					(reference "#PWR05")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 44.45 257.81 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "39ee0152-433a-454c-aeae-ed6856299f89")
+		(property "Reference" "H303"
+			(at 41.91 253.238 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MountingHole_Pad"
+			(at 36.576 250.698 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "MountingHole:MountingHole_2.2mm_M2_DIN965_Pad"
+			(at 44.45 257.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 44.45 257.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Mounting Hole with connection"
+			(at 44.45 257.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "2e8c8ac9-ffaf-4f9f-b92c-74c6dfe41749")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "H303")
 					(unit 1)
 				)
 			)
@@ -20424,6 +21191,84 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GND")
+		(at 374.65 81.28 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "43f983aa-9065-490c-8152-d30309a577d7")
+		(property "Reference" "#PWR0304"
+			(at 374.65 87.63 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 374.65 86.36 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 374.65 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 374.65 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 374.65 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "2e226d5c-77bd-4220-9934-9d177438bd01")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "#PWR0304")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_name "ATmega1284P-A_4")
 		(lib_id "SPItFIRE:ATmega1284P-A")
 		(at 219.71 252.73 0)
@@ -20634,7 +21479,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector:DA15_Socket")
+		(lib_id "Connector:DA15_Socket_MountingHoles")
 		(at 374.65 119.38 0)
 		(unit 1)
 		(body_style 1)
@@ -20689,7 +21534,7 @@
 				)
 			)
 		)
-		(property "Description" "15-pin D-SUB connector, socket (female) (low-density/2 columns)"
+		(property "Description" "15-pin D-SUB connector, socket (female) (low-density/2 columns), Mounting Hole"
 			(at 374.65 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -20744,6 +21589,9 @@
 		)
 		(pin "14"
 			(uuid "55e4e45e-8fd7-4cc5-a2f7-2c009e710a44")
+		)
+		(pin "SH"
+			(uuid "08c88781-a7fe-4718-a270-decf86a7f713")
 		)
 		(instances
 			(project "SPItFIRE"
@@ -21214,6 +22062,162 @@
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
 					(reference "#PWR0301")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 35.56 257.81 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "64cbb913-1273-4302-aba2-350742efae50")
+		(property "Reference" "H302"
+			(at 32.766 253.492 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MountingHole_Pad"
+			(at 26.67 248.158 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "MountingHole:MountingHole_2.2mm_M2_DIN965_Pad"
+			(at 35.56 257.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 35.56 257.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Mounting Hole with connection"
+			(at 35.56 257.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "2e8c8ac9-ffaf-4f9f-b92c-74c6dfe41749")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "H302")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 152.4 151.13 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "6815b4ad-3052-4a66-bcd6-d9b60d6aac28")
+		(property "Reference" "#PWR0308"
+			(at 152.4 157.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 152.4 156.21 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 152.4 151.13 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 152.4 151.13 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 152.4 151.13 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "b401abbc-2f82-4df2-b36a-4973b4d57207")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "#PWR0308")
 					(unit 1)
 				)
 			)
@@ -22770,7 +23774,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector:DE9_Socket")
+		(lib_id "Connector:DE9_Socket_MountingHoles")
 		(at 25.4 88.9 0)
 		(mirror y)
 		(unit 1)
@@ -22824,7 +23828,7 @@
 				)
 			)
 		)
-		(property "Description" "9-pin D-SUB connector, socket (female)"
+		(property "Description" "9-pin D-SUB connector, socket (female), Mounting Hole"
 			(at 25.4 88.9 0)
 			(hide yes)
 			(show_name no)
@@ -22862,10 +23866,91 @@
 		(pin "7"
 			(uuid "72481945-7ed4-4d7f-8beb-307d1600e911")
 		)
+		(pin "SH"
+			(uuid "4ae9020c-eb19-4718-8707-9bce280154f8")
+		)
 		(instances
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
 					(reference "J1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 25.4 257.81 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "b817c0b2-fa8b-43e4-9f61-68fc6d984186")
+		(property "Reference" "H301"
+			(at 22.86 253.238 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MountingHole_Pad"
+			(at 16.764 250.698 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "MountingHole:MountingHole_2.2mm_M2_DIN965_Pad"
+			(at 25.4 257.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 25.4 257.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Mounting Hole with connection"
+			(at 25.4 257.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "2e8c8ac9-ffaf-4f9f-b92c-74c6dfe41749")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "H301")
 					(unit 1)
 				)
 			)
@@ -23025,6 +24110,84 @@
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
 					(reference "#PWR014")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 148.59 144.78 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "bce85b3d-c251-4dd9-87b3-7f2fcb9ad774")
+		(property "Reference" "H307"
+			(at 145.796 140.462 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MountingHole_Pad"
+			(at 145.796 138.176 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "MountingHole:MountingHole_2.2mm_M2_DIN965_Pad"
+			(at 148.59 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 148.59 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Mounting Hole with connection"
+			(at 148.59 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "bef6b679-4568-4361-b4f1-40e4459a75ef")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "H307")
 					(unit 1)
 				)
 			)
@@ -23578,6 +24741,162 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GND")
+		(at 374.65 187.96 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "cb644bdf-9104-43fd-8161-38b30ea82c21")
+		(property "Reference" "#PWR0306"
+			(at 374.65 194.31 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 374.65 193.04 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 374.65 187.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 374.65 187.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 374.65 187.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "fcc4eb47-2da5-4854-a27d-c534a2f9643e")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "#PWR0306")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 53.34 257.81 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "cc06b557-8e7c-4dc8-87f0-53f01e2add0b")
+		(property "Reference" "H304"
+			(at 51.054 253.492 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MountingHole_Pad"
+			(at 45.72 248.412 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "MountingHole:MountingHole_2.2mm_M2_DIN965_Pad"
+			(at 53.34 257.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 53.34 257.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Mounting Hole with connection"
+			(at 53.34 257.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "2e8c8ac9-ffaf-4f9f-b92c-74c6dfe41749")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "H304")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Connector_Generic:Conn_01x07")
 		(at 129.54 175.26 0)
 		(unit 1)
@@ -23926,6 +25245,162 @@
 		)
 	)
 	(symbol
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 154.94 144.78 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "e21b486b-e789-403e-b54d-1c830ea16a08")
+		(property "Reference" "H308"
+			(at 152.146 140.462 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "MountingHole_Pad"
+			(at 151.892 135.636 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "MountingHole:MountingHole_2.2mm_M2_DIN965_Pad"
+			(at 154.94 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 154.94 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Mounting Hole with connection"
+			(at 154.94 144.78 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "bef6b679-4568-4361-b4f1-40e4459a75ef")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "H308")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 40.64 267.97 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "e47ff649-0139-46dd-90ee-7e853787a033")
+		(property "Reference" "#PWR0303"
+			(at 40.64 274.32 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 40.64 273.05 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 40.64 267.97 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 40.64 267.97 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 40.64 267.97 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "951257a9-f270-4f5b-a222-4f64f4cd1b33")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "#PWR0303")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C")
 		(at 186.69 252.73 0)
 		(unit 1)
@@ -24239,6 +25714,84 @@
 			(project "SPItFIRE"
 				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
 					(reference "#PWR09")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 25.4 107.95 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "f6d678cb-c075-435b-8816-385c67b1454d")
+		(property "Reference" "#PWR0307"
+			(at 25.4 114.3 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 25.4 113.03 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 25.4 107.95 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 25.4 107.95 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 25.4 107.95 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "f7bd09e6-68a0-4272-b60f-8a1ebe109e3d")
+		)
+		(instances
+			(project "SPItFIRE"
+				(path "/148e0ceb-efca-48fe-9d35-9803ba402dc8/66bc930e-1178-4e6f-bc8c-4ce2829b38df"
+					(reference "#PWR0307")
 					(unit 1)
 				)
 			)

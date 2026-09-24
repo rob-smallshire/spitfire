@@ -20638,7 +20638,7 @@
 			)
 		)
 		(pin "1"
-			(uuid "bef6b679-4568-4361-b4f1-40e4459a75ef")
+			(uuid "bef6b679-4568-4361-b4f1-40e4459a75f0")
 		)
 		(instances
 			(project "SPItFIRE"
@@ -20827,7 +20827,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "C_Small"
+		(property "Value" "pF"
 			(at 163.068 173.228 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22134,7 +22134,7 @@
 			)
 		)
 		(pin "1"
-			(uuid "2e8c8ac9-ffaf-4f9f-b92c-74c6dfe41749")
+			(uuid "2e8c8ac9-ffaf-4f9f-b92c-74c6dfe4174a")
 		)
 		(instances
 			(project "SPItFIRE"
@@ -23945,7 +23945,7 @@
 			)
 		)
 		(pin "1"
-			(uuid "2e8c8ac9-ffaf-4f9f-b92c-74c6dfe41749")
+			(uuid "2e8c8ac9-ffaf-4f9f-b92c-74c6dfe4174b")
 		)
 		(instances
 			(project "SPItFIRE"
@@ -24182,7 +24182,7 @@
 			)
 		)
 		(pin "1"
-			(uuid "bef6b679-4568-4361-b4f1-40e4459a75ef")
+			(uuid "bef6b679-4568-4361-b4f1-40e4459a75f1")
 		)
 		(instances
 			(project "SPItFIRE"
@@ -24885,7 +24885,7 @@
 			)
 		)
 		(pin "1"
-			(uuid "2e8c8ac9-ffaf-4f9f-b92c-74c6dfe41749")
+			(uuid "2e8c8ac9-ffaf-4f9f-b92c-74c6dfe4174c")
 		)
 		(instances
 			(project "SPItFIRE"
@@ -25311,7 +25311,7 @@
 			)
 		)
 		(pin "1"
-			(uuid "bef6b679-4568-4361-b4f1-40e4459a75ef")
+			(uuid "bef6b679-4568-4361-b4f1-40e4459a75f2")
 		)
 		(instances
 			(project "SPItFIRE"
@@ -25504,7 +25504,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "C_Small"
+		(property "Value" "pF"
 			(at 190.5 172.7262 0)
 			(show_name no)
 			(do_not_autoplace no)

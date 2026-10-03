@@ -6,18 +6,17 @@
  */
 
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <util/delay.h>
 #include "uart.hpp"
 #include "adc.hpp"
 #include "keypad.hpp"
 #include "joystick.hpp"
+#include "status_led.hpp"
 
 namespace {
     constexpr uint16_t SAMPLE_DELAY_MS = 100;
     constexpr uint32_t BAUD_RATE = 115200;
-
-    // LED on PD7 (active-low)
-    constexpr uint8_t LED_PIN = PD7;
 
     // Fire button pins (directly reading Acorn PB0/PB1)
     // Left fire (PB0): DA-15 pin 13 → PC6 (Port A) / PC7 (Port B)
@@ -237,9 +236,10 @@ int main() {
     joystick::init();
     init_fire_buttons();
 
-    // Configure LED on PD7 as output (active-low)
-    DDRD |= _BV(LED_PIN);
-    PORTD |= _BV(LED_PIN);  // LED off
+    status_led::init();
+    status_led::startup_flash();
+    status_led::start_heartbeat();
+    sei();
 
     // Print startup menu
     print_menu();
@@ -256,9 +256,6 @@ int main() {
         uart::print(" | ");
         print_port_data(joystick::Port::PORT_B);
         uart::println("");
-
-        // Toggle LED to show activity
-        PORTD ^= _BV(LED_PIN);
 
         _delay_ms(SAMPLE_DELAY_MS);
     }

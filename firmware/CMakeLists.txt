@@ -146,6 +146,7 @@ add_custom_target(disassemble
 
 add_executable(spitest
     ${CMAKE_CURRENT_SOURCE_DIR}/src/spi_slave.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/status_led.cpp
 )
 
 target_include_directories(spitest PRIVATE
@@ -205,6 +206,7 @@ add_custom_target(upload_spitest
 
 add_executable(spimouse
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mouse.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/status_led.cpp
 )
 
 target_include_directories(spimouse PRIVATE

@@ -1,15 +1,13 @@
 /**
  * SPItFIRE SPI Slave Test
  *
- * Minimal SPI slave that always returns &AA.
+ * Minimal SPI slave that returns each received byte XORed with &55.
  * Used to verify SPI communication with BBC Micro.
- *
- * Build with: make (uses existing CMake setup)
- * Temporarily replace main.cpp or modify CMakeLists.txt to build this instead.
  */
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include "status_led.hpp"
 
 namespace {
     // SPI pins on ATmega1284p
@@ -17,9 +15,6 @@ namespace {
     // PB5 = MOSI (input)
     // PB6 = MISO (output)
     // PB7 = SCK (input)
-
-    // LED on PD7 (active-low) for status indication
-    constexpr uint8_t LED_PIN = PD7;
 
     // Transform: XOR received byte with this value
     constexpr uint8_t XOR_PATTERN = 0x55;
@@ -35,31 +30,15 @@ namespace {
         // Pre-load initial response (0x00 XOR pattern)
         SPDR = XOR_PATTERN;
     }
-
-    void init_led() {
-        DDRD |= _BV(LED_PIN);
-        PORTD |= _BV(LED_PIN);  // LED off (active-low)
-    }
-
-    void led_off() {
-        PORTD |= _BV(LED_PIN);
-    }
-
-    void led_toggle() {
-        PORTD ^= _BV(LED_PIN);
-    }
 }
 
 int main() {
-    init_led();
+    status_led::init();
     init_spi_slave();
 
-    // Flash LED to indicate startup
-    for (uint8_t i = 0; i < 6; i++) {
-        led_toggle();
-        for (volatile uint32_t d = 0; d < 50000; d++);
-    }
-    led_off();
+    status_led::startup_flash();
+    status_led::start_heartbeat();
+    sei();
 
     while (true) {
         // Tight poll for SPI transfer complete
@@ -70,8 +49,5 @@ int main() {
 
         // Load response: received XOR pattern
         SPDR = received ^ XOR_PATTERN;
-
-        // Toggle LED to show activity
-        led_toggle();
     }
 }

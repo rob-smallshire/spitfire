@@ -19,6 +19,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <string.h>
+#include "status_led.hpp"
 
 // Generated lookup tables (PROGMEM)
 #include "mouse_tables.inc"
@@ -32,9 +33,6 @@ namespace {
     constexpr uint8_t CMD_MODE_AMX   = 0xF1;
     constexpr uint8_t CMD_MODE_AMIGA = 0xF2;
     constexpr uint8_t CMD_MODE_ATARI = 0xF3;
-
-    // --- LED on PD7 (active-low) ---
-    constexpr uint8_t LED_PIN = PD7;
 
     // --- SRAM working copies of active lookup tables ---
     uint8_t remap[128];
@@ -62,21 +60,8 @@ namespace {
         SPDR = 0x00;
     }
 
-    void init_led() {
-        DDRD |= _BV(LED_PIN);
-        PORTD |= _BV(LED_PIN);  // LED off (active-low)
-    }
-
-    void led_off() {
-        PORTD |= _BV(LED_PIN);
-    }
-
-    void led_toggle() {
-        PORTD ^= _BV(LED_PIN);
-    }
-
     void init_mouse_pins() {
-        DDRD = (DDRD & ~0x7F) | _BV(LED_PIN);
+        DDRD &= ~0x7F;  // PD0-PD6 inputs (PD7 is the status LED)
         PORTD |= 0x7F;  // Pull-ups on inputs
     }
 
@@ -133,7 +118,7 @@ ISR(PCINT3_vect) {
 }
 
 int main() {
-    init_led();
+    status_led::init();
     init_mouse_pins();
     init_spi_slave();
 
@@ -141,14 +126,10 @@ int main() {
     load_quadrature_mode(remap_compact, btn_remap_compact, PD4, PD0, PD6, PD3);
 
     init_pcint();
-    sei();
 
-    // Startup LED flash
-    for (uint8_t i = 0; i < 6; i++) {
-        led_toggle();
-        for (volatile uint32_t d = 0; d < 50000; d++);
-    }
-    led_off();
+    status_led::startup_flash();
+    status_led::start_heartbeat();
+    sei();
 
     // SPI command loop
     while (true) {
@@ -160,7 +141,6 @@ int main() {
         switch (cmd) {
             case CMD_MOUSE_X:
                 response = static_cast<uint8_t>(clamp_and_drain(dx_accum));
-                led_toggle();
                 break;
 
             case CMD_MOUSE_Y:

@@ -73,6 +73,7 @@ Use `uv run --python 3.10` if your system Python is older than 3.10 (the script 
 - MCU: ATMega1284p @ 18.432 MHz external crystal
 - Programmer: USBasp
 - Fuses: L=0xf7 (external crystal), H=0xd9, E=0xff
+- Status LED on PD7 is **active-high** on the Rev 1 PCB (PD7 → R2 → D2 → GND); the breadboard prototype was active-low. All firmware uses the shared `status_led` module, which drives a once-per-second double-flash heartbeat from a Timer0 compare interrupt - **Timer0 is reserved** for it.
 
 ## Architecture Highlights
 

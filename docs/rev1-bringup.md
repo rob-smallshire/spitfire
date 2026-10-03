@@ -107,6 +107,41 @@ Throughput is set by the 6502 transfer loops rather than the board, so
 matching figures are expected. The longer cable and the PCB layout
 introduced no errors.
 
+### Peripheral DE-9 (J13) - mirrored footprint
+
+J13 fitted (male DE-9). Measuring the connector directly (looking into
+the pins, wide row uppermost, pin 1 top-left) gave **pin 7 = 0 V and
+pin 8 = 4.8 V**: power and ground are swapped.
+
+Cause: the custom male footprint
+`DE9_Male_..._MountingHolesOffset12.5mm_1.kicad_mod` has pad coordinates
+identical to the custom female footprint used for J1. Male and female
+footprints must be mirror images (compare KiCad's stock `DSUB-9_Pins`,
+pins running +x, with `DSUB-9_Socket`, pins running -x). The female
+footprint is correct (J1 works with the Compact via a straight cable);
+the male footprint was not mirrored when it was created.
+
+Effect on Rev 1 (physical J13 pin -> signal): 1=PD4, 2=PD3, 3=PD2,
+4=PD1, 5=PD0, 6=PD6, 7=GND, 8=+5V, 9=PD5.
+
+**Do not plug a mouse directly into J13 on a Rev 1 board** - Compact,
+Amiga and Atari mice take +5 V on pin 7 and would be reverse-powered.
+Software remapping cannot correct the swapped supply pins.
+
+Workaround: a mirroring adapter (female on the board side, male on the
+peripheral side) wired 1-5, 2-4, 3-3, 4-2, 5-1, 6-9, 7-8, 8-7, 9-6,
+which restores the designed pinout so the mouse firmware and
+[peripheral-pinouts.md](peripheral-pinouts.md) apply unchanged.
+
+The custom female DA-15 footprint used for J11/J12 was checked against
+KiCad's stock `DSUB-15_Socket` and has the correct handedness.
+
+### Rev 2 errata
+
+| # | Issue | Fix |
+|---|---|---|
+| 1 | J13 male DE-9 footprint mirrored (pins 1-5, 2-4, 6-9, 7-8 swapped) | Negate pad X coordinates in the custom male DE-9 footprint so it mirrors the female footprint |
+
 ### Status
 
 | Subsystem | Status |
@@ -117,4 +152,4 @@ introduced no errors.
 | 74HC138 decoder, J4-J9 chip selects | Working |
 | SPI, bit-bang and turbo | Working, no errors |
 | DA-15 joystick ports | Not yet fitted |
-| Peripheral DE-9 (J13) | Not yet fitted |
+| Peripheral DE-9 (J13) | Fitted; footprint mirrored (erratum 1), usable via adapter |

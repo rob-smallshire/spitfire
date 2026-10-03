@@ -136,6 +136,29 @@ which restores the designed pinout so the mouse firmware and
 The custom female DA-15 footprint used for J11/J12 was checked against
 KiCad's stock `DSUB-15_Socket` and has the correct handedness.
 
+### Serial (USART0) via the Peripheral DE-9
+
+With the mirroring adapter fitted, a USB-TTL serial adapter was connected
+to the designed Peripheral DE-9 pins: pin 1 (PD0, AVR RX, TQFP pin 9) to
+the adapter's TXD, pin 2 (PD1, AVR TX, TQFP pin 10) to its RXD, and
+pin 8 to GND. Continuity was checked end to end from the AVR pins.
+
+Running the joystick firmware (`spitfire` target) at 115200 8N1:
+
+- Transmit: periodic status lines received cleanly at the 100 ms
+  reporting interval. 18.432 MHz gives an exact divisor (UBRR = 9,
+  0% baud error).
+- Receive: sending `3` set Port A to Delta 14B and the firmware
+  confirmed `Port A: Delta 14B`; sending `0` restored `No Joystick`.
+
+With J11 not yet fitted, Port A's ADC inputs float (readings around
+700/690 of 1023), as expected.
+
+Lesson from this step: DE-9 breakout boards may label their screw
+terminals for one of their two connectors only. Check continuity to the
+AVR pins themselves rather than trusting connector numbering when
+several breakouts and adapters are chained.
+
 ### Rev 2 errata
 
 | # | Issue | Fix |
@@ -153,3 +176,4 @@ KiCad's stock `DSUB-15_Socket` and has the correct handedness.
 | SPI, bit-bang and turbo | Working, no errors |
 | DA-15 joystick ports | Not yet fitted |
 | Peripheral DE-9 (J13) | Fitted; footprint mirrored (erratum 1), usable via adapter |
+| Serial (USART0, 115200 8N1) | Working, transmit and receive |

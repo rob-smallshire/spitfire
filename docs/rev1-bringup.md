@@ -170,6 +170,29 @@ terminals for one of their two connectors only. Check continuity to the
 AVR pins themselves rather than trusting connector numbering when
 several breakouts and adapters are chained.
 
+### Joystick A (J11) - Delta 3B Twin
+
+J11 fitted (female DA-15). Before soldering, the custom DA-15 footprint
+was checked against KiCad's stock `DSUB-15_Socket` and the proven J1
+female DE-9 footprint: same pin direction, row placement and second-row
+offset. With the board powered, J11 pins 11 and 14 (VREF, from AVCC via
+L1) read 4.85 V.
+
+Delta 3B Twin connected, Port A set to 3B Twin over serial (`1`):
+
+| | Left handset | Right handset |
+|---|---|---|
+| X at rest | 564 | 536 |
+| Y at rest | 506 | 534 |
+| X range | 0-1023 | 2-1023 |
+| Y range | 0-1023 | 2-1023 |
+| Fire button | Reported as `L` only | Reported as `R` only |
+
+Rest readings were stable to within about 2 counts. Moving either
+handset through its full range changed the other handset's readings by
+at most 1 count, so there is no crosstalk between the four ADC
+channels, and each handset and fire button maps to the correct side.
+
 ### Rev 2 errata
 
 | # | Issue | Fix |
@@ -185,6 +208,7 @@ several breakouts and adapters are chained.
 | Status LED | Working (active-high) |
 | 74HC138 decoder, J4-J9 chip selects | Working |
 | SPI, bit-bang and turbo | Working, no errors |
-| DA-15 joystick ports | Not yet fitted |
+| Joystick A (J11) | Working with Delta 3B Twin |
+| Joystick B (J12) | Not yet fitted |
 | Peripheral DE-9 (J13) | Working; fitted on reverse side to correct mirrored footprint (erratum 1) |
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |

@@ -275,6 +275,20 @@ No middle button in Atari mode is expected: the Atari pinout leaves
 pin 5 unconnected and the firmware's Atari button table has no middle
 button, matching standard two-button Atari mice.
 
+### Host User Port (J2) and User Port Passthrough (J3) - not yet tested
+
+J2 is the alternative host connection for a BBC Micro or Master with a
+20-way User Port (instead of J1 for the Master Compact). J3 passes the
+User Port through to further devices that do not use the SPItFIRE's pin
+allocations; it is only useful when the host is connected via J2.
+
+No machine with a working 20-way User Port was available, so neither
+was tested. Netlist check: J2 pins 2/4/6/8/10/12/14 (CB1, CB2, PB0-PB4)
+carry SCK, MISO, MOSI, SCK, A0, A1, A2, the same nets proven end to end
+through J1; pins 16/18/20 (PB5-PB7) go only to J3. The untested parts are
+therefore the connectors themselves and the PB5-PB7 passthrough tracks.
+Considered low risk.
+
 ### Rev 2 errata
 
 | # | Issue | Fix |
@@ -295,3 +309,4 @@ button, matching standard two-button Atari mice.
 | Peripheral DE-9 (J13) | Working; fitted on reverse side to correct mirrored footprint (erratum 1) |
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |
 | Mouse on J13, Amiga and Atari modes | Working (Golden Image GI-6000) |
+| Host User Port (J2), passthrough (J3) | Not tested (no 20-way User Port host available); netlist checked |

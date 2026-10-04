@@ -245,6 +245,18 @@ untouched while Port B was exercised.
   handsets stay where they are left), not electrical crosstalk.
 - Port A's right handset stayed within 1 count throughout.
 
+### Joystick B (J12) - Delta 14B
+
+Delta 14B connected to J12 (Port B set to 14B, `7`), with the 3B Twin
+left on J11 as a reference. At rest X=488, Y=499, keypad `FFF`. X and Y
+each covered 0-1023. Buttons 0-11 were reported in order, one bit each,
+with no ghosting, and the two extra buttons reported as button 10. The
+axes stayed within 2 counts while keys were pressed. The untouched
+Port A channels varied by at most 1 count and reported no fire events.
+
+With the 3B Twin and 14B results, every Port B signal on J12 is
+verified: ADC1/3/5/7, both fire inputs and the full 3x4 keypad matrix.
+
 ### Rev 2 errata
 
 | # | Issue | Fix |
@@ -261,6 +273,6 @@ untouched while Port B was exercised.
 | 74HC138 decoder, J4-J9 chip selects | Working |
 | SPI, bit-bang and turbo | Working, no errors |
 | Joystick A (J11) | Working: Delta 3B Twin, 3B Single and 14B; all pins verified |
-| Joystick B (J12) | Working with Delta 3B Twin; no crosstalk with Port A |
+| Joystick B (J12) | Working: Delta 3B Twin and 14B; all pins verified, no crosstalk with Port A |
 | Peripheral DE-9 (J13) | Working; fitted on reverse side to correct mirrored footprint (erratum 1) |
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |

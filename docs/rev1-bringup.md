@@ -124,21 +124,32 @@ the male footprint was not mirrored when it was created.
 Effect on Rev 1 (physical J13 pin -> signal): 1=PD4, 2=PD3, 3=PD2,
 4=PD1, 5=PD0, 6=PD6, 7=GND, 8=+5V, 9=PD5.
 
-**Do not plug a mouse directly into J13 on a Rev 1 board** - Compact,
-Amiga and Atari mice take +5 V on pin 7 and would be reverse-powered.
-Software remapping cannot correct the swapped supply pins.
+**On a Rev 1 board with J13 fitted on the component side, do not plug a
+mouse directly into J13** - Compact, Amiga and Atari mice take +5 V on
+pin 7 and would be reverse-powered. Software remapping cannot correct the
+swapped supply pins.
 
-Workaround: a mirroring adapter (female on the board side, male on the
-peripheral side) wired 1-5, 2-4, 3-3, 4-2, 5-1, 6-9, 7-8, 8-7, 9-6,
-which restores the designed pinout so the mouse firmware and
-[peripheral-pinouts.md](peripheral-pinouts.md) apply unchanged.
+Two workarounds restore the designed pinout, so the mouse firmware and
+[peripheral-pinouts.md](peripheral-pinouts.md) apply unchanged:
+
+1. **Fit J13 on the reverse (solder) side of the board** (adopted on
+   board 1). Mounting the right-angle connector on the opposite side
+   mirrors it relative to the footprint, cancelling the footprint's
+   mirroring. The connector still faces out of the same board edge, but
+   upside down. Verified on board 1: pin 7 = 4.8 V, pin 8 = 0 V, and
+   serial transmit and receive work through PD0/PD1 on pins 1/2.
+2. A mirroring adapter (female on the board side, male on the
+   peripheral side) wired 1-5, 2-4, 3-3, 4-2, 5-1, 6-9, 7-8, 8-7, 9-6.
+   Used initially; replaced by option 1 as the chained breakouts were
+   fragile.
 
 The custom female DA-15 footprint used for J11/J12 was checked against
 KiCad's stock `DSUB-15_Socket` and has the correct handedness.
 
 ### Serial (USART0) via the Peripheral DE-9
 
-With the mirroring adapter fitted, a USB-TTL serial adapter was connected
+With the designed pinout restored (first via the mirroring adapter, then
+with J13 re-mounted on the reverse side), a USB-TTL serial adapter was connected
 to the designed Peripheral DE-9 pins: pin 1 (PD0, AVR RX, TQFP pin 9) to
 the adapter's TXD, pin 2 (PD1, AVR TX, TQFP pin 10) to its RXD, and
 pin 8 to GND. Continuity was checked end to end from the AVR pins.
@@ -175,5 +186,5 @@ several breakouts and adapters are chained.
 | 74HC138 decoder, J4-J9 chip selects | Working |
 | SPI, bit-bang and turbo | Working, no errors |
 | DA-15 joystick ports | Not yet fitted |
-| Peripheral DE-9 (J13) | Fitted; footprint mirrored (erratum 1), usable via adapter |
+| Peripheral DE-9 (J13) | Working; fitted on reverse side to correct mirrored footprint (erratum 1) |
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |

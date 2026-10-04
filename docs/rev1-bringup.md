@@ -275,6 +275,27 @@ No middle button in Atari mode is expected: the Atari pinout leaves
 pin 5 unconnected and the firmware's Atari button table has no middle
 button, matching standard two-button Atari mice.
 
+### Peripheral User Port (J14) - AMX-compatible mice
+
+J14 (20-way header) was checked against the adapter wiring in
+[peripheral-pinouts.md](peripheral-pinouts.md) before fitting: every
+signal pin matches, pins 1 and 3 are +5V and the odd pins 5-19 are GND.
+Its pad numbering matches KiCad's stock 2x10 IDC header (not mirrored).
+J13 and J14 share Port D, so only one peripheral connector is used at a
+time.
+
+An AMX mouse in SPIMOUSE mode `1` (AMX/Compact) gave both axes working,
+confirming the AMX quadrature path (PD4/PD0/PD6/PD3). Buttons:
+
+| | Left (pin 16, PD5) | Right (pin 20, PD1) |
+|---|---|---|
+| AMX mouse | Working | Not working |
+| Second AMX-compatible mouse | Not working | Working |
+
+Each J14 button path works with at least one mouse; a fault on J14
+would break the same button on both. The failures are therefore in the
+(old) mice, not the board.
+
 ### Host User Port (J2) and User Port Passthrough (J3) - not yet tested
 
 J2 is the alternative host connection for a BBC Micro or Master with a
@@ -309,4 +330,5 @@ Considered low risk.
 | Peripheral DE-9 (J13) | Working; fitted on reverse side to correct mirrored footprint (erratum 1) |
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |
 | Mouse on J13, Amiga and Atari modes | Working (Golden Image GI-6000) |
+| Peripheral User Port (J14), AMX mode | Working (button faults traced to the mice) |
 | Host User Port (J2), passthrough (J3) | Not tested (no 20-way User Port host available); netlist checked |

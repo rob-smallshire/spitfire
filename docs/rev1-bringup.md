@@ -193,6 +193,15 @@ handset through its full range changed the other handset's readings by
 at most 1 count, so there is no crosstalk between the four ADC
 channels, and each handset and fire button maps to the correct side.
 
+### Joystick A (J11) - Delta 3B Single
+
+Delta 3B Single connected, Port A set to 3B Single over serial (`2`).
+At rest X=495, Y=583, stable to 1 count. X and Y each covered the full
+0-1023 range. The three physical buttons registered as two separate
+left-fire (`L`) presses and one right-fire (`R`) press, matching the
+handset's wiring (two buttons on PB0, one on PB1). The axes stayed
+within 1 count while buttons were pressed.
+
 ### Rev 2 errata
 
 | # | Issue | Fix |
@@ -208,7 +217,7 @@ channels, and each handset and fire button maps to the correct side.
 | Status LED | Working (active-high) |
 | 74HC138 decoder, J4-J9 chip selects | Working |
 | SPI, bit-bang and turbo | Working, no errors |
-| Joystick A (J11) | Working with Delta 3B Twin |
+| Joystick A (J11) | Working with Delta 3B Twin and 3B Single |
 | Joystick B (J12) | Not yet fitted |
 | Peripheral DE-9 (J13) | Working; fitted on reverse side to correct mirrored footprint (erratum 1) |
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |

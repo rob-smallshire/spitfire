@@ -225,6 +225,26 @@ pressed, so keypad scanning does not disturb the ADC.
 With the 3B Twin, 3B Single and 14B results, every Port A signal on J11
 is verified: ADC0/2/4/6, both fire inputs and the full 3x4 keypad matrix.
 
+### Joystick B (J12) - Delta 3B Twin, with Port A as a crosstalk reference
+
+J12 fitted; pins 11 and 14 read 4.85 V. A second Delta 3B Twin was
+connected to J12 while the first remained on J11, and both ports were
+set to 3B Twin over serial (`1`, `5`). The Port A handsets were left
+untouched while Port B was exercised.
+
+| | Left X | Left Y | Right X | Right Y |
+|---|---|---|---|---|
+| Port B range | 0-1023 | 0-1023 | 0-1023 | 0-1023 |
+
+- Each Port B handset moved only its own channels; three left-fire
+  and three right-fire presses registered on Port B only.
+- Port A's left handset held a constant reading (zero spread) while the
+  Port B left handset swept its full range. It later stepped once,
+  permanently, by about 20 counts at the moment the Port B right handset
+  was picked up, which is consistent with a physical nudge (Delta
+  handsets stay where they are left), not electrical crosstalk.
+- Port A's right handset stayed within 1 count throughout.
+
 ### Rev 2 errata
 
 | # | Issue | Fix |
@@ -241,6 +261,6 @@ is verified: ADC0/2/4/6, both fire inputs and the full 3x4 keypad matrix.
 | 74HC138 decoder, J4-J9 chip selects | Working |
 | SPI, bit-bang and turbo | Working, no errors |
 | Joystick A (J11) | Working: Delta 3B Twin, 3B Single and 14B; all pins verified |
-| Joystick B (J12) | Not yet fitted |
+| Joystick B (J12) | Working with Delta 3B Twin; no crosstalk with Port A |
 | Peripheral DE-9 (J13) | Working; fitted on reverse side to correct mirrored footprint (erratum 1) |
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |

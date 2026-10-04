@@ -202,6 +202,14 @@ left-fire (`L`) presses and one right-fire (`R`) press, matching the
 handset's wiring (two buttons on PB0, one on PB1). The axes stayed
 within 1 count while buttons were pressed.
 
+The 3B Single drives both pot pairs so it can act as either player's
+handset. With Port A switched to 3B Twin mode (`1`) to report all four
+channels, the second pair (ADC4/ADC6, J11 pins 12 and 4) covered
+0-1023 and tracked the primary pair (ADC0/ADC2) exactly: correlation
++1.000 on both axes, mean difference under 1 count, same direction, no
+X/Y swap. Each wiper is evidently connected to both channels in
+parallel.
+
 ### Rev 2 errata
 
 | # | Issue | Fix |

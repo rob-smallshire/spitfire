@@ -257,6 +257,24 @@ Port A channels varied by at most 1 count and reported no fire events.
 With the 3B Twin and 14B results, every Port B signal on J12 is
 verified: ADC1/3/5/7, both fire inputs and the full 3x4 keypad matrix.
 
+### Mouse on the Peripheral DE-9 (J13) - Golden Image GI-6000
+
+Firmware: `spimouse` (quadrature decoding on Port D via the PCINT3
+pin-change interrupt). Test program: SPIMOUSE on the Master Compact.
+
+The Golden Image GI-6000 is an optical mouse (it needs its own printed
+pad) with a switch selecting Amiga or Atari wiring, so one mouse tests
+both pinouts. It was plugged directly into the re-mounted J13.
+
+| Mouse switch | SPIMOUSE mode | Result |
+|---|---|---|
+| Amiga | `2` (Amiga) | Both axes and all three buttons working |
+| Atari | `3` (Atari) | Both axes and left/right buttons working |
+
+No middle button in Atari mode is expected: the Atari pinout leaves
+pin 5 unconnected and the firmware's Atari button table has no middle
+button, matching standard two-button Atari mice.
+
 ### Rev 2 errata
 
 | # | Issue | Fix |
@@ -276,3 +294,4 @@ verified: ADC1/3/5/7, both fire inputs and the full 3x4 keypad matrix.
 | Joystick B (J12) | Working: Delta 3B Twin and 14B; all pins verified, no crosstalk with Port A |
 | Peripheral DE-9 (J13) | Working; fitted on reverse side to correct mirrored footprint (erratum 1) |
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |
+| Mouse on J13, Amiga and Atari modes | Working (Golden Image GI-6000) |

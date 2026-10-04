@@ -210,6 +210,21 @@ channels, the second pair (ADC4/ADC6, J11 pins 12 and 4) covered
 X/Y swap. Each wiper is evidently connected to both channels in
 parallel.
 
+### Joystick A (J11) - Delta 14B
+
+Delta 14B connected, Port A set to 14B over serial (`3`). At rest
+X=509, Y=502, keypad `FFF` (no buttons). X and Y each covered 0-1023.
+
+Pressing the keypad from bottom-left to top-right, row by row, produced
+buttons 0-11 in order, each as a single cleared bit (`FFE`, `FFD`,
+`FFB` ... `7FF`), with no ghosting or multiple keys reported. The two
+extra physical buttons, wired in parallel with button 10, both reported
+as button 10 (`BFF`). The axes stayed within 1-3 counts while keys were
+pressed, so keypad scanning does not disturb the ADC.
+
+With the 3B Twin, 3B Single and 14B results, every Port A signal on J11
+is verified: ADC0/2/4/6, both fire inputs and the full 3x4 keypad matrix.
+
 ### Rev 2 errata
 
 | # | Issue | Fix |
@@ -225,7 +240,7 @@ parallel.
 | Status LED | Working (active-high) |
 | 74HC138 decoder, J4-J9 chip selects | Working |
 | SPI, bit-bang and turbo | Working, no errors |
-| Joystick A (J11) | Working with Delta 3B Twin and 3B Single |
+| Joystick A (J11) | Working: Delta 3B Twin, 3B Single and 14B; all pins verified |
 | Joystick B (J12) | Not yet fitted |
 | Peripheral DE-9 (J13) | Working; fitted on reverse side to correct mirrored footprint (erratum 1) |
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |

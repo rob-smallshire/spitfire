@@ -336,6 +336,26 @@ With a CR1225 backup cell fitted, the board was powered off for five
 minutes and powered on again: the RTC had kept time throughout and OSF
 remained clear.
 
+### SD card header (J4) - Adafruit MicroSD breakout+
+
+J4's pin order (5V, 3V, GND, CLK, DO, DI, CS, CD) matches the Adafruit
+breakout; 3V and CD are not connected. The breakout regulates its own
+3.3 V and level-shifts CLK/DI/CS with a 74HC4050; DO reaches MISO at
+3.3 V, above the 6522's 2.0 V input threshold. The card is selected by
+`~SS_2`, decoder output Y2 (`DEV_SD = %00001000`).
+
+New BBC test program SPISD (`beeb/spitest/src/spisd.asm`), SPI mode 3
+(SCK idling high, as MMFS). Because an SD card keeps driving DO for a
+few clocks after CS goes high, every deselect is followed by one byte of
+clocks with no device selected, so the card cannot contend with other
+devices on the shared MISO line.
+
+All steps passed with a card inserted: 80 power-up clocks, CMD0
+(R1=01), CMD8 (SD v2, R7 echo correct), ACMD41 until ready (R1=00),
+CMD58 (OCR read), CMD10 (CID read, with sensible manufacturer, product
+name, serial number and date) and CMD17 (sector 0 read, with a valid
+55 AA signature and partition entry).
+
 ### Host User Port (J2) and User Port Passthrough (J3) - not yet tested
 
 J2 is the alternative host connection for a BBC Micro or Master with a
@@ -372,4 +392,5 @@ Considered low risk.
 | Mouse on J13, Amiga and Atari modes | Working (Golden Image GI-6000) |
 | Peripheral User Port (J14), AMX mode | Working (button faults traced to the mice) |
 | RTC (J5, DS3234 DeadOn) | Working: SRAM, set/read time, status, temperature, battery backup |
+| SD card (J4, Adafruit microSD) | Working: initialisation, CID and sector reads |
 | Host User Port (J2), passthrough (J3) | Not tested (no 20-way User Port host available); netlist checked |

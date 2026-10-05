@@ -367,6 +367,27 @@ Card used: a SanDisk 16 GB microSDHC. CID as reported by SPISD:
 | Serial number | `AC9304AB` |
 | Manufacture date | 2018/04 |
 
+### Expansion SPI headers (J6-J9) - continuity checked
+
+Four 6-pin headers for future SPI add-ons, one per spare decoder output,
+all with the same project-specific pinout:
+
+| Pin | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| Signal | SCK | +5V | MISO | GND | MOSI | `~SS_n` |
+
+| Header | Chip select | Decoder output | Device constant |
+|---|---|---|---|
+| J6 | `~SS_4` | Y4 | `%00010000` |
+| J7 | `~SS_5` | Y5 | `%00010100` |
+| J8 | `~SS_6` | Y6 | `%00011000` |
+| J9 | `~SS_7` | Y7 | `%00011100` |
+
+No add-ons exist yet. Each chip select was checked for continuity from
+the 74HC138 and power was confirmed at each header. SCK, MISO and MOSI
+are the shared nets already proven end to end by the AVR, RTC and SD
+card, and SPIWALK showed Y4-Y7 switching correctly. Considered low risk.
+
 ### Host User Port (J2) and User Port Passthrough (J3) - not yet tested
 
 J2 is the alternative host connection for a BBC Micro or Master with a
@@ -404,4 +425,5 @@ Considered low risk.
 | Peripheral User Port (J14), AMX mode | Working (button faults traced to the mice) |
 | RTC (J5, DS3234 DeadOn) | Working: SRAM, set/read time, status, temperature, battery backup |
 | SD card (J4, Adafruit microSD) | Working: initialisation, CID and sector reads |
+| Expansion headers (J6-J9) | Continuity and power checked; no add-ons yet |
 | Host User Port (J2), passthrough (J3) | Not tested (no 20-way User Port host available); netlist checked |

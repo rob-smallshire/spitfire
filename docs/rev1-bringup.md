@@ -324,6 +324,14 @@ New BBC test program SPIRTC (`beeb/spitest/src/spirtc.asm`):
 Register values matching their power-on defaults exactly confirm bit
 alignment in both directions.
 
+A second program, SPISETTIME (`beeb/spitest/src/spisettime.asm`), prompts
+for the date and time, computes the day of the week (Sakamoto's method,
+checked against Python's calendar for every date 2000-2099), waits for a
+key press so the clock starts on an exact second, burst-writes registers
+00h-06h and clears OSF. After setting, SPIRTC showed the new time
+ticking and the status register no longer flagged OSF, confirming writes
+to the time and status registers.
+
 ### Host User Port (J2) and User Port Passthrough (J3) - not yet tested
 
 J2 is the alternative host connection for a BBC Micro or Master with a
@@ -359,5 +367,5 @@ Considered low risk.
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |
 | Mouse on J13, Amiga and Atari modes | Working (Golden Image GI-6000) |
 | Peripheral User Port (J14), AMX mode | Working (button faults traced to the mice) |
-| RTC (J5, DS3234 DeadOn) | Working: SRAM write/read, time, status, temperature |
+| RTC (J5, DS3234 DeadOn) | Working: SRAM write/read, setting and reading time, status, temperature |
 | Host User Port (J2), passthrough (J3) | Not tested (no 20-way User Port host available); netlist checked |

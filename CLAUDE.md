@@ -83,6 +83,7 @@ A 74HC138 3-to-8 decoder expands three VIA pins (PB2-PB4) into 7 chip-select lin
 ### Two SPI Modes
 - **Bit-bang** (~4100 bytes/sec): straightforward, used by all test programs
 - **Turbo** (~7400 bytes/sec): uses VIA shift register in mode 3, CB1 wired externally to PB1 as a clock. MMFS-style; used by `SPIT*` test programs
+- The 6522 shift register samples MISO on the **rising** edge of CB1/SCK. Devices therefore need different SCK idle levels when selected: the AVR is SPI mode 0 (SCK idles **low**); the DS3234 RTC (and SD cards, following MMFS) are driven in mode 3 (SCK idles **high**). Set SCK to the device's idle level *before* asserting its chip select. See `beeb/spitest/src/spirtc.asm`.
 
 ### SPI Protocol
 Single-byte commands with single-byte responses, two SPI bytes per command (command + dummy). See `docs/protocol.md`. Key ranges:

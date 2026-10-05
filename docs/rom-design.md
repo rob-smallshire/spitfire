@@ -88,10 +88,24 @@ modules.
 | Routine | Inputs | Outputs | Description |
 |---------|--------|---------|-------------|
 | `init_via` | - | - | One-time VIA setup |
-| `select_device` | A=device | - | Select device via 74HC138 |
+| `select_device` | A=device | - | Set SCK to the device's idle level, then select it via 74HC138 |
 | `deselect_device` | - | - | Deselect (Y0 = no device) |
 | `spi_transfer` | A=byte | A=received | Bit-bang transfer |
 | `spi_turbo_read` | - | A=received | Fast read using shift register |
+
+### Per-device SPI mode
+The 6522 shift register samples MISO on the rising edge of SCK (CB1), so
+every device must present data that is stable at the rising edge:
+
+| Device | SPI mode | SCK idle level when selected |
+|--------|----------|------------------------------|
+| SPItFIRE AVR | 0 | Low |
+| DS3234 RTC | 3 (it picks CPOL from SCK at CS falling) | High |
+| SD card | 3 (as MMFS) | High |
+
+`select_device` must therefore set SCK to the device's idle level
+*before* asserting chip select, and the transfer routines must keep that
+idle level between bytes. Verified with SPIRTC on the Rev 1 board.
 
 ### Device Assignments
 See [spi-interface.md](spi-interface.md) and
@@ -101,8 +115,8 @@ See [spi-interface.md](spi-interface.md) and
 |--------|--------|----------|
 | Y0 | None (deselect) | `DEV_NONE` |
 | Y1 | SPItFIRE AVR | `DEV_SPITFIRE` |
-| Y2 | (TBD - SD card?) | |
-| Y3 | (TBD - RTC?) | |
+| Y2 | SD card (J4, Adafruit microSD breakout) | `DEV_SD` |
+| Y3 | RTC (J5, SparkFun DeadOn DS3234) | `DEV_RTC` |
 | Y4-Y7 | Unassigned | |
 
 ## The `*SPITFIRE` Command Namespace

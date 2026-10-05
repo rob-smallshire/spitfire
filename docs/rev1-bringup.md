@@ -332,6 +332,10 @@ key press so the clock starts on an exact second, burst-writes registers
 ticking and the status register no longer flagged OSF, confirming writes
 to the time and status registers.
 
+With a CR1225 backup cell fitted, the board was powered off for five
+minutes and powered on again: the RTC had kept time throughout and OSF
+remained clear.
+
 ### Host User Port (J2) and User Port Passthrough (J3) - not yet tested
 
 J2 is the alternative host connection for a BBC Micro or Master with a
@@ -367,5 +371,5 @@ Considered low risk.
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |
 | Mouse on J13, Amiga and Atari modes | Working (Golden Image GI-6000) |
 | Peripheral User Port (J14), AMX mode | Working (button faults traced to the mice) |
-| RTC (J5, DS3234 DeadOn) | Working: SRAM write/read, setting and reading time, status, temperature |
+| RTC (J5, DS3234 DeadOn) | Working: SRAM, set/read time, status, temperature, battery backup |
 | Host User Port (J2), passthrough (J3) | Not tested (no 20-way User Port host available); netlist checked |

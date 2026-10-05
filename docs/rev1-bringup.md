@@ -356,6 +356,17 @@ CMD58 (OCR read), CMD10 (CID read, with sensible manufacturer, product
 name, serial number and date) and CMD17 (sector 0 read, with a valid
 55 AA signature and partition entry).
 
+Card used: a SanDisk 16 GB microSDHC. CID as reported by SPISD:
+
+| Field | Value |
+|---|---|
+| Manufacturer ID | `03` (SanDisk) |
+| OEM ID | `SD` |
+| Product name | `SC16G` |
+| Revision | 8.0 |
+| Serial number | `AC9304AB` |
+| Manufacture date | 2018/04 |
+
 ### Host User Port (J2) and User Port Passthrough (J3) - not yet tested
 
 J2 is the alternative host connection for a BBC Micro or Master with a

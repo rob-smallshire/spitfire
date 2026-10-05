@@ -296,6 +296,34 @@ Each J14 button path works with at least one mouse; a fault on J14
 would break the same button on both. The failures are therefore in the
 (old) mice, not the board.
 
+### RTC header (J5) - SparkFun DeadOn DS3234
+
+J5's pin order (GND, VCC, SQW, CLK, MISO, MOSI, SS) matches the DeadOn
+breakout header; SQW is not connected. The RTC is selected by `~SS_3`,
+decoder output Y3 (`DEV_RTC = %00001100`). No backup battery fitted.
+
+**SPI mode.** The DS3234 picks its clock polarity from the state of SCLK
+when CS falls. The 6522 shift register samples MISO on the rising edge
+of CB1 (as MMFS assumes; MMFS idles the clock high). With SCLK low at CS,
+the DS3234 would change DOUT on rising edges, racing the VIA's sample.
+SCK is therefore idled **high** before the RTC is selected, giving
+CPOL=1/CPHA=1: DOUT changes on falling edges and both ends sample on
+rising edges. (The AVR is SPI mode 0 and is unaffected: it is only
+selected with SCK idling low.)
+
+New BBC test program SPIRTC (`beeb/spitest/src/spirtc.asm`):
+
+| Test | Result |
+|---|---|
+| Write `55 AA 00 FF 01 80 5A A5` to SRAM, burst read back | Identical (`OK`) |
+| Control register (0Eh) | `1C`, the power-on default |
+| Status register (0Fh) | `C8` (OSF, BB32kHz, EN32kHz), the power-on default with no battery |
+| Time/date burst read (00h-06h) | Counting from 00:00:00 01/01/2000, seconds advancing once per second |
+| Temperature (11h-12h) | 23.50 C |
+
+Register values matching their power-on defaults exactly confirm bit
+alignment in both directions.
+
 ### Host User Port (J2) and User Port Passthrough (J3) - not yet tested
 
 J2 is the alternative host connection for a BBC Micro or Master with a
@@ -331,4 +359,5 @@ Considered low risk.
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |
 | Mouse on J13, Amiga and Atari modes | Working (Golden Image GI-6000) |
 | Peripheral User Port (J14), AMX mode | Working (button faults traced to the mice) |
+| RTC (J5, DS3234 DeadOn) | Working: SRAM write/read, time, status, temperature |
 | Host User Port (J2), passthrough (J3) | Not tested (no 20-way User Port host available); netlist checked |

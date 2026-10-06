@@ -73,6 +73,8 @@ Use `uv run --python 3.10` if your system Python is older than 3.10 (the script 
 - MCU: ATMega1284p @ 18.432 MHz external crystal
 - Programmer: USBasp
 - Fuses: L=0xf7 (external crystal), H=0xd9, E=0xff
+- **Rev 1 PCB J13 erratum:** the Peripheral DE-9 (J13) footprint is mirrored, so fitted normally it puts +5V on pin 8 and GND on pin 7. Board 1 has J13 fitted on the **reverse side**, which corrects it. Never plug a mouse into a component-side J13 on a Rev 1 board. See `docs/rev1-bringup.md` (erratum 1).
+- **USBasp with the board powered by the Compact:** remove the USBasp's 5 V jumper (J1 pin 7 ties the Compact's +5V to the board rail). Don't leave an **unpowered** USBasp attached: it holds the AVR in reset through RESET/SCK/MOSI. A factory-fresh AVR runs at 1 MHz, so use a slow ISP clock (`-B 32`) until the fuses are written.
 - Status LED on PD7 is **active-high** on the Rev 1 PCB (PD7 → R2 → D2 → GND); the breadboard prototype was active-low. All firmware uses the shared `status_led` module, which drives a once-per-second double-flash heartbeat from a Timer0 compare interrupt - **Timer0 is reserved** for it.
 
 ## Architecture Highlights
@@ -110,6 +112,10 @@ The ROM should implement standard BBC Micro mouse interfaces for ecosystem compa
 The Amiga and Atari mouse pinouts in our `docs/peripheral-pinouts.md` use **native** Amiga/Atari conventions, not the BBC-adapted labelling used by mdfs.net (which swaps Y-axis labels to match BBC handedness). Don't cross-reference mdfs.net pinouts directly.
 
 ## Testing
+
+The joystick firmware (`spitfire` target) is driven over serial on the Peripheral DE-9: pin 1 = AVR RX (PD0), pin 2 = AVR TX (PD1), pin 8 = GND, at 115200 8N1. Commands `0`-`3` set Port A to None/3B Twin/3B Single/14B and `4`-`7` do the same for Port B; it prints both ports every 100 ms. `firmware/tools/serread.py` reads and writes the port from the Mac. `docs/rev1-bringup.md` records how each subsystem was tested on the Rev 1 board.
+
+BBC test programs for the other SPI devices: SPIRTC and SPISETTIME (DS3234 RTC on J5) and SPISD (SD card on J4).
 
 This is embedded hardware - there is no automated test suite. Each piece of functionality is proven with a small standalone test program:
 - Flash firmware → load BBC test program → exercise hardware → observe results on the BBC display.

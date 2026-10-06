@@ -7,6 +7,8 @@ Example: serread.py /dev/cu.usbserial-0001 2 3   # set Port A to 14B, read 2 s
 Uses only the standard library (termios), no pyserial needed.
 """
 import os, sys, termios, time, select
+if len(sys.argv) < 2:
+    sys.exit(__doc__)
 port=sys.argv[1]; secs=float(sys.argv[2]) if len(sys.argv)>2 else 3
 fd=os.open(port, os.O_RDWR|os.O_NOCTTY|os.O_NONBLOCK)
 a=termios.tcgetattr(fd)

@@ -390,9 +390,15 @@ length. The string field positions are fixed: programs parse `TIME$`.
 
 ### Setting the clock
 `*TIME <string>` and `TIME$=` set the clock through OSWORD &0F, so
-nothing extra is needed beyond the &0F handler. Still to verify that
-MOS 5.10's `*TIME` passes its argument to OSWORD &0F. Writing the time
-must also clear the DS3234's oscillator stop flag (as SPISETTIME does).
+nothing extra is needed beyond the &0F handler: verified on the Compact,
+where MOS 5.10's `*TIME` passes its argument to OSWORD &0F. Any of the
+three forms (time, date, or both) works from either.
+
+The handler ignores the weekday name and computes the weekday from the
+date (Sakamoto's method, reduced to 8 bits for 2000-2199). It accepts
+years 2000-2199, the range of the DS3234's century bit, checks the date
+against the length of the month (2100 is not a leap year), and passes
+anything invalid on. A successful write clears the oscillator stop flag.
 
 ### Possible later extensions
 Time & Config defines further subcalls: &0E,5 for century and timezone,
@@ -562,8 +568,8 @@ Modules return claim status in A:
 The RTC hardware is proven and its MOS interface is now understood, so
 the RTC module comes first and brings the ROM skeleton with it:
 
-1. **RTC prototype** - ROM header, service dispatcher, SPI core and the
-   OSWORD &0E read calls (done, working on the Compact); then OSWORD &0F
+1. **RTC module** - ROM header, service dispatcher, SPI core, OSWORD &0E
+   and &0F (done, working on the Compact)
 2. **Mouse module** - first input feature, hardware proven
 3. **Joystick module** - reuse AVR firmware joystick code path
 4. **Single-config build first** - all modules in one ROM, configurable later

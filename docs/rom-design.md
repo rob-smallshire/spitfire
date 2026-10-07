@@ -49,12 +49,12 @@ evolve as we implement and learn.
 │  Module: RTC (optional)                 │
 │    - *TIME, *DATE commands              │
 │    - Updates &028D-&028F system clock   │
-├─────────────────────────────────────────┤
-│  Module: MMC/SD Filing (optional)       │
-│    - Custom MMFS variant for our        │
-│      74HC138 device selection           │
 └─────────────────────────────────────────┘
 ```
+
+The SD card filing system is not part of this ROM: it is MMFS, built
+with a SPItFIRE device driver, in a ROM of its own. See
+[SD Card Filing System](#sd-card-filing-system-separate-mmfs-rom).
 
 ## Reference: JGH's Module System
 
@@ -66,8 +66,8 @@ J.G. Harston's relocatable module system at
 - **SoftRTC2** - reference for RTC integration with system clock.
 - **SMLib** - relocatable module framework (we may adopt later, not
   required for first version).
-- **MMFS** - existing MMC filing system; we'll need a custom variant
-  (`MMC_Spitfire`) because standard MMFS ties SS to ground.
+- **MMFS** - existing MMC filing system. Standard MMFS ties SS to
+  ground, so we added a SPItFIRE device driver to it (see below).
 
 We should not be wilfully different on the MOS-facing side. Standard
 APIs and command syntax should match the existing BBC ecosystem.
@@ -332,16 +332,64 @@ Off-the-shelf SPI RTC breakout board (DS3234, DS3231, etc.).
 Read RTC at boot, update &028D-&028F (system clock low bytes).
 Could also periodically resync.
 
-## Module: MMC/SD Filing
+## SD Card Filing System (separate MMFS ROM)
 
-Custom MMFS variant for the SPItFIRE 74HC138 architecture.
+**Decision:** the SD card is served by MMFS in its own ROM, not by a
+module of the SPItFIRE ROM. MMFS gets a SPItFIRE device driver and
+nothing else, so the change stays small enough to offer upstream.
 
-### Background
-Standard MMFS ties SS to ground (always selected). Our 74HC138 has the
-SD card on a specific Y output. We need `MMC_Spitfire.asm` (a hardware
-abstraction layer matching MMFS conventions).
+- Fork: <https://github.com/rob-smallshire/MMFS>, branch `spitfire`
+  (upstream <https://github.com/hoglet67/MMFS>). Local clone at
+  `~/Code/MMFS` with `origin` = the fork, `upstream` = hoglet67.
+- Driver: `MMC_Spitfire.asm`, MMFS device `S`. Based on the non-turbo
+  User Port driver (`MMC_UserPort.asm`, device `U`).
+- Build: the Master build (`top_MAMMFS.asm`) is the one for the Compact.
+  MMFS2 (FAT32 card with `.ssd`/`.dsd` files) is the variant in use.
+- Tested on the Rev 1 board: `*DCAT`, `*DIN` and running games from a
+  FAT32 SDHC card. Writes are not yet tested on hardware.
 
-This is a substantial task and probably the last module to implement.
+### How the driver differs from the User Port driver
+- PB0-PB4 are outputs, and every write to IORB carries the SD card's
+  select code (Y2, `&08`), so the card stays selected throughout a
+  transaction.
+- The bit-banged byte write keeps PB2-PB4 constant. The User Port
+  version lets unsent data bits ripple across PB2-PB7, which on our
+  board would switch the decoder between devices mid-byte. The rewrite
+  is about 1.6x slower, but writes are only bit-banged commands and data
+  blocks; bulk reads use shift register mode 2 and run at the original
+  speed.
+- `MMC_DEVICE_RESET` (called from `MMC_BEGIN1` at the start of every
+  transaction) raises SCK with no device selected, then selects the card
+  (SPI mode 3).
+- `MMC_DEVICE_DESELECT`, called from `MMC_END`, selects Y0 and sends 8
+  clocks so the card releases MISO.
+- The TurboMMC mode 6 write path is not used: it relies on external
+  buffers switched by PB2-PB4, which on our board are decoder inputs.
+
+### ROM space
+The Master MMFS2 build leaves about 3.4 KB free, which could only just
+hold the rest of the SPItFIRE modules (estimated 2.3-3.7 KB) with no
+margin. Keeping them separate also keeps the MMFS fork upstreamable.
+The cost is a second ROM slot; at least one Compact socket takes a 32K
+ROM spanning two 16K sideways slots, so this is not a constraint in
+practice.
+
+### Bus access between the two ROMs (to be designed)
+The mouse (and possibly joystick) module will poll the AVR from an
+interrupt, and that poll must not disturb an MMFS transaction in
+progress. Points to settle:
+
+- A "bus busy" flag set in `MMC_BEGIN1` and cleared in `MMC_END`, at an
+  address both ROMs agree on. The interrupt-time poll must *skip* when
+  the flag is set; it must never wait, because MMFS cannot proceed until
+  the interrupt returns.
+- Errors raised mid-transaction (BRK) never reach `MMC_END`, so the flag
+  (and today the deselect) would be left set. MMFS needs to clear it on
+  its error path, or the poll needs a way to recover.
+- Outside a transaction, a poll changes PB2-PB4, the SCK idle level and
+  possibly the shift register mode. Either the poll restores what it
+  found, or MMFS reselects at the start of every transaction. It already
+  does the latter in `MMC_DEVICE_RESET`.
 
 ## Build/Configuration System
 
@@ -410,7 +458,10 @@ Modules return claim status in A:
 1. **Single ROM vs multiple ROMs?**
    - Single 16K ROM with all modules: consumes one bank slot, simple to load
    - Multiple ROMs: better separation, but uses multiple bank slots
-   - **Initial preference:** Single ROM, configurable at build time
+   - **Decision:** Two ROMs. The SPItFIRE ROM holds the SPI core, mouse,
+     joystick and RTC modules, configurable at build time. The SD card
+     filing system is a separate MMFS ROM (see
+     [SD Card Filing System](#sd-card-filing-system-separate-mmfs-rom)).
 
 2. **Relocation support?**
    - JGH's SMLib provides full relocatability
@@ -425,7 +476,8 @@ Modules return claim status in A:
 4. **MMFS_Spitfire vs adopting an existing variant?**
    - Could fork existing MMFS source
    - Or implement minimal MMC layer for our hardware
-   - **Decision:** Defer until we have SD card hardware to test
+   - **Decision:** Forked MMFS and added a device driver
+     (`MMC_Spitfire.asm`, device `S`); working on the Rev 1 board
 
 5. **RTC chip selection?**
    - DS3231 is popular and accurate (built-in TCXO)
@@ -440,7 +492,8 @@ Modules return claim status in A:
 4. **Joystick module** - reuse AVR firmware joystick code path
 5. **Single-config build first** - all modules in one ROM, configurable later
 6. **RTC module** - when hardware available
-7. **SD card module** - when hardware available, may borrow from MMFS
+7. **SD card** - done, as a separate MMFS ROM; still to do is the bus
+   access protocol shared with the mouse module
 
 ## References
 

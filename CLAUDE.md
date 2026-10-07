@@ -14,6 +14,7 @@ SPItFIRE is an analogue joystick and quadrature mouse adapter for the Acorn BBC 
 - `hardware/` - KiCad schematics and PCB
 - `docs/` - design docs and datasheets (start with `protocol.md`, `spi-interface.md`, `peripheral-pinouts.md`)
 - `docs/rom-design.md` - the in-progress ROM architecture proposal
+- SD card filing system: a separate MMFS ROM with a SPItFIRE device driver (`MMC_Spitfire.asm`, device `S`), on the `spitfire` branch of the fork at `~/Code/MMFS` (`origin` = rob-smallshire/MMFS, `upstream` = hoglet67/MMFS). See "SD Card Filing System" in `docs/rom-design.md`
 
 ## Build Commands
 

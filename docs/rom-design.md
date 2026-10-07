@@ -47,8 +47,8 @@ evolve as we implement and learn.
 │    - Provides ADVAL 1-4 (or extended)   │
 ├─────────────────────────────────────────┤
 │  Module: RTC (optional)                 │
-│    - *TIME, *DATE commands              │
-│    - Updates &028D-&028F system clock   │
+│    - Service call &08: OSWORD &0E/&0F   │
+│    - So *TIME and TIME$ read the DS3234 │
 └─────────────────────────────────────────┘
 ```
 
@@ -147,8 +147,7 @@ This is a working sketch, not a final design:
 | `*SPITFIRE JOYSTICK A 14B\|3B\|3B-TWIN\|...` | Configure joystick port A |
 | `*SPITFIRE JOYSTICK B ...` | Configure joystick port B |
 | `*SPITFIRE JOYSTICK INFO` | Report joystick state |
-| `*SPITFIRE RTC SET hh:mm:ss dd/mm/yyyy` | Set RTC |
-| `*SPITFIRE RTC INFO` | Show RTC status |
+| `*SPITFIRE RTC INFO` | Show RTC status (oscillator stop flag, temperature, aging) |
 | `*SPITFIRE SD INFO` | Show SD card status |
 
 ### Implementation Note
@@ -315,22 +314,94 @@ matching the existing AVR firmware test interface.
 
 ## Module: RTC
 
-Real-time clock support for an SPI RTC chip on Y2 or Y3 of the 74HC138.
+Makes the DS3234 on J5 (decoder output Y3, `DEV_RTC`) the machine's
+clock, so `*TIME`, BASIC's `TIME$` and anything else using OSWORD &0E
+(read clock) and &0F (write clock) see real time. The Master 128 had a
+clock; the Compact's was removed to save cost, and MOS 5.10 only returns
+a fixed default.
 
-### Hardware
-Off-the-shelf SPI RTC breakout board (DS3234, DS3231, etc.).
+### Findings on the Compact
+Probed with TIMEPROBE (`beeb/spitest/src/timeprobe.asm`), which calls
+OSWORD &0E with all ROMs, with every ROM hidden, and with each ROM on its
+own. Results on our Compact (MOS 5.10, ANFS 4.25 in slot 3):
 
-### MOS-facing API
-| Call | Description |
-|------|-------------|
-| `*TIME` | Display current time |
-| `*DATE` | Display current date |
-| `*SETTIME hh:mm:ss` | Set RTC time |
-| `*SETDATE dd/mm/yyyy` | Set RTC date |
+| Call | All ROMs (ANFS answers) | MOS only |
+|------|-------------------------|----------|
+| &0E,0 string | `   ,71 Oct 1994.23:25:49` | `Fri,31 Dec 1999.23:59:59` |
+| &0E,1 BCD | `94 10 71 00 23 25 49` | `99 12 31 06 23 59 59` |
+| &0E,2 of `26 10 07 04 12 34 56` | - | `Wed,07 Oct 1926.12:34:56` |
+| &0E,2 of `26 10 07 00 12 34 56` | - | `   ,07 Oct 1926.12:34:56` |
 
-### Integration with system clock
-Read RTC at boot, update &028D-&028F (system clock low bytes).
-Could also periodically resync.
+- **MOS 5.10 offers OSWORD &0E to sideways ROMs** with service call &08
+  (unrecognised OSWORD). ANFS 4.25 answers subcalls 0 and 1 by asking the
+  Econet file server. With no ROM answering, the MOS returns its default,
+  Fri 31 Dec 1999 23:59:59. (The Master 128 MOS handles these calls
+  itself and never offers them to ROMs; a Master add-on would have to
+  claim WORDV instead.)
+- **MOS subcall 2 always prints the century as 19**, so 2026 comes out
+  as 1926. A weekday of 0 prints as three spaces.
+- Every string is 25 bytes, `Ddd,dd Mon yyyy.hh:mm:ss` plus CR.
+- **ANFS 4.25 mis-decodes file server dates after 1996.** The server puts
+  the high year bits in bits 5-7 of the day byte, and ANFS passes the
+  whole byte on as the date. `71` with year `94` decodes as
+  day = 71 AND 31 = 7, year = (71 AND &E0)/2 + 94 + 1900 = 2026: the
+  correct date, 7 Oct 2026. The file server is right; ANFS is wrong.
+  ANFS also returns weekday 0 ("unknown"). This is what `*TIME` showed
+  before SPItFIRE.
+
+### How the module hooks in
+- **Service call &08.** On entry the OSWORD number is at &EF and the
+  parameter block address at &F0/&F1. Handle OSWORD &0E and &0F, return
+  A=0 to claim, and preserve X and Y. Anything not handled returns with
+  A unchanged, so other ROMs (ANFS especially) still see it.
+- **ROM slot above ANFS.** Service calls are offered from the highest slot
+  down, so the SPItFIRE ROM must sit in a higher slot than ANFS (slot 3
+  on our Compact) to answer before it.
+- **If the clock is not valid** (DS3234 oscillator stop flag set, or no
+  RTC fitted), pass the call on, so the machine falls back to ANFS or
+  the MOS default.
+
+### Calls to implement
+
+| Call | Data | Notes |
+|------|------|-------|
+| &0E,0 | Return `Ddd,dd Mon yyyy.hh:mm:ss` + CR (25 bytes) | Build the string ourselves with the real century; do not use MOS subcall 2 |
+| &0E,1 | Return 7 BCD bytes: year, month, date, weekday, hours, minutes, seconds | Weekday &01-&07 = Sun-Sat, as SPISETTIME writes it to the DS3234 |
+| &0E,2 | Convert 7 BCD bytes at XY+1 to a string | Only if the MOS offers it to ROMs before converting it itself (to test). Year &00-&79 = 20xx, &80-&99 = 19xx |
+| &0F,8 | `hh:mm:ss` | Set the time, leave the date |
+| &0F,15 | `Ddd,dd Mon yyyy` | Set the date, leave the time |
+| &0F,24 | `Ddd,dd Mon yyyy.hh:mm:ss` | Set both |
+
+Leave alone: &0E subcalls 3 and 4, which ANFS uses for the file server's
+time (and other ROMs use inconsistently), and every other subcall or
+length. The string field positions are fixed: programs parse `TIME$`.
+
+### Conventions (from the Stardot discussions)
+- **OSWORD calls never raise errors.** Invalid OSWORD &0F data is
+  ignored (or passed on). Errors belong to `*` commands.
+- **&A8-&AF belong to `*` commands.** An OSWORD handler that uses them
+  as workspace must save and restore them (e.g. on the stack).
+- **Return the real four-digit year** in subcall 0. Copying the
+  Master's 19xx is not required by the specification.
+- The 6502's V flag is not valid in decimal mode, which matters for any
+  BCD arithmetic (e.g. a future timezone offset).
+
+### Setting the clock
+`*TIME <string>` and `TIME$=` set the clock through OSWORD &0F, so
+nothing extra is needed beyond the &0F handler. Still to verify that
+MOS 5.10's `*TIME` passes its argument to OSWORD &0F. Writing the time
+must also clear the DS3234's oscillator stop flag (as SPISETTIME does).
+
+### Possible later extensions
+Time & Config defines further subcalls: &0E,5 for century and timezone,
+&0E,6 for when the clock was last set, &0F lengths for synchronising to
+the second and adjusting drift. None is a settled standard; leave them
+out of the first version.
+
+### Not to be confused with the system clock
+OSWORD 1/2 (`TIME` in BASIC) is a centisecond counter, unrelated to the
+calendar clock; the earlier idea of writing the RTC into &028D-&028F is
+wrong.
 
 ## SD Card Filing System (separate MMFS ROM)
 
@@ -402,13 +473,12 @@ beeb/spitfire-rom/
 │   ├── mod_mouse.asm       # Mouse module
 │   ├── mod_joystick.asm    # Joystick module
 │   ├── mod_rtc.asm         # RTC module
-│   ├── mod_sdcard.asm      # SD card filing system
 │   └── workspace.asm       # Shared workspace allocation
 ├── configs/
 │   ├── full.asm            # All modules
 │   ├── mouse_only.asm      # SPI core + mouse only
 │   ├── input.asm           # SPI core + mouse + joystick
-│   └── storage.asm         # SPI core + RTC + SD card
+│   └── clock.asm           # SPI core + RTC
 └── Makefile                # Build rule per config
 ```
 
@@ -482,17 +552,20 @@ Modules return claim status in A:
 5. **RTC chip selection?**
    - DS3231 is popular and accurate (built-in TCXO)
    - DS3234 is the SPI variant of DS3231
-   - **Decision:** Pick one when we have a board to test
+   - **Decision:** DS3234 (SparkFun DeadOn breakout on J5); proven on the
+     Rev 1 board by SPIRTC and SPISETTIME
 
 ## Implementation Plan (Proposed Order)
 
-1. **SPI Core module** - foundation for everything else
-2. **ROM header and service dispatcher** - basic ROM that loads cleanly
-3. **Mouse module** - first user-visible feature, hardware proven
-4. **Joystick module** - reuse AVR firmware joystick code path
-5. **Single-config build first** - all modules in one ROM, configurable later
-6. **RTC module** - when hardware available
-7. **SD card** - done, as a separate MMFS ROM; still to do is the bus
+The RTC hardware is proven and its MOS interface is now understood, so
+the RTC module comes first and brings the ROM skeleton with it:
+
+1. **RTC prototype** - ROM header, service dispatcher, SPI core and the
+   OSWORD &0E read calls; then OSWORD &0F
+2. **Mouse module** - first input feature, hardware proven
+3. **Joystick module** - reuse AVR firmware joystick code path
+4. **Single-config build first** - all modules in one ROM, configurable later
+5. **SD card** - done, as a separate MMFS ROM; still to do is the bus
    access protocol shared with the mouse module
 
 ## References
@@ -501,6 +574,13 @@ Modules return claim status in A:
 - AMX Mouse User Guide: `docs/datasheets/AMX_MouseUG.pdf`
   ([source](https://chrisacorns.computinghistory.org.uk/docs/AMX/AMX_MouseUG.pdf))
 - [JGH's relocatable modules](https://mdfs.net/Software/BBC/Modules/)
+- [BeebWiki OSWORD &0E](https://beebwiki.mdfs.net/OSWORD_%260E) and
+  [OSWORD &0F](https://beebwiki.mdfs.net/OSWORD_%260F) - clock calls,
+  per-MOS behaviour, the ANFS date fix
+- Stardot: [OSWORD 14 & 15 numbers](https://stardot.org.uk/forums/viewtopic.php?t=28743)
+  and [Time & Config](https://stardot.org.uk/forums/viewtopic.php?t=30412)
+  (Barney Hilken's RTC board; ROM source at
+  <https://codeberg.org/Barneyntd/Time-Config.>)
 - [JGH's MouseROM source](https://mdfs.net/Software/CommandSrc/Mouse/ROMMouse.src)
 - [MDFS BBC Mouse documentation](https://mdfs.net/Info/Comp/BBC/Mouse/)
 - Internal: [protocol.md](protocol.md) - SPI command set

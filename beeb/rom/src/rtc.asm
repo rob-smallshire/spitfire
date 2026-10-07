@@ -7,8 +7,8 @@
 ;   1  Return 7 BCD bytes: year, month, date, weekday (1 = Sunday),
 ;      hours, minutes, seconds
 ;   2  Convert the 7 BCD bytes at XY+1 into a string (year &00-&79 is
-;      20xx). Experimental: on MOS 5.10 this only takes effect if the MOS
-;      offers subcall 2 to ROMs before converting it itself.
+;      20xx). MOS 5.10 offers subcall 2 to ROMs before converting it
+;      itself (with century 19), so this fixes the century for everyone.
 ; Everything else is passed on, including subcalls 3 and 4 (ANFS's file
 ; server time). If the DS3234's oscillator stop flag is set, or no RTC
 ; answers, subcalls 0 and 1 are passed on too, so ANFS or the MOS

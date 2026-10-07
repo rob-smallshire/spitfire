@@ -339,7 +339,9 @@ own. Results on our Compact (MOS 5.10, ANFS 4.25 in slot 3):
   itself and never offers them to ROMs; a Master add-on would have to
   claim WORDV instead.)
 - **MOS subcall 2 always prints the century as 19**, so 2026 comes out
-  as 1926. A weekday of 0 prints as three spaces.
+  as 1926. A weekday of 0 prints as three spaces. The MOS offers subcall
+  2 to ROMs first, though: with the SPItFIRE ROM loaded, TIMEPROBE's
+  all-ROMs conversion of year &26 gives 2026.
 - Every string is 25 bytes, `Ddd,dd Mon yyyy.hh:mm:ss` plus CR.
 - **ANFS 4.25 mis-decodes file server dates after 1996.** The server puts
   the high year bits in bits 5-7 of the day byte, and ANFS passes the
@@ -367,7 +369,7 @@ own. Results on our Compact (MOS 5.10, ANFS 4.25 in slot 3):
 |------|------|-------|
 | &0E,0 | Return `Ddd,dd Mon yyyy.hh:mm:ss` + CR (25 bytes) | Build the string ourselves with the real century; do not use MOS subcall 2 |
 | &0E,1 | Return 7 BCD bytes: year, month, date, weekday, hours, minutes, seconds | Weekday &01-&07 = Sun-Sat, as SPISETTIME writes it to the DS3234 |
-| &0E,2 | Convert 7 BCD bytes at XY+1 to a string | Only if the MOS offers it to ROMs before converting it itself (to test). Year &00-&79 = 20xx, &80-&99 = 19xx |
+| &0E,2 | Convert 7 BCD bytes at XY+1 to a string | MOS 5.10 offers it to ROMs before converting it itself, so claiming it fixes the century for every caller. Year &00-&79 = 20xx, &80-&99 = 19xx |
 | &0F,8 | `hh:mm:ss` | Set the time, leave the date |
 | &0F,15 | `Ddd,dd Mon yyyy` | Set the date, leave the time |
 | &0F,24 | `Ddd,dd Mon yyyy.hh:mm:ss` | Set both |
@@ -561,7 +563,7 @@ The RTC hardware is proven and its MOS interface is now understood, so
 the RTC module comes first and brings the ROM skeleton with it:
 
 1. **RTC prototype** - ROM header, service dispatcher, SPI core and the
-   OSWORD &0E read calls; then OSWORD &0F
+   OSWORD &0E read calls (done, working on the Compact); then OSWORD &0F
 2. **Mouse module** - first input feature, hardware proven
 3. **Joystick module** - reuse AVR firmware joystick code path
 4. **Single-config build first** - all modules in one ROM, configurable later

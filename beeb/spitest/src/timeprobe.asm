@@ -3,7 +3,9 @@
 ; answers it: the MOS itself, or a sideways ROM such as ANFS.
 ;
 ; Three views:
-;   1. All ROMs   - what *TIME and TIME$ currently see
+;   1. All ROMs   - what *TIME and TIME$ currently see; also converts
+;                   a fixed BCD block with subcall 2, to show whether
+;                   the MOS offers subcall 2 to ROMs
 ;   2. MOS only   - every ROM hidden, so only MOS 5.10 can answer;
 ;                   also converts some fixed BCD blocks with subcall 2
 ;   3. Each ROM on its own, listed if its subcall 0 answer differs
@@ -76,6 +78,10 @@ save_y   = &78
     LDX #HI(blk_all1)
     LDY #1
     JSR read_clock
+    LDA #LO(blk_all2)
+    LDX #HI(blk_all2)
+    LDY #LO(bcd_a - bcd_tables)
+    JSR convert_bcd
 
     JSR print_inline
     EQUS 13, 10, "All ROMs:", 13, 10, 0
@@ -85,6 +91,11 @@ save_y   = &78
     LDX #LO(blk_all1)
     LDY #HI(blk_all1)
     JSR print_sub1
+    JSR print_inline
+    EQUS "2: 26 10 07 04 12 34 56", 13, 10, 0
+    LDX #LO(blk_all2)
+    LDY #HI(blk_all2)
+    JSR print_string_block
 
 ; ------ 2. MOS only ------
     JSR hide_all
@@ -432,5 +443,6 @@ blk_conv_c  = blk_conv_b + BLKSIZE
 blk_rom     = blk_conv_c + BLKSIZE
 blk_anfs3   = blk_rom + BLKSIZE
 blk_anfs4   = blk_anfs3 + BLKSIZE
+blk_all2    = blk_anfs4 + BLKSIZE
 
 SAVE "TIMEPROBE", start, end

@@ -427,26 +427,45 @@ still fall back to ANFS or the MOS when the RTC is absent.
 **The decoder selects whatever A0-A2 float to** whenever the VIA is not
 driving PB2-PB4: at power-up and reset (port B is all inputs), before
 any SPItFIRE software has set the port up, and when the cable is
-plugged into a running machine. The Compact's port is a joystick port
-(switches pull lines to ground), so it probably has its own pull-ups on
-PB0-PB4; if so the idle lines read all ones and select **Y7**, not Y0.
-Options for Rev 2:
+plugged into a running machine.
 
-- Make Y7 the "no device" code, with on-board pull-ups agreeing with the
-  Compact's. Every unconfigured state then selects nothing. Software
-  change: `DEV_NONE` in the test programs and ROM, and `nosel` in the
-  MMFS driver.
-- Keep Y0 as "no device" and add pull-downs. These would fight any
-  pull-ups in the Compact and could leave the lines at an indeterminate
-  level.
+Measured on the Compact with SPItFIRE attached (the 74HC138 inputs draw
+at most about 1 uA, so the board does not load these lines), probing
+A0/A1/A2 at J3 pins 10/12/14 against GND on the facing pins 9/11/13:
 
-To decide, measure the Compact with SPItFIRE unplugged and the machine
-just reset: the voltage on DE-9 pins 1, 2 and 4 (PB3, PB2, PB4), then
-again with 10k from each pin to ground. If the voltage stays high the
-Compact has pull-ups, and the ratio gives their strength.
+| Condition | A0-A2 | Selected |
+|---|---|---|
+| `?&FE62=&1F` then `?&FE60=0` / `?&FE60=&1C` | 0 V / 4.9 V | (pin mapping check) |
+| `?&FE62=0` (port B inputs, as after reset) | 4.95 V | Y7 (J9 pin 6 low, all other chip selects high) |
+| Same, with 10k from each line to GND in turn | 3.5 V | |
+| After Ctrl-BREAK, and after power-on | 4.95 V | Y7 |
+| After `*TIME` (the SPItFIRE ROM sets the port up) | 0 V | Y0 |
 
-On Rev 1 this is harmless while nothing is fitted to J9 (Y7). Keep J9
-empty until it is resolved.
+So the Compact pulls PB2-PB4 up, with about 4.1k each
+(10k x (4.95 - 3.5) / 3.5), as expected on a joystick port whose
+switches pull lines to ground; and nothing at boot (MMFS included)
+touches port B. With the port released, the decoder selects **Y7**.
+
+Pull-downs to keep Y0 as "no device" are impractical: to pull a line
+below the 74HC138's input-low threshold (about 1.35 V) against 4.1k they
+would need to be about 1.5k or less, and the VIA's NMOS port B outputs
+cannot then drive a good high (about 3 mA into the pull-down).
+
+**Decision for Rev 2: Y7 is "no device".** The Compact's pull-ups make
+all-ones the resting state, so every unconfigured moment selects
+nothing without extra parts. Leave Y7 unconnected (as Y0 is on Rev 1)
+and move the spare expansion header that was on Y7 (J9) to Y0.
+Optionally add weak on-board pull-ups (47k-100k) on A0-A2, which only
+matter when the board is powered without the Compact (e.g. from the
+USBasp); not 10k, which with the Compact's 4.1k would make the VIA sink
+about 1.7 mA per line when driving low, at its 1.6 mA rating.
+
+Software change, which also works on Rev 1 as long as J9 stays empty:
+"no device" becomes `%00011100` (Y7) instead of `%00000000` (Y0), in the
+test programs (`DEV_NONE`/deselect), the ROM (`spi_init`,
+`spi_deselect`), and the MMFS driver (`nosel`).
+
+On Rev 1, keep J9 empty: it is selected whenever port B is released.
 
 SCK and MOSI need no resistors: devices ignore them while deselected.
 
@@ -456,7 +475,7 @@ SCK and MOSI need no resistors: devices ignore them while deselected.
 |---|---|---|
 | 1 | J13 male DE-9 footprint mirrored (pins 1-5, 2-4, 6-9, 7-8 swapped) | Negate pad X coordinates in the custom male DE-9 footprint so it mirrors the female footprint |
 | 2 | MISO floats when no device drives it, so an absent device reads noise | 10k pull-up from MISO to +5V (Rev 1 bodge: 10k across pins 2-3 of J6, J7 or J8) |
-| 3 | Decoder inputs A0-A2 float while the VIA is not driving them, so the idle device is undefined (probably Y7, via the Compact's own pull-ups) | Measure the Compact's PB2-PB4 idle levels, then either make Y7 "no device" with pull-ups, or keep Y0 with pull-downs (see "Bus idle levels") |
+| 3 | When the VIA is not driving A0-A2, the Compact's own ~4.1k pull-ups make the decoder select Y7, which goes to expansion header J9 | Make Y7 "no device": leave Y7 unconnected and move J9 to Y0; optional 47k-100k pull-ups on A0-A2; software "no device" code becomes `%00011100` (see "Bus idle levels") |
 
 ### Status
 

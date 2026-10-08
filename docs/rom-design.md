@@ -359,9 +359,18 @@ own. Results on our Compact (MOS 5.10, ANFS 4.25 in slot 3):
 - **ROM slot above ANFS.** Service calls are offered from the highest slot
   down, so the SPItFIRE ROM must sit in a higher slot than ANFS (slot 3
   on our Compact) to answer before it.
-- **If the clock is not valid** (DS3234 oscillator stop flag set, or no
-  RTC fitted), pass the call on, so the machine falls back to ANFS or
-  the MOS default.
+- **If no DS3234 is fitted, or the clock is not valid**, pass the call
+  on, so the machine falls back to ANFS or the MOS default.
+  - *Presence* (all calls): MISO floats when nothing drives it (Rev 1
+    has no pull-up; see Rev 2 erratum 2 in
+    [rev1-bringup.md](rev1-bringup.md)), so a read alone cannot show that
+    a DS3234 answered. The module writes the complement of the SRAM
+    address register (18h, no side effects) and reads it back, then
+    restores it. A floating line cannot echo the value.
+  - *Validity* (reads only): the oscillator stop flag must be clear and
+    every time field valid BCD within its range. The ranges also cover
+    the bits that always read 0, and reject 12-hour mode. Writes do not
+    require a valid stored time, so `*TIME` can always repair the clock.
 
 ### Calls to implement
 

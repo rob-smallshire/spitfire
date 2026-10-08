@@ -402,11 +402,61 @@ through J1; pins 16/18/20 (PB5-PB7) go only to J3. The untested parts are
 therefore the connectors themselves and the PB5-PB7 passthrough tracks.
 Considered low risk.
 
+### Bus idle levels - no pull resistors on the shared SPI nets
+
+The netlist has no pull resistors on MISO, MOSI, SCK or the decoder
+inputs A0-A2 (the only resistors are R3-R6, the 1k series resistors to
+the AVR). Two consequences:
+
+**MISO floats when no device drives it.** With no device selected, or
+with the selected device absent (e.g. no DeadOn on J5), the VIA's CB2
+input reads whatever the floating line settles at, so software cannot
+reliably tell that nothing answered. A pull-up makes an absent device
+read `&FF` on every SPI device. Proposed: 10k to +5V. When the AVR
+drives low through its 1k series resistor (R5) the line sits at about
+0.45 V, still a good low; the SD breakout's 3.3 V DO is fed only about
+0.1 mA when tri-stated. Rev 1 bodge, no soldering: a 10k resistor
+across **pins 2 (+5V) and 3 (MISO)** of a spare expansion header
+(J6-J8). Not pins 3-4: pin 4 is GND, and that would pull MISO down.
+
+The SPItFIRE ROM does not rely on the pull-up: it validates what the
+DS3234 returns before claiming a clock call (see
+[rom-design.md](rom-design.md)), so Rev 1 boards without the bodge
+still fall back to ANFS or the MOS when the RTC is absent.
+
+**The decoder selects whatever A0-A2 float to** whenever the VIA is not
+driving PB2-PB4: at power-up and reset (port B is all inputs), before
+any SPItFIRE software has set the port up, and when the cable is
+plugged into a running machine. The Compact's port is a joystick port
+(switches pull lines to ground), so it probably has its own pull-ups on
+PB0-PB4; if so the idle lines read all ones and select **Y7**, not Y0.
+Options for Rev 2:
+
+- Make Y7 the "no device" code, with on-board pull-ups agreeing with the
+  Compact's. Every unconfigured state then selects nothing. Software
+  change: `DEV_NONE` in the test programs and ROM, and `nosel` in the
+  MMFS driver.
+- Keep Y0 as "no device" and add pull-downs. These would fight any
+  pull-ups in the Compact and could leave the lines at an indeterminate
+  level.
+
+To decide, measure the Compact with SPItFIRE unplugged and the machine
+just reset: the voltage on DE-9 pins 1, 2 and 4 (PB3, PB2, PB4), then
+again with 10k from each pin to ground. If the voltage stays high the
+Compact has pull-ups, and the ratio gives their strength.
+
+On Rev 1 this is harmless while nothing is fitted to J9 (Y7). Keep J9
+empty until it is resolved.
+
+SCK and MOSI need no resistors: devices ignore them while deselected.
+
 ### Rev 2 errata
 
 | # | Issue | Fix |
 |---|---|---|
 | 1 | J13 male DE-9 footprint mirrored (pins 1-5, 2-4, 6-9, 7-8 swapped) | Negate pad X coordinates in the custom male DE-9 footprint so it mirrors the female footprint |
+| 2 | MISO floats when no device drives it, so an absent device reads noise | 10k pull-up from MISO to +5V (Rev 1 bodge: 10k across pins 2-3 of J6, J7 or J8) |
+| 3 | Decoder inputs A0-A2 float while the VIA is not driving them, so the idle device is undefined (probably Y7, via the Compact's own pull-ups) | Measure the Compact's PB2-PB4 idle levels, then either make Y7 "no device" with pull-ups, or keep Y0 with pull-downs (see "Bus idle levels") |
 
 ### Status
 
@@ -423,7 +473,7 @@ Considered low risk.
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |
 | Mouse on J13, Amiga and Atari modes | Working (Golden Image GI-6000) |
 | Peripheral User Port (J14), AMX mode | Working (button faults traced to the mice) |
-| RTC (J5, DS3234 DeadOn) | Working: SRAM, set/read time, status, temperature, battery backup |
-| SD card (J4, Adafruit microSD) | Working: initialisation, CID and sector reads |
+| RTC (J5, DS3234 DeadOn) | Working: SRAM, set/read time, status, temperature, battery backup; `*TIME` and `TIME$` through the SPItFIRE ROM |
+| SD card (J4, Adafruit microSD) | Working: initialisation, CID and sector reads; MMFS2 with the SPItFIRE device driver |
 | Expansion headers (J6-J9) | Continuity and power checked; no add-ons yet |
 | Host User Port (J2), passthrough (J3) | Not tested (no 20-way User Port host available); netlist checked |

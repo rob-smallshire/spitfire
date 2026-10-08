@@ -11,9 +11,10 @@
 ;      20xx). MOS 5.10 offers subcall 2 to ROMs before converting it
 ;      itself (with century 19), so this fixes the century for everyone.
 ; Everything else is passed on, including subcalls 3 and 4 (ANFS's file
-; server time). If the DS3234's oscillator stop flag is set, or no RTC
-; answers, subcalls 0 and 1 are passed on too, so ANFS or the MOS
-; default answer instead.
+; server time). Subcalls 0 and 1 are passed on too, so ANFS or the MOS
+; default answer instead, if no DS3234 is present, if its oscillator
+; stop flag is set, or if any time field is not valid BCD in range
+; (which also rejects 12-hour mode).
 ;
 ; OSWORD &0F lengths handled (data from XY+1):
 ;   8  "hh:mm:ss"                  Set the time, leave the date
@@ -22,8 +23,13 @@
 ; Fields are at fixed positions and punctuation is not checked. The
 ; weekday name is ignored: the weekday is computed from the date. Years
 ; 2000-2199 only (the DS3234's century bit). Month names match in either
-; case. Anything invalid is passed on. A successful write clears the
-; oscillator stop flag.
+; case. Anything invalid is passed on, as is everything if no DS3234 is
+; present. A successful write clears the oscillator stop flag.
+;
+; Presence: MISO floats when nothing drives it (Rev 1 has no pull-up),
+; so reads alone cannot show that a DS3234 answered. Instead the SRAM
+; address register (18h), which has no side effects, is written with
+; its complement and read back, then restored.
 ;
 ; OSWORD calls never raise errors.
 
@@ -31,6 +37,7 @@
 RTC_SECONDS = &00
 RTC_WEEKDAY = &03
 RTC_STATUS  = &0F
+RTC_SRAM_ADDR = &18
 RTC_WRITE   = &80           ; OR with a register number to write it
 RTC_OSF     = %10000000     ; Status: oscillator stop flag
 RTC_CENTURY = %10000000     ; Month register: century bit
@@ -143,18 +150,15 @@ set_temp    = ws + 7        ; Shares with spi_temp; free before SPI
     CLC
     RTS
 
-; Read the DS3234 into ws. C=1 if the clock is not valid.
+; Read the DS3234 into ws. C=1 if the clock is not valid: no DS3234,
+; oscillator stopped, or a field out of range.
 .rtc_read
-    JSR spi_init
-    LDA #DEV_RTC
-    JSR spi_select3
+    JSR rtc_present
+    BCS rtc_read_done
     LDA #RTC_STATUS
-    JSR spi_xfer3
-    JSR spi_xfer3
-    PHA
-    JSR spi_deselect
-    PLA
-    BMI rtc_invalid         ; Oscillator stopped, or no RTC (reads &FF)
+    JSR rtc_read_reg
+    ASL A                   ; Oscillator stop flag into C
+    BCS rtc_read_done
 
     LDA #DEV_RTC
     JSR spi_select3
@@ -170,23 +174,94 @@ set_temp    = ws + 7        ; Shares with spi_temp; free before SPI
     BNE rtc_read_loop
     JSR spi_deselect
 
-    LDA rtc_hours
-    AND #%00111111          ; 24-hour mode (as SPISETTIME sets it)
-    STA rtc_hours
     LDX #&20
     LDA rtc_month
     BPL rtc_read_century
     LDX #&21
 .rtc_read_century
     STX rtc_century
-    AND #%00011111
+    AND #&FF EOR RTC_CENTURY
     STA rtc_month
-    BEQ rtc_invalid         ; Month 0: nothing sensible answered
+
+    LDX #6                  ; Every field valid BCD within its range.
+.rtc_read_check             ; The ranges also cover the bits that always
+    LDA ws, X               ; read 0, and reject 12-hour mode (hours
+    AND #&0F                ; bit 6).
+    CMP #10
+    BCS rtc_read_done       ; Low digit not 0-9
+    LDA ws, X
+    CMP rtc_field_min, X
+    BCC rtc_read_bad
+    LDA rtc_field_max, X
+    CMP ws, X
+    BCC rtc_read_bad        ; Above the maximum (or high digit not 0-9)
+    DEX
+    BPL rtc_read_check
     CLC
+.rtc_read_done
     RTS
-.rtc_invalid
+.rtc_read_bad
     SEC
     RTS
+
+; Field limits, BCD, in OSWORD &0E,1 order: year, month, date, weekday,
+; hours, minutes, seconds
+.rtc_field_min
+    EQUB &00, &01, &01, &01, &00, &00, &00
+.rtc_field_max
+    EQUB &99, &12, &31, &07, &23, &59, &59
+
+; C=1 if no DS3234 answers. Writes the complement of the SRAM address
+; register and reads it back, which a floating MISO cannot echo, then
+; restores it. Corrupts A, X, Y.
+.rtc_present
+    JSR spi_init
+    LDA #RTC_SRAM_ADDR
+    JSR rtc_read_reg
+    PHA                     ; Original value
+    EOR #&FF
+    TAY
+    LDA #RTC_SRAM_ADDR
+    JSR rtc_write_reg
+    LDA #RTC_SRAM_ADDR
+    JSR rtc_read_reg
+    STA spi_temp
+    PLA
+    CPY spi_temp
+    BNE rtc_absent
+    TAY                     ; Restore the original
+    LDA #RTC_SRAM_ADDR
+    JSR rtc_write_reg
+    CLC
+    RTS
+.rtc_absent
+    SEC
+    RTS
+
+; Return DS3234 register A in A. Preserves Y; corrupts X.
+.rtc_read_reg
+    PHA
+    LDA #DEV_RTC
+    JSR spi_select3
+    PLA
+    JSR spi_xfer3
+    JSR spi_xfer3
+    TAX
+    JSR spi_deselect
+    TXA
+    RTS
+
+; Write Y to DS3234 register A. Preserves Y; corrupts A, X.
+.rtc_write_reg
+    PHA
+    LDA #DEV_RTC
+    JSR spi_select3
+    PLA
+    ORA #RTC_WRITE
+    JSR spi_xfer3
+    TYA
+    JSR spi_xfer3
+    JMP spi_deselect
 
 ; DS3234 registers 00-06 (seconds, minutes, hours, weekday, date, month,
 ; year) to their offsets in the OSWORD &0E,1 block
@@ -282,6 +357,8 @@ set_temp    = ws + 7        ; Shares with spi_temp; free before SPI
 
 ; With &A8-&AF free. C=0 if claimed.
 .rtc_osword0f
+    JSR rtc_present
+    BCS rtc_set_invalid
     LDY #0
     LDA (OSWORD_BLK), Y
     CMP #8
@@ -586,22 +663,12 @@ set_temp    = ws + 7        ; Shares with spi_temp; free before SPI
 ; Clear the oscillator stop flag (status bit 7). Writing back the alarm
 ; flags as read leaves them as they are (they can only be written to 0).
 .rtc_clear_osf
-    JSR spi_init
-    LDA #DEV_RTC
-    JSR spi_select3
     LDA #RTC_STATUS
-    JSR spi_xfer3
-    JSR spi_xfer3
-    PHA
-    JSR spi_deselect
-    LDA #DEV_RTC
-    JSR spi_select3
-    LDA #RTC_STATUS OR RTC_WRITE
-    JSR spi_xfer3
-    PLA
+    JSR rtc_read_reg
     AND #&FF EOR RTC_OSF
-    JSR spi_xfer3
-    JMP spi_deselect
+    TAY
+    LDA #RTC_STATUS
+    JMP rtc_write_reg
 
 ; Sakamoto's month offsets, January first
 .rtc_weekday_t

@@ -462,9 +462,10 @@ USBasp); not 10k, which with the Compact's 4.1k would make the VIA sink
 about 1.7 mA per line when driving low, at its 1.6 mA rating.
 
 Software change, which also works on Rev 1 as long as J9 stays empty:
-"no device" becomes `%00011100` (Y7) instead of `%00000000` (Y0), in the
+"no device" is now `%00011100` (Y7) instead of `%00000000` (Y0), in the
 test programs (`DEV_NONE`/deselect), the ROM (`spi_init`,
-`spi_deselect`), and the MMFS driver (`nosel`).
+`spi_deselect`), and the MMFS driver (`nosel`). Done; on Rev 1 this
+gives six usable chip selects (Y1-Y6), on Rev 2 seven (Y0-Y6).
 
 On Rev 1, keep J9 empty: it is selected whenever port B is released.
 

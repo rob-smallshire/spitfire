@@ -317,8 +317,7 @@ dow      = &83              ; 1 = Sunday .. 7 = Saturday
     ORA #MOSI OR SCK OR SEL_MASK
     STA DDRB
     LDA IORB                ; No device, SCK high, MOSI high
-    AND #NOT_SEL
-    ORA #MOSI OR SCK
+    ORA #MOSI OR SCK OR SEL_MASK ; No device (Y7), SCK and MOSI high
     STA IORB
     RTS
 
@@ -332,7 +331,7 @@ dow      = &83              ; 1 = Sunday .. 7 = Saturday
 
 .rtc_deselect
     LDA IORB
-    AND #NOT_SEL
+    ORA #SEL_MASK            ; No device (Y7)
     STA IORB
     RTS
 

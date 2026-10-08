@@ -59,13 +59,13 @@ A 74HC138 3-to-8 decoder expands three VIA pins into seven chip select lines. Th
                               74HC138
                             ┌────┴────┐
                         A0 ─┤1      16├─ VCC
-                        A1 ─┤2      15├─ Y0 (unconnected - no device)
+                        A1 ─┤2      15├─ Y0 (unconnected on Rev 1)
                         A2 ─┤3      14├─ Y1 → [1kΩ] → AVR PB4 (SS)
-                       ~G0 ─┤4      13├─ Y2 (unassigned)
-                       ~G1 ─┤5      12├─ Y3 (unassigned)
-                        G2 ─┤6      11├─ Y4 (unassigned)
-                        Y7 ─┤7      10├─ Y5 (unassigned)
-                       GND ─┤8       9├─ Y6 (unassigned)
+                       ~G0 ─┤4      13├─ Y2 → J4 SD card
+                       ~G1 ─┤5      12├─ Y3 → J5 RTC
+                        G2 ─┤6      11├─ Y4 → J6 (spare)
+       (no device) J9 ← Y7 ─┤7      10├─ Y5 → J7 (spare)
+                       GND ─┤8       9├─ Y6 → J8 (spare)
                             └─────────┘
 ```
 
@@ -84,14 +84,14 @@ Host DE-9                   74HC138                 Devices
 Pin 2 (PB2) ─────────────────→ A0
 Pin 1 (PB3) ─────────────────→ A1
 Pin 4 (PB4) ─────────────────→ A2
-                               Y0 ─── (no connection)
+                               Y0 ─── (no connection on Rev 1)
                                Y1 ───[1kΩ]──→ AVR PB4 (SS)
-                               Y2 ─── (unassigned)
-                               Y3 ─── (unassigned)
-                               Y4 ─── (unassigned)
-                               Y5 ─── (unassigned)
-                               Y6 ─── (unassigned)
-                               Y7 ─── (unassigned)
+                               Y2 ─────────→ J4 SD card
+                               Y3 ─────────→ J5 RTC
+                               Y4 ─────────→ J6 (spare)
+                               Y5 ─────────→ J7 (spare)
+                               Y6 ─────────→ J8 (spare)
+                               Y7 ─────────→ J9: no device (keep empty)
 
 Pin 6 (PB0) ─────────[1kΩ]───────────────→ AVR PB5 (MOSI)
 Pin 3 (PB1) ──┬──────[1kΩ]───────────────→ AVR PB7 (SCK)
@@ -104,16 +104,24 @@ Pin 8 (0V)  ──────────────────────�
 
 Write a 3-bit device number to PB4:PB3:PB2 to select a device:
 
-| A2 (PB4) | A1 (PB3) | A0 (PB2) | Value | Active Output | Device |
-|----------|----------|----------|-------|---------------|--------|
-| 0 | 0 | 0 | 0 | Y0 | None (idle) |
-| 0 | 0 | 1 | 1 | Y1 | SPItFIRE |
-| 0 | 1 | 0 | 2 | Y2 | (unassigned) |
-| 0 | 1 | 1 | 3 | Y3 | (unassigned) |
-| 1 | 0 | 0 | 4 | Y4 | (unassigned) |
-| 1 | 0 | 1 | 5 | Y5 | (unassigned) |
-| 1 | 1 | 0 | 6 | Y6 | (unassigned) |
-| 1 | 1 | 1 | 7 | Y7 | (unassigned) |
+| A2 (PB4) | A1 (PB3) | A0 (PB2) | Value | Active Output | Rev 1 | Rev 2 (proposed) |
+|----------|----------|----------|-------|---------------|-------|------------------|
+| 0 | 0 | 0 | 0 | Y0 | Unconnected | Spare header (J9) |
+| 0 | 0 | 1 | 1 | Y1 | SPItFIRE AVR | SPItFIRE AVR |
+| 0 | 1 | 0 | 2 | Y2 | SD card (J4) | SD card |
+| 0 | 1 | 1 | 3 | Y3 | RTC (J5) | RTC |
+| 1 | 0 | 0 | 4 | Y4 | Spare header J6 | J6 |
+| 1 | 0 | 1 | 5 | Y5 | Spare header J7 | J7 |
+| 1 | 1 | 0 | 6 | Y6 | Spare header J8 | J8 |
+| 1 | 1 | 1 | 7 | Y7 | **No device** (J9, keep empty) | **No device** (unconnected) |
+
+**"No device" is Y7, all ones.** The Compact pulls PB2-PB4 up (about
+4.1k each) whenever port B is not driving them, at power-up, after reset
+and before any SPItFIRE code runs, so the decoder rests on Y7 anyway.
+Software deselects to the same code, so the bus looks the same whether
+or not SPItFIRE code has run. Y0 cannot be used as "no device": see Rev 2
+erratum 3 in [rev1-bringup.md](rev1-bringup.md). On Rev 1, J9 (Y7) must
+stay empty.
 
 ### Software Interface
 
@@ -127,14 +135,13 @@ SEL_A2   = %00010000        ; PB4 - decoder A2
 SEL_MASK = %00011100        ; All decoder bits (PB2-PB4)
 
 ; Device constants (pre-shifted to PB2-4 position)
-DEV_NONE     = %00000000    ; Y0 - no device selected
+DEV_NONE     = %00011100    ; Y7 - no device selected (A2=1, A1=1, A0=1)
 DEV_SPITFIRE = %00000100    ; Y1 - SPItFIRE (A0=1)
-DEV_2        = %00001000    ; Y2 - unassigned (A1=1)
-DEV_3        = %00001100    ; Y3 - unassigned (A1=1, A0=1)
-DEV_4        = %00010000    ; Y4 - unassigned (A2=1)
-DEV_5        = %00010100    ; Y5 - unassigned (A2=1, A0=1)
-DEV_6        = %00011000    ; Y6 - unassigned (A2=1, A1=1)
-DEV_7        = %00011100    ; Y7 - unassigned (A2=1, A1=1, A0=1)
+DEV_SD       = %00001000    ; Y2 - SD card (A1=1)
+DEV_RTC      = %00001100    ; Y3 - RTC (A1=1, A0=1)
+DEV_4        = %00010000    ; Y4 - spare (A2=1)
+DEV_5        = %00010100    ; Y5 - spare (A2=1, A0=1)
+DEV_6        = %00011000    ; Y6 - spare (A2=1, A1=1)
 
 ; Mask for clearing decoder bits
 NOT_SEL  = %11100011        ; Clear PB2, PB3, PB4
@@ -147,11 +154,11 @@ NOT_SEL  = %11100011        ; Clear PB2, PB3, PB4
 
 ; Deselect (idle)
     LDA IORB
-    AND #NOT_SEL            ; Clear decoder bits (device 0)
+    ORA #DEV_NONE           ; Set decoder bits (Y7, no device)
     STA IORB
 ```
 
-**Note:** This interface differs from MMFS which ties SS to ground (always selected). SD card support would require a custom MMC driver that controls device selection via the decoder.
+**Note:** This interface differs from standard MMFS, which ties SS to ground (always selected). SD card support uses a custom MMFS device driver (`MMC_Spitfire.asm`) that controls device selection via the decoder; see [rom-design.md](rom-design.md).
 
 ## SPItFIRE As-Built Wiring
 
@@ -309,10 +316,10 @@ SEL_MASK = %00011100    ; All decoder bits
     ORA #MOSI OR SCK OR SEL_MASK
     STA DDRB
 
-    ; 5. Set idle state: device 0 (none), SCK low (CPOL=0), MOSI high
+    ; 5. Set idle state: no device (Y7), SCK low (CPOL=0), MOSI high
     LDA IORB
-    AND #%11100001      ; Clear SCK and decoder bits
-    ORA #MOSI           ; MOSI high
+    AND #NOT_SCK        ; SCK low
+    ORA #MOSI OR SEL_MASK   ; MOSI high, no device (Y7)
     STA IORB
 
     RTS

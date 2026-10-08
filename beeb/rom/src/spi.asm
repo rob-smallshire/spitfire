@@ -24,8 +24,10 @@ NOT_SEL  = %11100011
 NOT_SCK  = %11111101
 NOT_MOSI = %11111110
 
-; Devices (74HC138 outputs)
-DEV_NONE = %00000000        ; Y0
+; Devices (74HC138 outputs). "No device" is Y7: the Compact pulls
+; PB2-PB4 high whenever port B is not driving them, so all ones is the
+; resting state (see Rev 2 erratum 3 in docs/rev1-bringup.md).
+DEV_NONE = %00011100        ; Y7
 DEV_RTC  = %00001100        ; Y3 -> ~SS_3 -> J5 DeadOn DS3234
 
 spi_temp = ws + 7           ; Byte being shifted out
@@ -43,8 +45,7 @@ spi_temp = ws + 7           ; Byte being shifted out
     AND #%00001111          ; CB1, CB2 inputs
     STA PCR
     LDA IORB
-    AND #NOT_SEL
-    ORA #MOSI OR SCK        ; No device, SCK and MOSI high
+    ORA #MOSI OR SCK OR DEV_NONE   ; No device, SCK and MOSI high
     STA IORB
     LDA DDRB
     ORA #MOSI OR SCK OR SEL_MASK
@@ -56,17 +57,16 @@ spi_temp = ws + 7           ; Byte being shifted out
 .spi_select3
     STA spi_temp
     LDA IORB
-    ORA #SCK
-    AND #NOT_SEL
+    ORA #SCK OR DEV_NONE
     STA IORB                ; No device, SCK high
+    AND #NOT_SEL
     ORA spi_temp
     STA IORB
     RTS
 
 .spi_deselect
     LDA IORB
-    AND #NOT_SEL
-    ORA #SCK
+    ORA #SCK OR DEV_NONE
     STA IORB
     RTS
 

@@ -89,9 +89,9 @@ delay_hi = &73
     LDA #&7E
     JSR OSBYTE
 
-    ; Deselect all (device 0)
+    ; Deselect all: no device (Y7)
     LDA IORB
-    AND #NOT_SEL
+    ORA #SEL_MASK            ; No device (Y7)
     STA IORB
 
     JSR OSNEWL
@@ -105,9 +105,9 @@ delay_hi = &73
     ORA #SEL_MASK
     STA DDRB
 
-    ; Start with device 0 (all decoder bits low)
+    ; Start with no device (Y7, all decoder bits high)
     LDA IORB
-    AND #NOT_SEL
+    ORA #SEL_MASK            ; No device (Y7)
     STA IORB
 
     RTS

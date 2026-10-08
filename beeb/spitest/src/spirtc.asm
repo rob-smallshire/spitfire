@@ -97,8 +97,7 @@ sram_ok  = &74              ; 0 = fail, 1 = pass
 
     ; Idle: no device selected, SCK HIGH, MOSI high
     LDA IORB
-    AND #NOT_SEL
-    ORA #MOSI OR SCK
+    ORA #MOSI OR SCK OR SEL_MASK ; No device (Y7), SCK and MOSI high
     STA IORB
     RTS
 
@@ -113,7 +112,7 @@ sram_ok  = &74              ; 0 = fail, 1 = pass
 
 .rtc_deselect
     LDA IORB
-    AND #NOT_SEL
+    ORA #SEL_MASK            ; No device (Y7)
     STA IORB
     RTS
 

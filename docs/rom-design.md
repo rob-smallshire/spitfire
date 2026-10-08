@@ -89,7 +89,7 @@ modules.
 |---------|--------|---------|-------------|
 | `init_via` | - | - | One-time VIA setup |
 | `select_device` | A=device | - | Set SCK to the device's idle level, then select it via 74HC138 |
-| `deselect_device` | - | - | Deselect (Y0 = no device) |
+| `deselect_device` | - | - | Deselect (Y7 = no device) |
 | `spi_transfer` | A=byte | A=received | Bit-bang transfer |
 | `spi_turbo_read` | - | A=received | Fast read using shift register |
 
@@ -113,11 +113,12 @@ See [spi-interface.md](spi-interface.md) and
 
 | Output | Device | Constant |
 |--------|--------|----------|
-| Y0 | None (deselect) | `DEV_NONE` |
+| Y0 | Unassigned (unconnected on Rev 1; spare header on Rev 2) | |
 | Y1 | SPItFIRE AVR | `DEV_SPITFIRE` |
 | Y2 | SD card (J4, Adafruit microSD breakout) | `DEV_SD` |
 | Y3 | RTC (J5, SparkFun DeadOn DS3234) | `DEV_RTC` |
-| Y4-Y7 | Unassigned | |
+| Y4-Y6 | Unassigned (spare headers J6-J8) | |
+| Y7 | None (deselect): the Compact's idle state, see [spi-interface.md](spi-interface.md) | `DEV_NONE` |
 
 ## The `*SPITFIRE` Command Namespace
 
@@ -449,14 +450,14 @@ nothing else, so the change stays small enough to offer upstream.
 - `MMC_DEVICE_RESET` (called from `MMC_BEGIN1` at the start of every
   transaction) raises SCK with no device selected, then selects the card
   (SPI mode 3).
-- `MMC_DEVICE_DESELECT` selects Y0 and sends 8 clocks so the card
+- `MMC_DEVICE_DESELECT` selects Y7 (no device) and sends 8 clocks so the card
   releases MISO. It is called from `ResetLEDS`, which MMFS calls at the
   end of every card operation and when reporting any error, and from
   `MMC_END`. `MMC_END` alone was not enough: `MMC_BEGIN`/`MMC_END`
   bracket a zero page save, not a card operation (`MMC_BEGIN2` calls
   both at once, and the reads follow), so the card was left selected
   after booting with MMFS2 active and after `*DCAT`. Verified on the
-  Compact: the decoder now rests on Y0 and the SD card's LED is off
+  Compact: the decoder now rests on no device and the SD card's LED is off
   except while loading.
 - The TurboMMC mode 6 write path is not used: it relies on external
   buffers switched by PB2-PB4, which on our board are decoder inputs.

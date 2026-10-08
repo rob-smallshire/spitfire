@@ -23,7 +23,7 @@ SEL_A2   = %00010000        ; PB4 - decoder A2
 SEL_MASK = %00011100        ; All decoder bits (PB2-PB4)
 
 ; Device numbers (via 74HC138)
-DEV_NONE     = %00000000    ; Y0 - no device
+DEV_NONE     = %00011100    ; Y7 - no device (the Compact pulls PB2-PB4 high)
 DEV_SPITFIRE = %00000100    ; Y1 - SPItFIRE (A0=1)
 
 ; Inverted masks for AND operations
@@ -206,7 +206,7 @@ mouse_mode  = &7A           ; Current mode (1=AMX, 2=Amiga, 3=Atari)
 
 .deselect_device
     LDA IORB
-    AND #NOT_SEL
+    ORA #SEL_MASK            ; No device (Y7)
     STA IORB
     RTS
 
@@ -524,10 +524,10 @@ mouse_mode  = &7A           ; Current mode (1=AMX, 2=Amiga, 3=Atari)
     ORA #MOSI OR SCK OR SEL_MASK
     STA DDRB
 
-    ; Set idle state: device 0 (none), SCK low, MOSI high
+    ; Set idle state: no device (Y7), SCK low, MOSI high
     LDA IORB
-    AND #NOT_SEL AND NOT_SCK
-    ORA #MOSI
+    AND #NOT_SCK              ; SCK low
+    ORA #MOSI OR SEL_MASK     ; MOSI high, no device (Y7)
     STA IORB
 
     RTS

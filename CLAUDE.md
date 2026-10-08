@@ -81,7 +81,7 @@ Use `uv run --python 3.10` if your system Python is older than 3.10 (the script 
 ## Architecture Highlights
 
 ### Multi-device SPI Bus
-A 74HC138 3-to-8 decoder expands three VIA pins (PB2-PB4) into 7 chip-select lines. Y0 = no device (idle), Y1 = SPItFIRE AVR, Y2 = SD card (J4), Y3 = DS3234 RTC (J5); Y4-Y7 go to spare headers. Test programs select the AVR with `DEV_SPITFIRE = %00000100` written to IORB. The decoder's enable pins use the datasheet naming `G0`/`G1` (active low) and `G2` (active high).
+A 74HC138 3-to-8 decoder expands three VIA pins (PB2-PB4) into chip-select lines. **Y7 (`%00011100`) = no device**: the Compact pulls PB2-PB4 high whenever port B is released, so all software deselects to Y7 too (not Y0). Y1 = SPItFIRE AVR, Y2 = SD card (J4), Y3 = DS3234 RTC (J5); Y4-Y6 go to spare headers J6-J8. On Rev 1, Y0 is unconnected and J9 (on Y7) must stay empty; Rev 2 moves J9 to Y0. See erratum 3 in `docs/rev1-bringup.md`. Test programs select the AVR with `DEV_SPITFIRE = %00000100` written to IORB. The decoder's enable pins use the datasheet naming `G0`/`G1` (active low) and `G2` (active high).
 
 ### Two SPI Modes
 - **Bit-bang** (~4100 bytes/sec): straightforward, used by all test programs

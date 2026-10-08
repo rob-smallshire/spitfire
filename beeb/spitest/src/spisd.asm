@@ -394,8 +394,7 @@ buf_ptr  = &80              ; 2 bytes
     ORA #MOSI OR SCK OR SEL_MASK
     STA DDRB
     LDA IORB                ; No device, SCK high, MOSI high
-    AND #NOT_SEL
-    ORA #MOSI OR SCK
+    ORA #MOSI OR SCK OR SEL_MASK ; No device (Y7), SCK and MOSI high
     STA IORB
     RTS
 
@@ -410,7 +409,7 @@ buf_ptr  = &80              ; 2 bytes
 ; Deselect, then clock one byte so the card releases DO (MISO)
 .sd_deselect
     LDA IORB
-    AND #NOT_SEL
+    ORA #SEL_MASK            ; No device (Y7)
     STA IORB
     LDA #&FF
     JMP spi_xfer

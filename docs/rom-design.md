@@ -449,8 +449,15 @@ nothing else, so the change stays small enough to offer upstream.
 - `MMC_DEVICE_RESET` (called from `MMC_BEGIN1` at the start of every
   transaction) raises SCK with no device selected, then selects the card
   (SPI mode 3).
-- `MMC_DEVICE_DESELECT`, called from `MMC_END`, selects Y0 and sends 8
-  clocks so the card releases MISO.
+- `MMC_DEVICE_DESELECT` selects Y0 and sends 8 clocks so the card
+  releases MISO. It is called from `ResetLEDS`, which MMFS calls at the
+  end of every card operation and when reporting any error, and from
+  `MMC_END`. `MMC_END` alone was not enough: `MMC_BEGIN`/`MMC_END`
+  bracket a zero page save, not a card operation (`MMC_BEGIN2` calls
+  both at once, and the reads follow), so the card was left selected
+  after booting with MMFS2 active and after `*DCAT`. Verified on the
+  Compact: the decoder now rests on Y0 and the SD card's LED is off
+  except while loading.
 - The TurboMMC mode 6 write path is not used: it relies on external
   buffers switched by PB2-PB4, which on our board are decoder inputs.
 
@@ -467,13 +474,15 @@ The mouse (and possibly joystick) module will poll the AVR from an
 interrupt, and that poll must not disturb an MMFS transaction in
 progress. Points to settle:
 
-- A "bus busy" flag set in `MMC_BEGIN1` and cleared in `MMC_END`, at an
-  address both ROMs agree on. The interrupt-time poll must *skip* when
-  the flag is set; it must never wait, because MMFS cannot proceed until
-  the interrupt returns.
-- Errors raised mid-transaction (BRK) never reach `MMC_END`, so the flag
-  (and today the deselect) would be left set. MMFS needs to clear it on
-  its error path, or the poll needs a way to recover.
+- A "bus busy" flag at an address both ROMs agree on. The
+  interrupt-time poll must *skip* when the flag is set; it must never
+  wait, because MMFS cannot proceed until the interrupt returns.
+- Where MMFS sets and clears it: not `MMC_BEGIN1`/`MMC_END`, which do
+  not bracket card operations (see above). `SetLEDS` and `ResetLEDS`
+  bracket nearly all of them, and `ResetLEDS` also runs on every error
+  report, so the flag would not be left set by a BRK. Exceptions to
+  cover: `MMC_GetCIDCRC` (card ID check) reads the card without
+  `SetLEDS`.
 - Outside a transaction, a poll changes PB2-PB4, the SCK idle level and
   possibly the shift register mode. Either the poll restores what it
   found, or MMFS reselects at the start of every transaction. It already

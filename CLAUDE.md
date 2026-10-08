@@ -54,10 +54,11 @@ Programs are saved as raw binaries plus `.inf` files for Econet/disk transfer. L
 
 ```bash
 cd beeb/rom
-make
+make        # Builds build/SPITFIRE (+ .inf for the Econet file server)
+make test   # Emulator regression test of the RTC module (needs uv)
 ```
 
-Builds the Sideways ROM image. The ROM source is still under design - see `docs/rom-design.md`.
+Builds the Sideways ROM image: header, service dispatch, SPI core and the RTC module (OSWORD &0E/&0F, so `*TIME` and `TIME$` use the DS3234). Load it on the Compact with `*SRLOAD SPITFIRE 8000 <bank>` in a bank above ANFS. Other modules are still under design - see `docs/rom-design.md`.
 
 ### Mouse Lookup Tables
 
@@ -118,10 +119,11 @@ The joystick firmware (`spitfire` target) is driven over serial on the Periphera
 
 BBC test programs for the other SPI devices: SPIRTC and SPISETTIME (DS3234 RTC on J5) and SPISD (SD card on J4).
 
-This is embedded hardware - there is no automated test suite. Each piece of functionality is proven with a small standalone test program:
+This is embedded hardware, so most testing is on the machine. Each piece of functionality is proven with a small standalone test program:
 - Flash firmware → load BBC test program → exercise hardware → observe results on the BBC display.
-- The `beeb/spitest/` programs are the regression suite. Re-run them after firmware changes.
+- The `beeb/spitest/` programs are the regression suite. Re-run them after firmware changes. SPITEST, SPI256, SPIT256 and SPITTEST need the `spitest` firmware; with other firmware the AVR replies `FF` and nearly every transfer counts as bad.
 - Build verification is "does it compile clean with `-Werror`" plus the size report from `avr-size`.
+- The exception is the ROM's RTC module, which has an emulator test (`beeb/rom/test/test_rtc.py`, `make test` in `beeb/rom`): it runs the ROM on py65 against a model DS3234 that decodes the bit-banged SPI. Run it after changing `beeb/rom/src/rtc.asm` or `spi.asm`.
 
 ## Coding Conventions
 

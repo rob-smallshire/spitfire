@@ -443,8 +443,9 @@ A0/A1/A2 at J3 pins 10/12/14 against GND on the facing pins 9/11/13:
 
 So the Compact pulls PB2-PB4 up, with about 4.1k each
 (10k x (4.95 - 3.5) / 3.5), as expected on a joystick port whose
-switches pull lines to ground; and nothing at boot (MMFS included)
-touches port B. With the port released, the decoder selects **Y7**.
+switches pull lines to ground; and nothing at boot touches port B with
+ANFS and the SPItFIRE ROM loaded (MMFS was not loaded for these
+measurements). With the port released, the decoder selects **Y7**.
 
 Pull-downs to keep Y0 as "no device" are impractical: to pull a line
 below the 74HC138's input-low threshold (about 1.35 V) against 4.1k they

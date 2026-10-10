@@ -31,6 +31,7 @@ file(GLOB_RECURSE SOURCES
 )
 list(FILTER SOURCES EXCLUDE REGEX ".*spi_slave\\.cpp$")
 list(FILTER SOURCES EXCLUDE REGEX ".*mouse\\.cpp$")
+list(FILTER SOURCES EXCLUDE REGEX ".*spijoy\\.cpp$")
 
 # Create executable
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -258,4 +259,66 @@ add_custom_target(upload_spimouse
         -U flash:w:spimouse.hex:i
     DEPENDS spimouse
     COMMENT "Uploading spimouse.hex to ${AVR_MCU}"
+)
+
+# =============================================================================
+# Joystick Firmware - analogue joysticks and keypads with SPI reporting
+# =============================================================================
+
+add_executable(spijoy
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/spijoy.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/joystick.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/keypad.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/status_led.cpp
+)
+
+target_include_directories(spijoy PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_compile_definitions(spijoy PRIVATE
+    F_CPU=${AVR_MCU_SPEED}
+)
+
+target_compile_options(spijoy PRIVATE
+    -mmcu=${AVR_MCU}
+    -fpack-struct
+    -fshort-enums
+    -funsigned-char
+    -funsigned-bitfields
+    -ffunction-sections
+    -fdata-sections
+    -Wall
+    -Wextra
+    -Werror
+    -pedantic
+    -std=c++17
+    -fno-exceptions
+    -fno-rtti
+    $<$<CONFIG:Release>:-Os>
+    $<$<CONFIG:Debug>:-Og -g -gdwarf-3>
+)
+
+target_link_options(spijoy PRIVATE
+    -mmcu=${AVR_MCU}
+    -Wl,--gc-sections
+    -Wl,-Map,spijoy.map
+)
+
+set_target_properties(spijoy PROPERTIES
+    OUTPUT_NAME spijoy
+    SUFFIX ".elf"
+)
+
+add_custom_command(TARGET spijoy POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O ihex -R .eeprom $<TARGET_FILE:spijoy> spijoy.hex
+    COMMAND ${CMAKE_SIZE} --mcu=${AVR_MCU} -C $<TARGET_FILE:spijoy>
+    COMMENT "Generating spijoy.hex"
+)
+
+add_custom_target(upload_spijoy
+    COMMAND avrdude -c ${AVR_PROGRAMMER} -p m1284p ${AVRDUDE_OPTIONS}
+        -U flash:w:spijoy.hex:i
+    DEPENDS spijoy
+    COMMENT "Uploading spijoy.hex to ${AVR_MCU}"
 )

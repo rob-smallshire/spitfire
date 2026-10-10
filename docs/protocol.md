@@ -56,6 +56,28 @@ We need much more than the following, but this gives a flavour.
 | MOUSE_BTN | 0x32 | Get mouse buttons | 1 |
 | CONFIG  | 0xF0 | Configuration command | varies |
 
+### Analogue Joystick Commands (`spijoy` firmware)
+
+The `spijoy` firmware reports both DA-15 ports at full 10-bit resolution.
+Channels follow the Acorn port: CH0-CH3 are DA-15 pins 15, 7, 12 and 4.
+Each response is answered from cached values (the ADC converts all eight
+inputs continuously), so it is ready for the host's dummy byte.
+
+| Command | Code | Response |
+|---------|------|----------|
+| JOY_A0-JOY_A3 | 0x40-0x43 | Low byte of Port A CH0-CH3; latches the high byte |
+| JOY_B0-JOY_B3 | 0x44-0x47 | The same for Port B |
+| JOY_HI | 0x48 | High byte latched by the last channel or keypad read |
+| JOY_BTN | 0x49 | Fire inputs, 1 = pressed: b0 A pin 13, b1 A pin 10, b2 B pin 13, b3 B pin 10 |
+| JOY_KEY_A | 0x4A | Port A 14B keypad buttons 0-7, 1 = pressed; latches buttons 8-11 |
+| JOY_KEY_B | 0x4B | The same for Port B |
+| JOY_TYPE_A | 0xE0-0xE3 | Set Port A to None, 3B Twin, 3B Single or 14B; echoes the command |
+| JOY_TYPE_B | 0xE4-0xE7 | The same for Port B |
+
+An Acorn-standard joystick such as the Bitstik uses 3B Twin, which grounds
+pins 3, 5 and 6 and reads all four channels. `beeb/spitest` SPIJOY exercises
+every command.
+
 ### Joystick Data Format
 
 Joystick position values are 8-bit unsigned (0-255):

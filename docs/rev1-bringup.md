@@ -295,6 +295,19 @@ Bitstik works without it.
   counts.
 - The firmware needs no changes. A Bitstik mode belongs in the ROM.
 
+This unit is Acorn branded, which is less common than the Robocom
+branded version. It has five exposed trimmers: three underneath
+(labelled red, green and blue for now) and two on the front (left and
+right). Photographs of other Bitstiks show no front trimmers or holes
+for them, so the front pair may be a later revision or an owner's
+addition. With the stick still, turning the left, right and red
+trimmers 1/8 turn each way changed no channel by more than its normal
+noise. Green and blue were not tried. This test cannot tell whether
+the trimmers are multi-turn, set gain or range limits, or are
+mechanical. No Bitstik schematic was found online. The unit is to be
+disassembled and its circuit traced, which should also explain the
+reduced axis span.
+
 ### Mouse on the Peripheral DE-9 (J13) - Golden Image GI-6000
 
 Firmware: `spimouse` (quadrature decoding on Port D via the PCINT3

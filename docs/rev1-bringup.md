@@ -277,7 +277,7 @@ Bitstik works without it.
 | Control | Signal | Reading |
 |---|---|---|
 | Stick left-right | CH0 (pin 15) | 0-633, left low |
-| Stick forward-back | CH1 (pin 7) | 0-637 |
+| Stick forward-back | CH1 (pin 7) | 0-637, forward low |
 | Twist | CH2 (pin 12) | 0-612 |
 | Button T (back left) | PB0, left fire (pin 13) | `L-` |
 | Button L (front left) | PB1, right fire (pin 10) | `-R` |
@@ -294,6 +294,15 @@ Bitstik works without it.
   were steady, and moving one axis shifted the others by only a few
   counts.
 - The firmware needs no changes. A Bitstik mode belongs in the ROM.
+- CH1 falls as the stick moves forward, the opposite of the Delta
+  joysticks, so a Bitstik mode must invert Y.
+
+Then repeated over SPI from the Compact, with the `spijoy` firmware and
+the SPIJOY test program (MODE 1, Bitstik mode on Port A, which sets the
+port to 3B Twin with command `&E1`). The cross tracked the stick across
+the box once Y was inverted, Twist followed the twist axis, and T, L
+and R each lit when pressed, R being decoded from CH3 below half
+scale. SPIJOY scales the Bitstik's 0-630 span to the full box.
 
 This unit is Acorn branded, which is less common than the Robocom
 branded version. It has five exposed trimmers: three underneath

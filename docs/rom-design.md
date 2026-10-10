@@ -308,6 +308,13 @@ Provides analogue joystick support via SPItFIRE.
 TBD - configuration of joystick types (3B Single, 3B Twin, 14B keypad, etc.)
 matching the existing AVR firmware test interface.
 
+An Acorn Bitstik works in the firmware's 3B Twin mode. It needs a
+Bitstik type in the ROM because of three quirks, measured in
+`docs/rev1-bringup.md`:
+- Its third button is reported on CH3 (pressed below about half scale).
+- Its axes span only about 0-630 of 1023, so they need scaling.
+- Twist is reported on CH2.
+
 ### Polling Mechanism
 - ADC values change slowly (analogue position)
 - Could poll on demand (each ADVAL call) or periodically

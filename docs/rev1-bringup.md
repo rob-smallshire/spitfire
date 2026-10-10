@@ -170,6 +170,13 @@ terminals for one of their two connectors only. Check continuity to the
 AVR pins themselves rather than trusting connector numbering when
 several breakouts and adapters are chained.
 
+Later (2026-10-10) the AVR stopped receiving even though the adapter's
+TXD LED flashed and PD0 swung correctly (3.36 V idle, 0.35 V average
+while streaming `0x00`). Then transmit stopped too, and both returned
+after the wiring was handled for continuity checks. This points to an
+intermittent contact at the DE-9. If serial stops in one direction,
+reseat the connector before suspecting the firmware.
+
 ### Joystick A (J11) - Delta 3B Twin
 
 J11 fitted (female DA-15). Before soldering, the custom DA-15 footprint
@@ -256,6 +263,37 @@ Port A channels varied by at most 1 count and reported no fire events.
 
 With the 3B Twin and 14B results, every Port B signal on J12 is
 verified: ADC1/3/5/7, both fire inputs and the full 3x4 keypad matrix.
+
+### Joystick A (J11) - Acorn (Robocom) Bitstik, 2026-10-10
+
+Bitstik connected to J11, Port A set to 3B Twin (`1`). That mode
+drives DA-15 pins 3, 5 and 6 low, matching the 0 V and AGND pins of
+Acorn's analogue port, and reads all four channels and both fire
+inputs. The Bitstik's LED lit once the mode was set. In None mode those
+pins are not driven, so the Bitstik was missing its grounds. Pin 2 (also
+0 V on the Acorn port, PC0 here) is not driven by any mode, and the
+Bitstik works without it.
+
+| Control | Signal | Reading |
+|---|---|---|
+| Stick left-right | CH0 (pin 15) | 0-633, left low |
+| Stick forward-back | CH1 (pin 7) | 0-637 |
+| Twist | CH2 (pin 12) | 0-612 |
+| Button T (back left) | PB0, left fire (pin 13) | `L-` |
+| Button L (front left) | PB1, right fire (pin 10) | `-R` |
+| Button R (front right) | CH3 (pin 4) | about 1020 released, about 86 pressed |
+
+- The third button is reported on an analogue channel, because the port
+  has only two fire inputs. The ROM must treat CH3 as a button
+  (pressed below about half scale).
+- The axes reach only about 62% of full scale (about 3.1 V). The ROM's
+  scaling for the Bitstik must use about 0-630, not 0-1023. This has not
+  been compared with `ADVAL` on a real BBC, whose ADC uses a different
+  reference.
+- The stick does not self-centre; it stays where it is left. Readings
+  were steady, and moving one axis shifted the others by only a few
+  counts.
+- The firmware needs no changes. A Bitstik mode belongs in the ROM.
 
 ### Mouse on the Peripheral DE-9 (J13) - Golden Image GI-6000
 
@@ -488,7 +526,7 @@ SCK and MOSI need no resistors: devices ignore them while deselected.
 | Status LED | Working (active-high) |
 | 74HC138 decoder, J4-J9 chip selects | Working |
 | SPI, bit-bang and turbo | Working, no errors |
-| Joystick A (J11) | Working: Delta 3B Twin, 3B Single and 14B; all pins verified |
+| Joystick A (J11) | Working: Delta 3B Twin, 3B Single and 14B, Acorn Bitstik; all pins verified |
 | Joystick B (J12) | Working: Delta 3B Twin and 14B; all pins verified, no crosstalk with Port A |
 | Peripheral DE-9 (J13) | Working; fitted on reverse side to correct mirrored footprint (erratum 1) |
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |

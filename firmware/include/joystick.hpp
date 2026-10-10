@@ -19,13 +19,23 @@ enum class Port : uint8_t {
     PORT_B = 1   ///< Odd-numbered AVR pins
 };
 
-/// Initialize joystick module (both ports set to NO_JOYSTICK)
+/// Initialize joystick module (both ports set to NO_JOYSTICK, fire inputs
+/// pulled up)
 void init();
 
 /// Set joystick type for a port
 /// @param port Which port to configure
 /// @param type Joystick type to set
 void set_type(Port port, Type type);
+
+/// Set the type for a port and configure its DA-15 pins to match:
+/// 3BS and 3BT drive pins 3 and 6 low, 3BT also drives pin 5 (AGND) low
+/// and takes the pull-up off pin 4. Call keypad::init() first.
+void configure(Port port, Type type);
+
+/// Read a port's fire inputs: bit 0 = PB0 (pin 13), bit 1 = PB1 (pin 10),
+/// 1 = pressed
+uint8_t fire_buttons(Port port);
 
 /// Get current type for a port
 /// @param port Which port to query

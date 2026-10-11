@@ -315,6 +315,11 @@ Bitstik type in the ROM because of three quirks, measured in
 - Its axes span only about 0-630 of 1023, so they need scaling.
 - Twist is reported on CH2.
 
+Its axes are reversed relative to Acorn joystick convention (high at the
+left and at the top), reading low at the left and at the front. A real
+BBC sees the same polarity, so the ROM should report the readings
+unchanged.
+
 ### Polling Mechanism
 - ADC values change slowly (analogue position)
 - Could poll on demand (each ADVAL call) or periodically

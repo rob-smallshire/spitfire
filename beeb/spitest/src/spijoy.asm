@@ -347,6 +347,11 @@ ny       = &89              ; 2 bytes
     LDA raw_hi, X
     STA tmp+1
     JSR scale
+    LDY cur_type
+    LDA invert_x, Y
+    BEQ update_marker_x
+    JSR invert
+.update_marker_x
     LDY geom
     CLC
     LDA tmp
@@ -369,16 +374,10 @@ ny       = &89              ; 2 bytes
     LDA raw_hi+1, X
     STA tmp+1
     JSR scale
-    LDA cur_type            ; The Bitstik's Y reading falls as it
-    CMP #T_BITSTIK          ; moves forward, unlike the Delta joysticks
-    BNE update_marker_y
-    SEC
-    LDA #LO(511)
-    SBC tmp
-    STA tmp
-    LDA #HI(511)
-    SBC tmp+1
-    STA tmp+1
+    LDY cur_type
+    LDA invert_y, Y
+    BEQ update_marker_y
+    JSR invert
 .update_marker_y
     LDY geom
     CLC
@@ -434,6 +433,26 @@ ny       = &89              ; 2 bytes
     LDA #1
     STA drawn, X
     JMP cross
+
+; Flip the scaled reading in tmp across its box: 255 - tmp for a 3BT
+; half box, 511 - tmp otherwise
+.invert
+    LDX #LO(511)
+    LDY #HI(511)
+    LDA cur_type
+    CMP #T_3BT
+    BNE invert_sub
+    LDX #LO(255)
+    LDY #HI(255)
+.invert_sub
+    TXA
+    SEC
+    SBC tmp
+    STA tmp
+    TYA
+    SBC tmp+1
+    STA tmp+1
+    RTS
 
 ; Scale the reading in tmp to box units for cur_type
 .scale
@@ -1007,6 +1026,14 @@ ny       = &89              ; 2 bytes
 ; Bitstik is wired as an Acorn port, which is the firmware's 3BT.
 .fw_type
     EQUB 0, 2, 1, 3, 1
+
+; Axes whose readings run opposite to the screen, by type. Acorn-standard
+; joysticks (the Deltas) read high at the left and at the top; the Bitstik
+; reads low at the left and at the front.
+.invert_x
+    EQUB 0, 1, 1, 1, 0
+.invert_y
+    EQUB 0, 0, 0, 0, 1
 
 .type_names                 ; 16 bytes each
     EQUS "None           ", 0

@@ -294,15 +294,26 @@ Bitstik works without it.
   were steady, and moving one axis shifted the others by only a few
   counts.
 - The firmware needs no changes. A Bitstik mode belongs in the ROM.
-- CH1 falls as the stick moves forward, the opposite of the Delta
-  joysticks, so a Bitstik mode must invert Y.
+- Both axes run opposite to Acorn joystick convention, which the Delta
+  joysticks follow: high at the left and high at the front. The Bitstik
+  reads low at the left and low at the front. The DA-15 wiring is the
+  same as a BBC Micro's analogue port, so a real BBC should see the same
+  polarity, and the ROM should pass it through rather than correct it.
 
 Then repeated over SPI from the Compact, with the `spijoy` firmware and
 the SPIJOY test program (MODE 1, Bitstik mode on Port A, which sets the
 port to 3B Twin with command `&E1`). The cross tracked the stick across
-the box once Y was inverted, Twist followed the twist axis, and T, L
+the box once SPIJOY flipped Y for the Bitstik, Twist followed the twist axis, and T, L
 and R each lit when pressed, R being decoded from CH3 below half
 scale. SPIJOY scales the Bitstik's 0-630 span to the full box.
+
+SPIJOY also showed that the Delta joysticks follow Acorn joystick
+convention: X reads 0 hard right and 1023 hard left, and Y reads high at
+the top. Screen X runs the other way, so SPIJOY flips X when it plots a
+Delta's position, and flips Y when it plots the Bitstik's. The numbers
+it prints are the raw readings. Both 3B Twin units (four handsets) behaved
+the same on Port A and Port B, and the 3B Single and 14B have the same X
+polarity.
 
 This unit is Acorn branded, which is less common than the Robocom
 branded version. It has five exposed trimmers: three underneath

@@ -29,9 +29,11 @@ $(INF): | $(BUILD_DIR)
 clean:
 	rm -rf $(BUILD_DIR)
 
-# Emulator regression test for the RTC module (needs uv; fetches py65)
+# Emulator regression tests for the RTC and joystick modules (needs uv;
+# fetches py65)
 test:
 	uv run --with py65 python test/test_rtc.py
+	uv run --with py65 python test/test_joystick.py
 
 # Install to BeebEm ROMs directory (adjust path as needed)
 install: $(ROM) $(INF)

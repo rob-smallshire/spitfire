@@ -42,9 +42,9 @@ evolve as we implement and learn.
 │    - *MOUSE [ON|OFF|TYPE]               │
 ├─────────────────────────────────────────┤
 │  Module: Joystick (optional)            │
-│    - Hooks BYTEV                        │
+│    - MOS 5.x service call &2C (100 Hz)  │
 │    - Uses SPI Core                      │
-│    - Provides ADVAL 1-4 (or extended)   │
+│    - Provides ADVAL 0-2 (BYTEV later)   │
 ├─────────────────────────────────────────┤
 │  Module: RTC (optional)                 │
 │    - Service call &08: OSWORD &0E/&0F   │
@@ -292,21 +292,79 @@ which is `b0=L, b1=M, b2=R`. The driver swaps bits 1 and 2.
 
 ## Module: Joystick
 
-Provides analogue joystick support via SPItFIRE.
+Provides analogue joystick support via SPItFIRE. The first step, done in
+`beeb/rom/src/joystick.asm`, makes one handset (Port A CH0/CH1, e.g. the
+left handset of a Delta 3B Twin) the BBC's first joystick, with full
+analogue range, through the Master Compact's joystick service call. As far
+as we know nothing has used that call before.
 
-### MOS-facing API
-| Call | Description |
-|------|-------------|
-| `ADVAL(1)` | Channel 0 X (joystick A) |
-| `ADVAL(2)` | Channel 0 Y |
-| `ADVAL(3)` | Channel 1 X (joystick B) |
-| `ADVAL(4)` | Channel 1 Y |
-| `OSBYTE &80` with X=0 | Last channel converted |
-| Various INKEY values | Fire buttons |
+### The MOS 5.x joystick service call (&2C)
 
-### SPItFIRE-specific commands
-TBD - configuration of joystick types (3B Single, 3B Twin, 14B keypad, etc.)
-matching the existing AVR firmware test interface.
+Sources: [the Master Compact joystick article][compact-joystick] and Tom
+Seddon's [MOS disassembly][mos-disassembly] (`handleDigitalJoystick` in
+`src/mos.s65`).
+
+- The MOS's digital joystick routine runs every centisecond from the
+  System VIA timer interrupt, with interrupts disabled. It returns at once
+  if `*FX16,0` has set the number of ADC channels to zero.
+- If bit 7 of the joystick byte (`adcConversionType`, written by
+  `*FX190`) is set, it tail-calls ROM service call &2C with Y = &B6 and
+  does nothing else: no proportional or switched simulation, no cursor
+  key joystick. A ROM returns A=0 to claim.
+- Y is the offset in page 2 of the ADVAL workspace that OSBYTE &80
+  reads: &0200+Y = `ADVAL(0)` low byte (switches), +1/+2 = `ADVAL(1)`,
+  +3/+4 = `ADVAL(2)`. Every odd channel returns `ADVAL(1)` and every even
+  one `ADVAL(2)`, so `ADVAL(3)` and `(4)` mirror the first joystick. The
+  high byte of `ADVAL(0)` is the MOS's current ADC channel.
+- &0200+Y+5 and +6 are the proportional mode's temporaries, free once
+  the call is delegated. +7 is not free: `*FX190,64` (joystick as cursor
+  keys) keeps its repeat delay there, and that feature still runs before
+  the call, from the switch byte we store.
+- The MOS loads the joystick byte from CMOS during reset, before service
+  call &27, so the ROM sets bit 7 at &27 with OSBYTE &BE, X=&80, Y=&7F
+  (keeping the other bits). Nothing is written to CMOS, so without the
+  ROM the built-in joystick handling is back.
+- With SPItFIRE fitted, the built-in routine would read our SPI lines
+  (PB0-PB4) as joystick switches, so taking over the call also stops
+  spurious directions.
+- The built-in routine also raises the ADC conversion event (event 3)
+  and steps the current channel. Delegating skips that; the ROM could do
+  it later for software that waits on conversions.
+
+### How the module works
+
+- **Every second call (50 Hz, the field rate)** it reads the AVR's
+  JOY_ADVAL burst for the handset ([protocol.md](protocol.md)): a status
+  byte and the five workspace bytes, already scaled to 16 bits with the
+  direction bits derived from position. The AVR does all the arithmetic;
+  the 6502 stores five bytes. Switch bits 0 and 1 are the two fire inputs,
+  as `ADVAL(0) AND 3` on a BBC with an analogue port.
+- **Bus sharing.** The poll runs in the interrupt, so it can arrive
+  during a foreground SPI transaction. It runs only when the decoder
+  rests on Y7: MMFS keeps the SD card selected for a whole card operation
+  and the RTC module keeps the DS3234 selected, so a selected device means
+  "busy". Otherwise it saves DDRB, the ACR and port B's outputs, takes SCK
+  low (the AVR's idle; MMFS leaves it high) with no device selected,
+  selects the AVR, and restores everything afterwards. The joystick
+  values hold during disc access.
+- **Robustness.** The status byte (&A0 OR the port type) shows the AVR
+  answered: a floating MISO cannot produce it, and a bad status leaves
+  the values alone. If the port is not 3B Twin (the AVR reset, or was
+  slow to start: its startup flash keeps interrupts off for 240 ms), the
+  poll sets it and stores nothing that time. So there is no presence
+  check or set-up at reset.
+- **Cost.** About 1,050 cycles per poll in the emulator, plus the User
+  VIA's 1 MHz accesses: roughly 0.7 ms every 20 ms (3.5%). Calls in
+  between take 72 cycles.
+
+### Later steps
+- `*SPITFIRE JOYSTICK` commands: which handset, which port type
+  (Bitstik, 3B Single and so on), on/off. `*CONFIGURE` options through
+  service calls &28/&29; bits 3 and 4 of the CMOS joystick byte are
+  unused.
+- The second joystick (`ADVAL(3)`/`(4)`) needs BYTEV, as the Mertec
+  Companion did, because OSBYTE &80 reads only two analogue channels.
+- ADC conversion events and the `ADVAL(0)` channel byte.
 
 An Acorn Bitstik works in the firmware's 3B Twin mode. It needs a
 Bitstik type in the ROM because of three quirks, measured in
@@ -332,11 +390,6 @@ module would do the same and need the driver's command and shift tables
 as well as its letters. See the Quinkey section of `docs/rev1-bringup.md`
 for the measurements and references. `beeb/spitest` SPIJOY's Quinkey x4
 mode is a working decoder.
-
-### Polling Mechanism
-- ADC values change slowly (analogue position)
-- Could poll on demand (each ADVAL call) or periodically
-- Periodic polling at 25 Hz via vsync should be sufficient
 
 ## Module: RTC
 
@@ -495,10 +548,14 @@ The cost is a second ROM slot; at least one Compact socket takes a 32K
 ROM spanning two 16K sideways slots, so this is not a constraint in
 practice.
 
-### Bus access between the two ROMs (to be designed)
-The mouse (and possibly joystick) module will poll the AVR from an
-interrupt, and that poll must not disturb an MMFS transaction in
-progress. Points to settle:
+### Bus access between the two ROMs
+The joystick module polls the AVR from an interrupt (and the mouse
+module will), and that poll must not disturb an MMFS transaction in
+progress. The joystick module settles it without a flag: MMFS keeps the
+card selected throughout each card operation, so the poll skips whenever
+the decoder is not on Y7, and restores the VIA state it changes (see
+"Module: Joystick"). The notes below were the earlier plan for a shared
+flag, kept in case a case turns up that the chip select does not cover:
 
 - A "bus busy" flag at an address both ROMs agree on. The
   interrupt-time poll must *skip* when the flag is set; it must never
@@ -615,7 +672,8 @@ the RTC module comes first and brings the ROM skeleton with it:
 1. **RTC module** - ROM header, service dispatcher, SPI core, OSWORD &0E
    and &0F (done, working on the Compact)
 2. **Mouse module** - first input feature, hardware proven
-3. **Joystick module** - reuse AVR firmware joystick code path
+3. **Joystick module** - first step done: one handset on Port A as
+   `ADVAL(0)`-`(2)` through MOS 5.x service call &2C
 4. **Single-config build first** - all modules in one ROM, configurable later
 5. **SD card** - done, as a separate MMFS ROM; still to do is the bus
    access protocol shared with the mouse module
@@ -623,6 +681,10 @@ the RTC module comes first and brings the ROM skeleton with it:
 ## References
 
 - [BeebWiki OSBYTE &80](https://beebwiki.mdfs.net/OSBYTE_%2680) - ADVAL details
+- [Acorn BBC Master Compact Joystick][compact-joystick] - MOS 5.x joystick
+  handling, `*FX190` and service call &2C
+- [Acorn MOS disassembly][mos-disassembly] (Tom Seddon) - annotated MOS
+  5.x source, including `handleDigitalJoystick`
 - AMX Mouse User Guide: `docs/datasheets/AMX_MouseUG.pdf`
   ([source](https://chrisacorns.computinghistory.org.uk/docs/AMX/AMX_MouseUG.pdf))
 - [JGH's relocatable modules](https://mdfs.net/Software/BBC/Modules/)
@@ -639,3 +701,6 @@ the RTC module comes first and brings the ROM skeleton with it:
 - Internal: [spi-interface.md](spi-interface.md) - hardware layer
 - Internal: [peripheral-pinouts.md](peripheral-pinouts.md) - device pinouts
 - Internal: [mouse-trackball-peripheral.md](mouse-trackball-peripheral.md) - mouse details
+
+[compact-joystick]: https://blog.smallshire.no/blog/compact-joystick/acorn-bbc-master-compact-joystick/
+[mos-disassembly]: https://github.com/tom-seddon/acorn_mos_disassembly

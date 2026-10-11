@@ -328,6 +328,17 @@ mechanical. No Bitstik schematic was found online. The unit is to be
 disassembled and its circuit traced, which should also explain the
 reduced axis span.
 
+### Joystick A (J11) as the BBC's joystick, through the ROM, 2026-10-11
+
+The `spijoy` firmware's JOY_ADVAL burst and the ROM's joystick module
+(MOS 5.x service call &2C, see "Module: Joystick" in
+[rom-design.md](rom-design.md)) were tried with a Delta 3B Twin on J11.
+The ROM was loaded with `*SRLOAD` and enabled by Ctrl-Break. A BASIC loop
+printing `ADVAL(0) AND &FF`, `ADVAL(1)` and `ADVAL(2)` followed the left
+handset, and Acornsoft's Arcadians was playable with it: an analogue
+joystick on a Master Compact, through the MOS's own joystick interface.
+Joystick use during MMFS disc access has not been tried yet.
+
 ### Joystick B (J12) - Microwriter Quinkey, 2026-10-11
 
 The Quinkey is Microwriter's six-key, one-handed chord keyboard for the
@@ -615,7 +626,7 @@ SCK and MOSI need no resistors: devices ignore them while deselected.
 | Status LED | Working (active-high) |
 | 74HC138 decoder, J4-J9 chip selects | Working |
 | SPI, bit-bang and turbo | Working, no errors |
-| Joystick A (J11) | Working: Delta 3B Twin, 3B Single and 14B, Acorn Bitstik; all pins verified |
+| Joystick A (J11) | Working: Delta 3B Twin, 3B Single and 14B, Acorn Bitstik; all pins verified; ADVAL through the ROM |
 | Joystick B (J12) | Working: Delta 3B Twin and 14B, Microwriter Quinkey; all pins verified, no crosstalk with Port A |
 | Peripheral DE-9 (J13) | Working; fitted on reverse side to correct mirrored footprint (erratum 1) |
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |

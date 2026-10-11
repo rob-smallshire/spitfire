@@ -71,8 +71,29 @@ inputs continuously), so it is ready for the host's dummy byte.
 | JOY_BTN | 0x49 | Fire inputs, 1 = pressed: b0 A pin 13, b1 A pin 10, b2 B pin 13, b3 B pin 10 |
 | JOY_KEY_A | 0x4A | Port A 14B keypad buttons 0-7, 1 = pressed; latches buttons 8-11 |
 | JOY_KEY_B | 0x4B | The same for Port B |
+| JOY_ADVAL | 0x50-0x53 | Burst of 6 bytes for handset n (below) |
 | JOY_TYPE_A | 0xE0-0xE3 | Set Port A to None, 3B Twin, 3B Single or 14B; echoes the command |
 | JOY_TYPE_B | 0xE4-0xE7 | The same for Port B |
+
+JOY_ADVAL is the protocol's first multi-byte response: after the command,
+the host clocks out 6 bytes with 6 dummies, in one chip select. Handset 0 is
+Port A CH0/CH1, 1 is Port A CH2/CH3, and 2 and 3 are the same for Port B.
+The bytes are exactly what MOS 5.x keeps for `ADVAL(0)`-`(2)` (&02B6-&02BA),
+so the ROM stores them without work:
+
+| Byte | Content |
+|------|---------|
+| 0 | Status: &A0 OR the port's type (None, 3BT, 3BS, 14B = 0-3) |
+| 1 | Switches: b0 fire pin 13, b1 fire pin 10, b4 left, b5 down, b6 up, b7 right |
+| 2, 3 | X as a 16-bit ADVAL value, low byte first |
+| 4, 5 | Y, the same |
+
+The 10-bit reading v becomes `v<<6 OR v>>4`, so 0 is &0000 and 1023 is
+&FFFF. Readings are not inverted: Acorn joysticks already read high at the
+left and at the top. A direction bit is set beyond a quarter of full scale
+from centre. Raising SS ends a burst early. The status byte lets the host
+tell that the AVR answered (a floating MISO cannot produce it) and which
+type the port is.
 
 An Acorn-standard joystick such as the Bitstik uses 3B Twin, which grounds
 pins 3, 5 and 6 and reads all four channels. `beeb/spitest` SPIJOY exercises

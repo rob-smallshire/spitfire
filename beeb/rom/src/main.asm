@@ -1,6 +1,7 @@
 ; SPItFIRE Sideways ROM
-; Prototype: ROM header, service call dispatch, SPI core and the RTC
-; module (OSWORD &0E read clock). See docs/rom-design.md.
+; Prototype: ROM header, service call dispatch, SPI core, the RTC module
+; (OSWORD &0E/&0F) and the joystick module (MOS 5.x service call &2C).
+; See docs/rom-design.md.
 ;
 ; Build with beebasm from beeb/rom (see Makefile).
 
@@ -39,10 +40,26 @@ GUARD &C000
 ; A = reason, X = this ROM's slot, Y = parameter. Return A=0 to claim,
 ; otherwise A unchanged. X and Y must be preserved.
 .service
+    CMP #&2C
+    BEQ service_joystick
     CMP #&08
     BEQ service_osword
     CMP #&09
     BEQ service_help
+    CMP #&27
+    BEQ service_reset
+    RTS
+
+; Service &2C: Master Compact joystick poll (in the interrupt). Claimed.
+.service_joystick
+    JSR joy_poll
+    LDA #0
+    RTS
+
+; Service &27: reset
+.service_reset
+    JSR joy_reset
+    LDA #&27
     RTS
 
 ; Service &08: unrecognised OSWORD
@@ -95,6 +112,7 @@ GUARD &C000
 
 INCLUDE "src/spi.asm"
 INCLUDE "src/rtc.asm"
+INCLUDE "src/joystick.asm"
 
 .rom_end
 

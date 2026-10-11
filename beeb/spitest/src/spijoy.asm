@@ -2,7 +2,8 @@
 ; Needs the spijoy firmware. Shows both joystick ports in MODE 1: stick
 ; positions as crosses in boxes, raw 10-bit values, and buttons. The A
 ; and B keys cycle each port through None, Delta 3B Single, Delta 3B
-; Twin, Delta 14B and Acorn Bitstik.
+; Twin, Delta 14B, Acorn Bitstik and Quinkey x4 (up to four Microwriter
+; Quinkeys on the four-way adapter, decoded to characters).
 
 ORG &1900
 
@@ -39,7 +40,11 @@ T_3BS     = 1
 T_3BT     = 2
 T_14B     = 3
 T_BITSTIK = 4
-NUM_TYPES = 5
+T_QUINKEY = 5
+NUM_TYPES = 6
+
+TICKER    = 18              ; Characters shown per Quinkey
+QUINKEY_ZERO = 6            ; Quinkey reading with no keys pressed
 
 ; OS calls
 OSWRCH = &FFEE
@@ -138,6 +143,9 @@ ny       = &89              ; 2 bytes
     BEQ do_port_done
     STA cur_type
     JSR read_port
+    LDA cur_type
+    CMP #T_QUINKEY
+    BEQ do_port_quinkey
     LDA #0
     JSR update_marker
     LDA cur_type
@@ -153,6 +161,13 @@ ny       = &89              ; 2 bytes
 .do_port_done
     RTS
 
+.do_port_quinkey
+    JSR quinkey_port
+    LDA frame
+    AND #3
+    BNE do_port_done
+    JMP quinkey_text
+
 ; Read the channels (and keypad) the port's type uses
 .read_port
     LDY #2
@@ -160,6 +175,8 @@ ny       = &89              ; 2 bytes
     CMP #T_3BT
     BEQ read_port_4
     CMP #T_BITSTIK
+    BEQ read_port_4
+    CMP #T_QUINKEY
     BNE read_port_n
 .read_port_4
     LDY #4
@@ -270,6 +287,10 @@ ny       = &89              ; 2 bytes
     LDX port
     LDA type, X
     BEQ draw_panel_done
+    CMP #T_QUINKEY
+    BNE draw_panel_stick
+    JMP draw_panel_quinkey
+.draw_panel_stick
     CMP #T_3BT
     BEQ draw_panel_twin
     JSR plot_inline
@@ -838,6 +859,286 @@ ny       = &89              ; 2 bytes
     PHA
     RTS
 
+; ------ Quinkey ------
+
+; Each Quinkey's six keys switch a binary resistor ladder: little finger
+; 16 counts, ring 32, middle 64, index 128, thumb 256 and command 512,
+; above about 6 with no keys. The chord is the reading less that offset,
+; rounded to a multiple of 16, which gives the five-bit finger number of Microwriter's
+; tables plus command as bit 5. As on the BBC, a character is entered
+; when all keys are released, from every key held since the first went
+; down. A code counts only once two successive frames agree.
+
+; Decode the port's four Quinkeys
+.quinkey_port
+    LDA #0
+    STA qn
+.quinkey_next
+    LDA qn
+    CLC
+    ADC chbase
+    STA qi
+    TAX
+    JSR quinkey_code
+    CMP qprev, X
+    BEQ quinkey_steady
+    STA qprev, X
+    JMP quinkey_done
+.quinkey_steady
+    CMP qstable, X
+    BEQ quinkey_done
+    STA qstable, X
+    CMP #0
+    BEQ quinkey_release
+    ORA qacc, X
+    STA qacc, X
+    JMP quinkey_show
+.quinkey_release
+    LDA qacc, X
+    BEQ quinkey_show
+    STA qlast, X
+    LDA #0
+    STA qacc, X
+    LDA qlast, X
+    CMP #32
+    BCS quinkey_show        ; Command chords make no character here
+    TAY
+    LDA quinkey_chars-1, Y
+    JSR quinkey_append
+    JSR quinkey_ticker
+.quinkey_show
+    JSR quinkey_state
+.quinkey_done
+    INC qn
+    LDA qn
+    CMP #4
+    BNE quinkey_next
+    RTS
+
+; Chord (0-63) for channel X: (reading - QUINKEY_ZERO + 8) / 16.
+; Preserves X.
+.quinkey_code
+    LDA raw_lo, X
+    CLC
+    ADC #8 - QUINKEY_ZERO
+    STA tmp
+    LDA raw_hi, X
+    ADC #0
+    LSR A
+    ROR tmp
+    LSR A
+    ROR tmp
+    LSR A
+    ROR tmp
+    LSR A
+    ROR tmp
+    LDA tmp
+    CMP #64
+    BCC quinkey_code_done
+    LDA #63
+.quinkey_code_done
+    RTS
+
+; Add character A to the end of channel qi's ticker
+.quinkey_append
+    PHA
+    LDX qi
+    LDY text_off, X
+    LDX #TICKER-1
+.quinkey_append_shift
+    LDA qtext+1, Y
+    STA qtext, Y
+    INY
+    DEX
+    BNE quinkey_append_shift
+    PLA
+    STA qtext, Y
+    RTS
+
+; Move the text cursor to row A of Quinkey qn's block, column Y
+.quinkey_tab
+    LDX qn
+    CLC
+    ADC qrow, X
+    JMP tab_row
+
+; Print channel qi's ticker
+.quinkey_ticker
+    LDA #3
+    LDY #0
+    JSR quinkey_tab
+    LDA #'>'
+    JSR OSWRCH
+    LDX qi
+    LDA text_off, X
+    STA qoff
+    LDA #TICKER
+    STA qcount
+.quinkey_ticker_char
+    LDX qoff
+    LDA qtext, X
+    JSR OSWRCH
+    INC qoff
+    DEC qcount
+    BNE quinkey_ticker_char
+    RTS
+
+; Print channel qi's keys, held chord and last chord entered
+.quinkey_state
+    LDA #1
+    LDY #1
+    JSR quinkey_tab
+    LDA #5
+    STA qbit
+.quinkey_state_key
+    LDX qi
+    LDY qbit
+    LDA qstable, X
+    AND bit_mask, Y
+    JSR flag_colour
+    LDA qbit
+    ASL A
+    TAX
+    LDA key_names, X
+    JSR OSWRCH
+    LDA key_names+1, X
+    JSR OSWRCH
+    LDA #' '
+    JSR OSWRCH
+    DEC qbit
+    BPL quinkey_state_key
+    JSR white
+
+    LDA #2
+    LDY #1
+    JSR quinkey_tab
+    JSR print_inline
+    EQUS "Held ", 0
+    LDX qi
+    LDA qacc, X
+    JSR print_dec2
+    JSR print_inline
+    EQUS " Last ", 0
+    LDX qi
+    LDA qlast, X
+    BEQ quinkey_state_none
+    CMP #32
+    BCS quinkey_state_cmd
+    TAY
+    LDA #39                 ; Quote
+    JSR OSWRCH
+    LDA quinkey_chars-1, Y
+    JSR OSWRCH
+    LDA #39
+    JSR OSWRCH
+    LDA #' '
+    JMP OSWRCH
+.quinkey_state_cmd
+    PHA
+    LDA #'C'
+    JSR OSWRCH
+    LDA #'+'
+    JSR OSWRCH
+    PLA
+    AND #31
+    JMP print_dec2
+.quinkey_state_none
+    JSR print_inline
+    EQUS "    ", 0
+    RTS
+
+; Print each Quinkey's reading and chord
+.quinkey_text
+    LDA #0
+    STA qn
+.quinkey_text_next
+    LDA #0
+    LDY #0
+    JSR quinkey_tab
+    LDA #'Q'
+    JSR OSWRCH
+    LDA qn
+    CLC
+    ADC #'1'
+    JSR OSWRCH
+    LDA #' '
+    JSR OSWRCH
+    LDA qn
+    CLC
+    ADC chbase
+    STA qi
+    TAX
+    LDA raw_lo, X
+    STA val
+    LDA raw_hi, X
+    STA val+1
+    JSR print_dec4
+    JSR print_inline
+    EQUS " Chord ", 0
+    LDX qi
+    JSR quinkey_code
+    JSR print_dec2
+    INC qn
+    LDA qn
+    CMP #4
+    BNE quinkey_text_next
+    RTS
+
+; Reset the port's Quinkeys and draw their blocks
+.draw_panel_quinkey
+    LDX chbase
+    LDY #4
+    LDA #0
+.draw_panel_quinkey_reset
+    STA qprev, X
+    STA qstable, X
+    STA qacc, X
+    STA qlast, X
+    INX
+    DEY
+    BNE draw_panel_quinkey_reset
+    LDX chbase
+    LDY text_off, X
+    LDX #4 * TICKER
+    LDA #' '
+.draw_panel_quinkey_clear
+    STA qtext, Y
+    INY
+    DEX
+    BNE draw_panel_quinkey_clear
+
+    LDA #0
+    STA qn
+.draw_panel_quinkey_next
+    LDA qn
+    CLC
+    ADC chbase
+    STA qi
+    JSR quinkey_state
+    JSR quinkey_ticker
+    INC qn
+    LDA qn
+    CMP #4
+    BNE draw_panel_quinkey_next
+    JMP quinkey_text
+
+; Print A (0-99) as two decimal digits
+.print_dec2
+    LDX #'0'
+.print_dec2_tens
+    CMP #10
+    BCC print_dec2_units
+    SBC #10
+    INX
+    BNE print_dec2_tens
+.print_dec2_units
+    PHA
+    TXA
+    JSR OSWRCH
+    PLA
+    ORA #'0'
+    JMP OSWRCH
+
 ; ------ Graphics ------
 
 ; GCOL 0, A
@@ -1025,15 +1326,15 @@ ny       = &89              ; 2 bytes
 ; Firmware type for each of our types: None, 3BT, 3BS, 14B = 0-3. The
 ; Bitstik is wired as an Acorn port, which is the firmware's 3BT.
 .fw_type
-    EQUB 0, 2, 1, 3, 1
+    EQUB 0, 2, 1, 3, 1, 1
 
 ; Axes whose readings run opposite to the screen, by type. Acorn-standard
 ; joysticks (the Deltas) read high at the left and at the top; the Bitstik
 ; reads low at the left and at the front.
 .invert_x
-    EQUB 0, 1, 1, 1, 0
+    EQUB 0, 1, 1, 1, 0, 0
 .invert_y
-    EQUB 0, 0, 0, 0, 1
+    EQUB 0, 0, 0, 0, 1, 0
 
 .type_names                 ; 16 bytes each
     EQUS "None           ", 0
@@ -1041,6 +1342,7 @@ ny       = &89              ; 2 bytes
     EQUS "Delta 3B Twin  ", 0
     EQUS "Delta 14B      ", 0
     EQUS "Acorn Bitstik  ", 0
+    EQUS "Quinkey x4     ", 0
 ASSERT P% - type_names = 16 * NUM_TYPES
 
 ; Boxes: single, 3BT left, 3BT right (inside the outlines)
@@ -1060,6 +1362,20 @@ ASSERT P% - type_names = 16 * NUM_TYPES
 
 .bit_mask
     EQUB 1, 2, 4, 8, 16, 32, 64, 128
+
+; Microwriter's unshifted characters for finger chords 1-31 (little
+; finger = bit 0 ... thumb = bit 4), from the BBC Quinkey driver's table
+; as listed in Acorn User, September 1984
+.quinkey_chars
+    EQUS "usgoqnbevt,a-.m hkjczyxilrwd'fp"
+ASSERT P% - quinkey_chars = 31
+
+.qrow                       ; First text row of each Quinkey's block
+    EQUB 5, 11, 17, 23
+.text_off                   ; Ticker offset in qtext, by channel
+    FOR i, 0, 7 : EQUB i * TICKER : NEXT
+.key_names                  ; By bit: little, ring, middle, index, thumb,
+    EQUS "LiRiMiInThCo"     ; command
 
 ; MODE 1, cursor off, title
 .vdu_init
@@ -1098,6 +1414,16 @@ ASSERT P% - type_names = 16 * NUM_TYPES
 .keyn       EQUB 0
 .keyrow     EQUB 0
 .keycol     EQUB 0
+.qprev      SKIP 8          ; Quinkeys, by channel: last code read
+.qstable    SKIP 8          ; Code read on two successive frames
+.qacc       SKIP 8          ; Keys held since the chord began
+.qlast      SKIP 8          ; Last chord entered
+.qtext      SKIP 8 * TICKER ; Characters entered
+.qn         EQUB 0
+.qi         EQUB 0
+.qbit       EQUB 0
+.qoff       EQUB 0
+.qcount     EQUB 0
 
 .end
 

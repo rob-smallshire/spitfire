@@ -122,7 +122,7 @@ BBC test programs for the other SPI devices: SPIRTC and SPISETTIME (DS3234 RTC o
 
 This is embedded hardware, so most testing is on the machine. Each piece of functionality is proven with a small standalone test program:
 - Flash firmware → load BBC test program → exercise hardware → observe results on the BBC display.
-- The `beeb/spitest/` programs are the regression suite. Re-run them after firmware changes. SPITEST, SPI256, SPIT256 and SPITTEST need the `spitest` firmware; with other firmware the AVR replies `FF` and nearly every transfer counts as bad. SPIJOY (MODE 1 plotter for Delta 3B Single/Twin, 14B and Bitstik on either port) needs the `spijoy` firmware.
+- The `beeb/spitest/` programs are the regression suite. Re-run them after firmware changes. SPITEST, SPI256, SPIT256 and SPITTEST need the `spitest` firmware; with other firmware the AVR replies `FF` and nearly every transfer counts as bad. SPIJOY (MODE 1 plotter for Delta 3B Single/Twin, 14B and Bitstik on either port, plus a Quinkey x4 chord decoder) needs the `spijoy` firmware.
 - Build verification is "does it compile clean with `-Werror`" plus the size report from `avr-size`.
 - The exception is the ROM's RTC module, which has an emulator test (`beeb/rom/test/test_rtc.py`, `make test` in `beeb/rom`): it runs the ROM on py65 against a model DS3234 that decodes the bit-banged SPI. Run it after changing `beeb/rom/src/rtc.asm` or `spi.asm`.
 

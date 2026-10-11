@@ -320,6 +320,19 @@ left and at the top), reading low at the left and at the front. A real
 BBC sees the same polarity, so the ROM should report the readings
 unchanged.
 
+A Microwriter Quinkey is a chord keyboard rather than a joystick, but it
+uses the same port, also in 3B Twin mode. A four-way adapter puts up to
+four Quinkeys on CH0-CH3. Each Quinkey's six keys switch a binary
+resistor ladder, so the chord is `(reading - offset + 8) / 16`. The
+offset was about 6 counts on the Rev 1 board; the ROM should measure it
+per channel with no keys pressed rather than assume it. Microwriter's
+BBC driver polled at 100 Hz, ORed the keys held during a chord, and
+inserted the character into the input buffer on release. A Quinkey
+module would do the same and need the driver's command and shift tables
+as well as its letters. See the Quinkey section of `docs/rev1-bringup.md`
+for the measurements and references. `beeb/spitest` SPIJOY's Quinkey x4
+mode is a working decoder.
+
 ### Polling Mechanism
 - ADC values change slowly (analogue position)
 - Could poll on demand (each ADVAL call) or periodically

@@ -328,6 +328,62 @@ mechanical. No Bitstik schematic was found online. The unit is to be
 disassembled and its circuit traced, which should also explain the
 reduced axis span.
 
+### Joystick B (J12) - Microwriter Quinkey, 2026-10-11
+
+The Quinkey is Microwriter's six-key, one-handed chord keyboard for the
+BBC Micro. It plugs into the analogue port through an adapter with a male
+DA-15 and four 3.5 mm jack sockets (labelled 1-4), so that up to four
+Quinkeys can be used at once. One Quinkey was plugged into socket 1 and
+the adapter into J12, with Port B in 3B Twin mode (the Acorn port's
+grounds, and all four channels). Socket 1 is CH0 (the BBC's ADVAL 1 on
+the first port). Channels with nothing plugged in read 0, so the adapter
+evidently pulls them down.
+
+Inside, the six keys switch a resistor ladder. Each key alone (right
+hand):
+
+| Keys | Reading | Less no-keys reading |
+|---|---|---|
+| None | 6 | 0 |
+| Little finger | 22 | 16 |
+| Ring finger | 38 | 32 |
+| Middle finger | 70 | 64 |
+| Index finger | 134 | 128 |
+| Thumb | 261 | 255 |
+| Command (second thumb key) | 519 | 513 |
+
+The ladder is a 6-bit DAC and adds linearly: command + index + ring read
+680 (sum 679), and command + index + ring + little read 696 (sum 695).
+The chord is therefore `(reading - 6 + 8) / 16`. Rounding without
+taking off the 6-count offset first decoded both of those chords with
+an extra little finger. The bit order matches Microwriter's: little
+finger = bit 0 up to thumb = bit 4 is the five-bit finger number of the
+BBC driver's tables, and command is bit 5.
+
+SPIJOY's Quinkey x4 mode decodes all four sockets this way. As in the
+BBC driver, it ORs together every key held since the chord began and
+enters the character when all keys are released. It accepts a code only
+once two successive frames agree. Letters come from the driver's
+unshifted table. "typing with a quinkey" was typed correctly. Command
+chords are shown only as `C+n`, because their tables have not been
+found yet.
+
+References:
+- Peter Voke, "Quinkey" hardware review, Acorn User, September 1984
+  (<https://plett.uk/posts/quinkey/Quinkey%20Review%20-%20Acorn%20User%20026%201984-09.pdf>).
+  It covers the four-way adapter, Microwriter's PROG driver (100 Hz
+  polling through IRQ2V, characters entered on release), the bit order
+  (thumb + ring + little = `10011` = 19 = "j"), and the unshifted table
+  for chords 1-31: `usgoqnbevt,a-.m hkjczyxilrwd'fp`. The command,
+  capital, numeric-shift, function-key and control-code tables sit at
+  &1C6C-&1D0B when PROG is loaded at &1900. An image of the PROG tape
+  would supply them.
+- Vik Olliver's Quirkey, a modern Raspberry Pi Pico recreation
+  (<https://github.com/VikOlliver/Quirkey>). Its `alphaTable` agrees with
+  the Acorn User table for all 31 chords once its reversed bit order
+  (thumb = bit 0) is allowed for. Its command and shift tables are a
+  modern PC layout, not the BBC's.
+
 ### Mouse on the Peripheral DE-9 (J13) - Golden Image GI-6000
 
 Firmware: `spimouse` (quadrature decoding on Port D via the PCINT3
@@ -560,7 +616,7 @@ SCK and MOSI need no resistors: devices ignore them while deselected.
 | 74HC138 decoder, J4-J9 chip selects | Working |
 | SPI, bit-bang and turbo | Working, no errors |
 | Joystick A (J11) | Working: Delta 3B Twin, 3B Single and 14B, Acorn Bitstik; all pins verified |
-| Joystick B (J12) | Working: Delta 3B Twin and 14B; all pins verified, no crosstalk with Port A |
+| Joystick B (J12) | Working: Delta 3B Twin and 14B, Microwriter Quinkey; all pins verified, no crosstalk with Port A |
 | Peripheral DE-9 (J13) | Working; fitted on reverse side to correct mirrored footprint (erratum 1) |
 | Serial (USART0, 115200 8N1) | Working, transmit and receive |
 | Mouse on J13, Amiga and Atari modes | Working (Golden Image GI-6000) |

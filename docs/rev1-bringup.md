@@ -339,6 +339,19 @@ handset, and Acornsoft's Arcadians was playable with it: an analogue
 joystick on a Master Compact, through the MOS's own joystick interface.
 Joystick use during MMFS disc access has not been tried yet.
 
+On 2026-10-13 the ROM's commands were tried on the Compact.
+
+- `*HELP` listed the SPITFIRE topic and the joystick setting.
+- `*HELP SPITFIRE` and `*HELP SPITFIRE JOYSTICK` listed the commands and
+  the setting. `*HELP JOYSTICK` was left to the other ROMs.
+- `*SPITFIRE` printed the version and modules.
+- `*SPITFIRE JOYSTICK` reported "Joystick on (Port A CH0/CH1)".
+- `*SPITFIRE JOYSTICK OFF` handed the joystick back to the MOS, and the
+  setting then read "Joystick off". `*SPITFIRE JOYSTICK ON` gave it back
+  to the ROM.
+
+Everything behaved as the emulator tests (`test_commands.py`) expect.
+
 ### Joystick B (J12) - Microwriter Quinkey, 2026-10-11
 
 The Quinkey is Microwriter's six-key, one-handed chord keyboard for the

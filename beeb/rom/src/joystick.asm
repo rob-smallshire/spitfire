@@ -10,10 +10,13 @@
 ; returns: ADVAL(0) low byte (switches), then ADVAL(1) and ADVAL(2) as
 ; 16-bit values. Odd channels return ADVAL(1) and even ones ADVAL(2).
 ;
-; Every second call (50 Hz) reads the AVR's JOY_ADVAL burst for the
-; handset (firmware/src/spijoy.cpp): a status byte, then those five
-; bytes, ready to store. The AVR scales the readings and derives the
-; direction bits, so the 6502 only copies.
+; Every second call (50 Hz) reads the AVR's JOY_MOS burst
+; (firmware/src/spijoy.cpp): a status byte, then those five bytes for
+; the handset configured in the AVR's EEPROM, ready to store. The AVR
+; scales the readings and derives the direction bits, so the 6502 only
+; copies. The port types and the handset are set with *SPITFIRE
+; JOYSTICK (commands.asm) and the AVR applies them at power-up, so the
+; poll needs no set-up.
 ;
 ; The call arrives in the 100 Hz interrupt, so it may interrupt a
 ; foreground SPI transaction (MMFS keeps the SD card selected for a
@@ -26,13 +29,12 @@
 ; *FX190,64 keeps its key repeat count there.) Y stays the same
 ; throughout.
 
-CMD_JOY_ADVAL  = &50        ; + handset: 0 = Port A CH0/CH1
-CMD_JOY_TYPE_A = &E0        ; + firmware type for Port A
-ADVAL_STATUS   = &A0        ; JOY_ADVAL status byte: &A0 | port type
-JOY_HANDSET    = 0          ; Port A left handset (CH0, CH1)
-JOY_TYPE       = 1          ; Firmware 3B Twin: the Acorn port's grounds
-
-DEV_SPITFIRE = %00000100    ; Y1 -> SPItFIRE AVR
+CMD_JOY_MOS    = &54        ; Burst for the configured handset
+CMD_JOY_CONFIG = &58        ; The saved configuration
+CMD_CFG_TYPE_A = &D0        ; + type: set and save Port A's type
+CMD_CFG_HANDSET = &D8       ; + handset: set and save the MOS handset
+ADVAL_STATUS   = &A0        ; JOY_MOS status byte: &A0 | port type
+CONFIG_VALID   = &40        ; JOY_CONFIG: b6 set, b7 clear
 
 JOY_TICK  = &0205           ; + Y: bit 0 alternates, to poll at 50 Hz
 JOY_SHIFT = &0206           ; + Y: byte being sent
@@ -123,23 +125,17 @@ OSBYTE = &FFF4
     STA IORB
     RTS
 
-; Read the handset's burst and store it, or fix the port type if the AVR
-; reports another. X = selected port B value (from joy_bus_take).
+; Read the configured handset's burst and store it. X = selected port B
+; value (from joy_bus_take). The values are kept if no AVR answers (or
+; not this firmware) or the handset's port is set to None.
 .joy_read
-    LDA #CMD_JOY_ADVAL + JOY_HANDSET
+    LDA #CMD_JOY_MOS
     JSR joy_send
-    JSR joy_receive         ; Status
-    PHA
-    AND #&F8
-    CMP #ADVAL_STATUS
-    BEQ joy_read_status
-    PLA                     ; No AVR (or not this firmware): keep values
-    RTS
-.joy_read_status
-    PLA
-    AND #&07
-    CMP #JOY_TYPE
-    BNE joy_set_type
+    JSR joy_receive         ; Status: &A1-&A3
+    CMP #ADVAL_STATUS + 1
+    BCC joy_read_done
+    CMP #ADVAL_STATUS + 4
+    BCS joy_read_done
     JSR joy_receive
     STA &0200, Y            ; Switches
     JSR joy_receive
@@ -150,18 +146,24 @@ OSBYTE = &FFF4
     STA &0203, Y            ; ADVAL(2)
     JSR joy_receive
     STA &0204, Y
+.joy_read_done
     RTS
 
-; The AVR's port is not yet the type we need (it may have reset): end
-; this transaction and set it.
-.joy_set_type
-    TXA
-    ORA #DEV_NONE
-    STA IORB
-    STX IORB                ; Select again
-    LDA #CMD_JOY_TYPE_A + JOY_TYPE
-    JSR joy_send
-    JMP joy_receive         ; Clock out the echo
+; Foreground (for *SPITFIRE commands): send command A to the AVR and
+; return its reply in A. Preserves Y; corrupts X.
+.joy_command
+    PHA
+    JSR spi_init
+    LDA #DEV_SPITFIRE
+    JSR spi_select0
+    PLA
+    JSR spi_xfer0
+    LDA #0
+    JSR spi_xfer0           ; Clock out the reply
+    PHA
+    JSR spi_deselect0
+    PLA
+    RTS
 
 ; Send A, MSB first, in SPI mode 0. X = selected port B value with SCK
 ; and MOSI low. Uses JOY_SHIFT + Y. Leaves SCK and MOSI low.

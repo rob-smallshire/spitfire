@@ -72,7 +72,12 @@ inputs continuously), so it is ready for the host's dummy byte.
 | JOY_KEY_A | 0x4A | Port A 14B keypad buttons 0-7, 1 = pressed; latches buttons 8-11 |
 | JOY_KEY_B | 0x4B | The same for Port B |
 | JOY_ADVAL | 0x50-0x53 | Burst of 6 bytes for handset n (below) |
-| JOY_TYPE_A | 0xE0-0xE3 | Set Port A to None, 3B Twin, 3B Single or 14B; echoes the command |
+| JOY_MOS | 0x54 | The JOY_ADVAL burst for the configured handset |
+| JOY_CONFIG | 0x58 | The saved configuration (below) |
+| CFG_TYPE_A | 0xD0-0xD3 | Set Port A to None, 3B Twin, 3B Single or 14B and save it; echoes the command |
+| CFG_TYPE_B | 0xD4-0xD7 | The same for Port B |
+| CFG_HANDSET | 0xD8-0xDB | Set the handset for JOY_MOS and save it; echoes the command |
+| JOY_TYPE_A | 0xE0-0xE3 | Set Port A's type until the next reset or CFG_ command (not saved); echoes the command |
 | JOY_TYPE_B | 0xE4-0xE7 | The same for Port B |
 
 JOY_ADVAL is the protocol's first multi-byte response: after the command,
@@ -94,6 +99,33 @@ left and at the top. A direction bit is set beyond a quarter of full scale
 from centre. Raising SS ends a burst early. The status byte lets the host
 tell that the AVR answered (a floating MISO cannot produce it) and which
 type the port is.
+
+#### Saved configuration
+
+The port types and the handset that JOY_MOS reports live in the AVR's
+EEPROM, and the AVR applies them at power-up. JOY_CONFIG returns them in
+one byte:
+
+| Bits | Content |
+|------|---------|
+| 0-1 | Port A type (None, 3BT, 3BS, 14B = 0-3) |
+| 2-3 | Port B type |
+| 4-5 | Handset for JOY_MOS (0-3, as JOY_ADVAL) |
+| 6 | Always 1 |
+| 7 | Always 0 |
+
+Bits 6 and 7 let the host tell the AVR answered: a floating MISO, or MISO
+stuck at either level, cannot produce them. A blank or corrupt EEPROM
+record (a marker, the byte and its complement) gives both ports 3B Twin
+and handset 0. The CFG_ commands take effect in JOY_CONFIG at once; the
+main loop then sets up the ports and writes the EEPROM, rewriting only
+bytes that differ, so repeating a setting costs no write cycles. Only the
+CFG_ commands write the EEPROM. Test programs use JOY_TYPE_ so that they
+leave the saved configuration alone.
+
+The fuses leave EESAVE unprogrammed (high fuse 0xD9), so the chip erase
+before each upload also erases the EEPROM, and the AVR comes back with the
+defaults after reflashing.
 
 An Acorn-standard joystick such as the Bitstik uses 3B Twin, which grounds
 pins 3, 5 and 6 and reads all four channels. `beeb/spitest` SPIJOY exercises

@@ -152,13 +152,37 @@ This is a working sketch, not a final design:
 | `*SPITFIRE SD INFO` | Show SD card status |
 
 ### Implemented so far
-`beeb/rom/src/commands.asm`: `*SPITFIRE` (version and modules),
-`*SPITFIRE JOYSTICK` (status) and `*SPITFIRE JOYSTICK ON|OFF` (sets or
-clears bit 7 of the MOS joystick byte, keeping the rest), with
-`*HELP SPITFIRE [JOYSTICK]`. Plain `*HELP` lists `SPITFIRE` as a topic.
+`beeb/rom/src/commands.asm`:
+
+| Command | Effect |
+|---------|--------|
+| `*SPITFIRE` | Version and modules |
+| `*SPITFIRE JOYSTICK` | The joystick settings |
+| `*SPITFIRE JOYSTICK ON\|OFF` | Set or clear bit 7 of the MOS joystick byte, keeping the rest |
+| `*SPITFIRE JOYSTICK A\|B NONE\|TWIN\|SINGLE\|14B` | Set and save a port's type |
+| `*SPITFIRE JOYSTICK USE A\|B [1\|2]` | Set and save which handset is the BBC's joystick (1 = CH0/CH1, 2 = CH2/CH3) |
+
+`*HELP SPITFIRE [JOYSTICK]` lists the commands, and plain `*HELP` lists
+`SPITFIRE` as a topic. Both end with the settings, as the network filing
+systems show their station number:
+
+```
+  Joystick on, Port A 1
+  Ports A 3B Twin, B 3B Twin
+```
+
+"on" or "off" is the MOS's joystick byte. The rest is read from the AVR
+(JOY_CONFIG), which keeps the port types and handset in its EEPROM (see
+[protocol.md](protocol.md)); "SPItFIRE not responding" replaces it if the
+AVR does not answer, and is the error if a setting cannot be made.
 Keywords match in either case; anything else after `*SPITFIRE` is a
-Syntax error. Selecting the handset and port type waits for somewhere to
-keep the setting (`*CONFIGURE`).
+Syntax error.
+
+The EEPROM is written only by the commands that set a port type or the
+handset, and the AVR rewrites only bytes that differ, so repeating a
+setting costs nothing. The poll, `*HELP` and the status command only read
+it. ON and OFF are not kept in the AVR: the MOS byte is set at every reset
+(service &27).
 
 ### Implementation Note
 Each module registers its own `*SPITFIRE <name>` subcommand handler.
@@ -302,8 +326,8 @@ which is `b0=L, b1=M, b2=R`. The driver swaps bits 1 and 2.
 ## Module: Joystick
 
 Provides analogue joystick support via SPItFIRE. The first step, done in
-`beeb/rom/src/joystick.asm`, makes one handset (Port A CH0/CH1, e.g. the
-left handset of a Delta 3B Twin) the BBC's first joystick, with full
+`beeb/rom/src/joystick.asm`, makes one handset (by default Port A
+CH0/CH1, e.g. the left handset of a Delta 3B Twin) the BBC's first joystick, with full
 analogue range, through the Master Compact's joystick service call. As far
 as we know nothing has used that call before.
 
@@ -343,7 +367,8 @@ Seddon's [MOS disassembly][mos-disassembly] (`handleDigitalJoystick` in
 ### How the module works
 
 - **Every second call (50 Hz, the field rate)** it reads the AVR's
-  JOY_ADVAL burst for the handset ([protocol.md](protocol.md)): a status
+  JOY_MOS burst for the configured handset ([protocol.md](protocol.md)):
+  a status
   byte and the five workspace bytes, already scaled to 16 bits with the
   direction bits derived from position. The AVR does all the arithmetic;
   the 6502 stores five bytes. Switch bits 0 and 1 are the two fire inputs,
@@ -358,19 +383,18 @@ Seddon's [MOS disassembly][mos-disassembly] (`handleDigitalJoystick` in
   values hold during disc access.
 - **Robustness.** The status byte (&A0 OR the port type) shows the AVR
   answered: a floating MISO cannot produce it, and a bad status leaves
-  the values alone. If the port is not 3B Twin (the AVR reset, or was
-  slow to start: its startup flash keeps interrupts off for 240 ms), the
-  poll sets it and stores nothing that time. So there is no presence
-  check or set-up at reset.
+  the values alone, as does a handset on a port set to None. The AVR
+  applies its saved port types and handset at power-up, so the poll needs
+  no presence check or set-up and never sends a configuration command.
 - **Cost.** About 1,050 cycles per poll in the emulator, plus the User
   VIA's 1 MHz accesses: roughly 0.7 ms every 20 ms (3.5%). Calls in
   between take 72 cycles.
 
 ### Later steps
-- `*SPITFIRE JOYSTICK` commands: which handset, which port type
-  (Bitstik, 3B Single and so on), on/off. `*CONFIGURE` options through
-  service calls &28/&29; bits 3 and 4 of the CMOS joystick byte are
-  unused.
+- Calibration (centre and range per axis), kept in the AVR's EEPROM
+  with the rest of the configuration, and a Bitstik type (below).
+- Perhaps `*CONFIGURE` options through service calls &28/&29, as a
+  second way to reach the same AVR settings.
 - The second joystick (`ADVAL(3)`/`(4)`) needs BYTEV, because OSBYTE
   &80 reads only two analogue channels. The Mertec Companion, with four
   channels, probably hooked BYTEV for the same reason; whether it also
@@ -683,7 +707,8 @@ the RTC module comes first and brings the ROM skeleton with it:
 1. **RTC module** - ROM header, service dispatcher, SPI core, OSWORD &0E
    and &0F (done, working on the Compact)
 2. **Mouse module** - first input feature, hardware proven
-3. **Joystick module** - first step done: one handset on Port A as
+3. **Joystick module** - first step done: one handset, chosen with
+   `*SPITFIRE JOYSTICK USE` and kept in the AVR's EEPROM, as
    `ADVAL(0)`-`(2)` through MOS 5.x service call &2C
 4. **Single-config build first** - all modules in one ROM, configurable later
 5. **SD card** - done, as a separate MMFS ROM; still to do is the bus

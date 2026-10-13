@@ -36,17 +36,32 @@
  *                                    b1 fire pin 10, b4 left, b5 down,
  *                                    b6 up, b7 right
  *                           X lo, X hi, Y lo, Y hi  16-bit ADVAL values
- *   0xE0-0xE3 JOY_TYPE_A - set Port A to None, 3BT, 3BS or 14B
+ *   0x54      JOY_MOS   - the JOY_ADVAL burst for the configured handset
+ *   0x58      JOY_CONFIG - the saved configuration:
+ *                         b0-1 Port A type, b2-3 Port B type,
+ *                         b4-5 handset for JOY_MOS, b6 = 1, b7 = 0
+ *   0xD0-0xD3 CFG_TYPE_A - set and save Port A's type
+ *   0xD4-0xD7 CFG_TYPE_B - set and save Port B's type
+ *   0xD8-0xDB CFG_HANDSET - set and save the handset for JOY_MOS
+ *   0xE0-0xE3 JOY_TYPE_A - set Port A to None, 3BT, 3BS or 14B until the
+ *                         next reset or CFG_ command (not saved)
  *   0xE4-0xE7 JOY_TYPE_B - the same for Port B
- *                         (both reply with the command byte)
+ *                         (CFG_ and JOY_TYPE_ reply with the command byte)
  *
  * The JOY_ADVAL bytes are the MOS 5.x ADVAL workspace (&02B6-&02BA), so
  * the ROM's service call &2C handler just stores them. Raising SS ends a
  * burst early.
+ *
+ * The configuration lives in EEPROM and is applied at power-up; a blank
+ * or corrupt record gives both ports 3B Twin (the Acorn standard) and
+ * handset 0. The SPI interrupt updates it at once, so JOY_CONFIG reads
+ * back a change straight away; the main loop applies it to the ports
+ * and writes the EEPROM (3.3 ms a byte, too long for the interrupt).
  */
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/eeprom.h>
 #include <util/atomic.h>
 #include "joystick.hpp"
 #include "keypad.hpp"
@@ -63,6 +78,10 @@ namespace {
     constexpr uint8_t CMD_JOY_KEY_B  = 0x4B;
     constexpr uint8_t CMD_JOY_ADVAL  = 0x50;
     constexpr uint8_t CMD_JOY_ADVAL_LAST = 0x53;
+    constexpr uint8_t CMD_JOY_MOS    = 0x54;
+    constexpr uint8_t CMD_JOY_CONFIG = 0x58;
+    constexpr uint8_t CMD_CFG_FIRST  = 0xD0;
+    constexpr uint8_t CMD_CFG_LAST   = 0xDB;
     constexpr uint8_t CMD_JOY_TYPE_A = 0xE0;
     constexpr uint8_t CMD_JOY_TYPE_B = 0xE7;
 
@@ -79,6 +98,21 @@ namespace {
     constexpr uint8_t SW_UP      = 0x40;
     constexpr uint8_t SW_RIGHT   = 0x80;
 
+    // Configuration byte, as JOY_CONFIG returns it
+    constexpr uint8_t CONFIG_VALID   = 0x40;
+    constexpr uint8_t CONFIG_DEFAULT = CONFIG_VALID |
+        static_cast<uint8_t>(joystick::Type::DELTA_3B_TWIN) |
+        static_cast<uint8_t>(joystick::Type::DELTA_3B_TWIN) << 2;
+
+    // EEPROM record: a marker, the configuration and its complement
+    constexpr uint8_t RECORD_MARKER = 0x53;
+    struct Record {
+        uint8_t marker;
+        uint8_t config;
+        uint8_t check;
+    };
+    Record EEMEM saved_record;
+
     // Directions are reported beyond a quarter of full scale from centre
     constexpr uint16_t LOW_THRESHOLD = 256;
     constexpr uint16_t HIGH_THRESHOLD = 768;
@@ -86,6 +120,8 @@ namespace {
     // --- Written by interrupts ---
     volatile uint16_t samples[8];          // ADC interrupt
     volatile uint8_t type_request = NO_REQUEST;  // SPI interrupt
+    volatile uint8_t config = CONFIG_DEFAULT;    // SPI interrupt
+    volatile bool config_changed = false;        // SPI interrupt
 
     // --- Written by the main loop, read by the SPI interrupt ---
     volatile uint16_t keys[2];             // Active high, bit N = button N
@@ -125,6 +161,42 @@ namespace {
     uint8_t fire_buttons() {
         return joystick::fire_buttons(joystick::Port::PORT_A) |
                (joystick::fire_buttons(joystick::Port::PORT_B) << 2);
+    }
+
+    joystick::Type config_type(uint8_t value, uint8_t port) {
+        return static_cast<joystick::Type>((value >> (2 * port)) & 3);
+    }
+
+    void apply_config(uint8_t value) {
+        joystick::configure(joystick::Port::PORT_A, config_type(value, 0));
+        joystick::configure(joystick::Port::PORT_B, config_type(value, 1));
+    }
+
+    // Read the saved configuration, or the default if there is none
+    uint8_t load_config() {
+        Record record;
+        eeprom_read_block(&record, &saved_record, sizeof record);
+        if (record.marker == RECORD_MARKER &&
+            record.check == static_cast<uint8_t>(~record.config) &&
+            (record.config & 0xC0) == CONFIG_VALID) {
+            return record.config;
+        }
+        return CONFIG_DEFAULT;
+    }
+
+    void save_config(uint8_t value) {
+        Record record = {RECORD_MARKER, value, static_cast<uint8_t>(~value)};
+        eeprom_update_block(&record, &saved_record, sizeof record);
+    }
+
+    // Apply and save a configuration change made over SPI. Changes that
+    // arrive while the EEPROM is being written are picked up next time.
+    void service_config() {
+        if (!config_changed) return;
+        config_changed = false;
+        uint8_t value = config;
+        apply_config(value);
+        save_config(value);
     }
 
     // Apply a type change requested over SPI, then refresh the keypads
@@ -212,8 +284,8 @@ ISR(SPI_STC_vect) {
     uint8_t response;
     uint16_t value;
 
-    if (cmd >= CMD_JOY_ADVAL && cmd <= CMD_JOY_ADVAL_LAST) {
-        uint8_t h = cmd - CMD_JOY_ADVAL;
+    if ((cmd >= CMD_JOY_ADVAL && cmd <= CMD_JOY_ADVAL_LAST) || cmd == CMD_JOY_MOS) {
+        uint8_t h = cmd == CMD_JOY_MOS ? (config >> 4) & 3 : cmd - CMD_JOY_ADVAL;
         auto port = static_cast<joystick::Port>(h >> 1);
         burst[0] = ADVAL_STATUS | static_cast<uint8_t>(joystick::get_type(port));
         for (uint8_t i = 0; i < ADVAL_BYTES; i++) {
@@ -236,6 +308,13 @@ ISR(SPI_STC_vect) {
         value = keys[cmd - CMD_JOY_KEY_A];
         latched_hi = static_cast<uint8_t>(value >> 8);
         response = static_cast<uint8_t>(value);
+    } else if (cmd == CMD_JOY_CONFIG) {
+        response = config;
+    } else if (cmd >= CMD_CFG_FIRST && cmd <= CMD_CFG_LAST) {
+        uint8_t shift = 2 * ((cmd >> 2) & 3);  // Port A, Port B, handset
+        config = (config & ~(3 << shift)) | ((cmd & 3) << shift);
+        config_changed = true;
+        response = cmd;
     } else if (cmd >= CMD_JOY_TYPE_A && cmd <= CMD_JOY_TYPE_B) {
         type_request = cmd & 7;
         response = cmd;
@@ -250,6 +329,8 @@ int main() {
     status_led::init();
     keypad::init();
     joystick::init();
+    config = load_config();
+    apply_config(config);
     init_spi_slave();
     start_adc();
 
@@ -258,6 +339,7 @@ int main() {
     sei();
 
     while (true) {
+        service_config();
         service_ports();
         update_adval();
     }

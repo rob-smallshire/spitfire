@@ -1,9 +1,8 @@
 """Regression test for the SPItFIRE ROM's joystick module, run on a 6502 emulator.
 
 Assembles the ROM, then calls its service entry for MOS 5.x service call &2C
-(the Master Compact's centisecond joystick poll) and &27 (reset) on py65. A
-model AVR decodes the bit-banged SPI (mode 0) from the User VIA port B writes
-and answers the spijoy firmware's JOY_ADVAL burst and type commands.
+(the Master Compact's centisecond joystick poll) and &27 (reset) on py65,
+against the model AVR in avr_model.py.
 
 Checks:
 - the burst's five bytes land in the ADVAL workspace (&0200+Y..+4)
@@ -11,7 +10,9 @@ Checks:
 - no transaction while a foreground device is selected (decoder not on Y7)
 - DDRB, the ACR and port B's outputs (PB5-PB7 included) are restored, the
   AVR is only ever selected with SCK low, and Y0 is never driven
-- a port of the wrong type is set to 3B Twin and its values not stored
+- the burst is the configured handset's (JOY_MOS), whichever it is
+- nothing is stored when the handset's port is set to None, and the poll
+  never changes the configuration or the port types
 - nothing is stored when no AVR answers (MISO stuck high or low)
 - every &2C call is claimed with X, Y and the stack preserved
 - service &27 calls OSBYTE &BE with X=&80, Y=&7F and is not claimed
@@ -22,6 +23,7 @@ Run from beeb/rom with `make test`, or:
 import ast, pathlib, random, subprocess, sys, tempfile
 from py65.devices.mpu6502 import MPU
 from py65.memory import ObservableMemory
+from avr_model import AVR
 
 random.seed(int(sys.argv[1]) if len(sys.argv) > 1 else 6502)
 
@@ -39,57 +41,11 @@ IORB, DDRB, SR, ACR, IER = 0xFE60, 0xFE62, 0xFE6A, 0xFE6B, 0xFE6E
 WS = 0xB6                       # Y on service call &2C: ADVAL workspace &02B6
 Y1, Y7 = 1, 7
 
-class AVR:
-    """The spijoy firmware's SPI slave, as seen through the decoder."""
-    def __init__(self):
-        self.iorb = 0xFF; self.sr = 0; self.cs = False
-        self.type = [1, 0]                       # Port A 3B Twin, Port B None
-        self.adval = [[random.randrange(256) for _ in range(5)] for _ in range(4)]
-        self.absent = None                       # None, "high" or "low"
-        self.transactions = 0; self.commands = []
-        self.y0 = False
-    def write_iorb(self, addr, v):
-        prev, self.iorb = self.iorb, v
-        dev = (v >> 2) & 7
-        if dev == 0: self.y0 = True
-        if dev != Y1:
-            if self.cs: self.burst = []          # SS rising ends a burst
-            self.cs = False; return
-        if not self.cs:
-            assert not (v & 2), "AVR selected with SCK high"
-            self.cs = True; self.bits = 0; self.rx = 0; self.burst = []
-            self.out = 0xFF; self.transactions += 1
-        if (v & 2) and not (prev & 2):           # Rising edge
-            if self.bits == 0: self.tx = self.out
-            self.rx = ((self.rx << 1) | (v & 1)) & 0xFF
-            self.bits += 1
-            if self.bits == 8:
-                self.bits = 0; self.sr = self.tx; self.isr(self.rx)
-    def isr(self, b):
-        if self.burst:
-            self.out = self.burst.pop(0); return
-        self.commands.append(b)
-        if 0x50 <= b <= 0x53:
-            h = b - 0x50
-            data = [0xA0 | self.type[h >> 1]] + self.adval[h]
-            self.out = data[0]; self.burst = data[1:] + [0xFF]
-        elif 0xE0 <= b <= 0xE7:
-            self.type[(b >> 2) & 1] = b & 3; self.out = b
-        else:
-            self.out = 0xFF
-    def read_iorb(self, addr): return self.iorb
-    def read_sr(self, addr):
-        if self.absent == "high": return 0xFF
-        if self.absent == "low": return 0x00
-        return self.sr
-
 osbyte_calls = []
 def machine():
     mem = ObservableMemory()
     avr = AVR()
-    mem.subscribe_to_write([IORB], avr.write_iorb)
-    mem.subscribe_to_read([IORB], avr.read_iorb)
-    mem.subscribe_to_read([SR], avr.read_sr)
+    avr.attach(mem)
     mpu = MPU(memory=mem)
     mem[0x8000:0x8000 + len(rom)] = rom
     mem[0x0400:0x0404] = [0x20, 0x03, 0x80, 0x00]          # JSR &8003 (service)
@@ -149,7 +105,7 @@ for i in range(40):
         seen += 1
         check(ws == avr.adval[0], f"poll {i}: workspace {ws} != {avr.adval[0]}")
 check(seen == 20, f"{seen} transactions in 40 calls, expected 20")
-check(set(avr.commands) == {0x50}, f"unexpected commands {set(avr.commands)}")
+check(set(avr.commands) == {0x54}, f"unexpected commands {set(avr.commands)}")
 check(not avr.y0, "Y0 was driven")
 
 # --- Busy: a foreground device is selected ---
@@ -162,19 +118,27 @@ for dev in (0, 2, 3, 1, 6):
     check(ws == before, f"device {dev} selected: workspace changed")
     mem[IORB] = Y7 << 2
 
-# --- Wrong port type: set to 3B Twin, values not stored that time ---
-for wrong in (0, 2, 3):
-    avr.type[0] = wrong; avr.commands = []
+# --- Each configured handset in turn ---
+for h in (1, 2, 3, 0):
+    avr.config = (avr.config & 0xCF) | h << 4
+    for _ in range(2):
+        ws = poll(mpu, mem, avr)
+    check(ws == avr.adval[h], f"handset {h}: workspace {ws} != {avr.adval[h]}")
+
+# --- Port set to None: values kept, nothing changed ---
+avr.commands = []
+for port_type in (0, 2, 3, 1):
+    avr.type[0] = port_type
+    avr.adval[0] = [random.randrange(256) for _ in range(5)]
     before = list(mem[0x0200 + WS:0x0200 + WS + 5])
     for _ in range(2):
         ws = poll(mpu, mem, avr)
-    check(ws == before, f"type {wrong}: values stored")
-    cmds = [c for c in avr.commands if c]  # The echo's dummy byte is a no-op command
-    check(cmds == [0x50, 0xE1], f"type {wrong}: commands {[hex(c) for c in cmds]}")
-    check(avr.type[0] == 1, f"type {wrong}: not set to 3B Twin")
-    for _ in range(2):
-        ws = poll(mpu, mem, avr)
-    check(ws == avr.adval[0], f"type {wrong}: no values after repair")
+    if port_type == 0:
+        check(ws == before, "type None: values stored")
+    else:
+        check(ws == avr.adval[0], f"type {port_type}: values not stored")
+check(set(avr.commands) == {0x54}, f"poll sent {set(avr.commands)}")
+check(avr.eeprom_writes == 0, "poll wrote the EEPROM")
 
 # --- No AVR: nothing stored ---
 for mode in ("high", "low"):

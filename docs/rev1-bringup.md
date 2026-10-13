@@ -352,6 +352,31 @@ On 2026-10-13 the ROM's commands were tried on the Compact.
 
 Everything behaved as the emulator tests (`test_commands.py`) expect.
 
+On 2026-10-13 the joystick configuration moved into the AVR's EEPROM:
+the port types and the handset the MOS reads (see "Saved configuration"
+in [protocol.md](protocol.md)).
+
+- Flashing the `spijoy` firmware erased the EEPROM, as the high fuse
+  (0xD9) leaves EESAVE off. The AVR started with the defaults, both ports
+  3B Twin and Port A handset 1.
+- `*SPITFIRE JOYSTICK USE A 2` and `*SPITFIRE JOYSTICK B 14B`, then
+  `B TWIN`, each showed in `*SPITFIRE JOYSTICK` straight away. Changing
+  a port type left the handset alone.
+- After an AVR power cycle (USBasp unplugged), `*SPITFIRE JOYSTICK`
+  still showed `Port A 2` and both types.
+- The ON/OFF state is the MOS's and is unaffected by an AVR power cycle.
+  Ctrl-Break on the Compact turned it on again (service &27), and the
+  handset was still `Port A 2`.
+
+A first attempt showed the handset back at `Port A 1` after the power
+cycle, but with B 14B saved. It was probably mistyped and did not
+recur.
+
+Brown-out detection is off (extended fuse 0xFF), which risks EEPROM
+corruption as the supply rises or falls. The record's check byte would
+catch that and fall back to the defaults. Extended fuse 0xFC (reset below
+about 4.3 V) would prevent it, and has not been set yet.
+
 ### Joystick B (J12) - Microwriter Quinkey, 2026-10-11
 
 The Quinkey is Microwriter's six-key, one-handed chord keyboard for the

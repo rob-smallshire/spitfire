@@ -5,7 +5,7 @@
 ;   *SPITFIRE JOYSTICK          Joystick settings
 ;   *SPITFIRE JOYSTICK ON|OFF   Hand the MOS's joystick handling to the
 ;                               ROM, or give it back
-;   *SPITFIRE JOYSTICK A|B <type>
+;   *SPITFIRE JOYSTICK SETTYPE A|B <type>
 ;                               Set and save a port's type: NONE, TWIN,
 ;                               SINGLE or 14B
 ;   *SPITFIRE JOYSTICK USE A|B [1|2]
@@ -47,9 +47,9 @@ str_ptr   = ws + 6          ; 2 bytes: print_inline's pointer
     LDX #word_on - words    ; ON, OFF
     JSR match_choice
     BCC cmd_joystick_on_off
-    LDX #word_a - words     ; A, B
-    JSR match_choice
-    BCC cmd_joystick_port
+    LDX #word_settype - words
+    JSR match_word
+    BCC cmd_joystick_settype
     LDX #word_use - words
     JSR match_word
     BCC cmd_joystick_use
@@ -94,10 +94,10 @@ str_ptr   = ws + 6          ; 2 bytes: print_inline's pointer
     CLC
     RTS
 
-; *SPITFIRE JOYSTICK A|B <type>
-.cmd_joystick_port
-    LDA choice
-    STA port
+; *SPITFIRE JOYSTICK SETTYPE A|B <type>
+.cmd_joystick_settype
+    JSR match_port
+    BCS cmd_syntax
     LDX #word_none - words  ; NONE, TWIN, SINGLE, 14B
     JSR match_choice
     BCS cmd_syntax
@@ -112,11 +112,8 @@ str_ptr   = ws + 6          ; 2 bytes: print_inline's pointer
 
 ; *SPITFIRE JOYSTICK USE A|B [1|2]
 .cmd_joystick_use
-    LDX #word_a - words
-    JSR match_choice
+    JSR match_port
     BCS cmd_syntax
-    LDA choice
-    STA port
     LDA #0
     STA choice              ; Handset 1 unless given
     JSR at_end
@@ -283,7 +280,7 @@ str_ptr   = ws + 6          ; 2 bytes: print_inline's pointer
 .help_joystick
     JSR print_inline
     EQUS "  SPITFIRE JOYSTICK [ON|OFF]", 13
-    EQUS "  SPITFIRE JOYSTICK A|B <type>", 13
+    EQUS "  SPITFIRE JOYSTICK SETTYPE A|B <type>", 13
     EQUS "  SPITFIRE JOYSTICK USE A|B [1|2]", 13
     EQUS "    <type>: NONE TWIN SINGLE 14B", 13, 0
     JMP print_settings
@@ -349,6 +346,14 @@ str_ptr   = ws + 6          ; 2 bytes: print_inline's pointer
 .match_choice_done
     RTS
 
+; Match A or B: C=0 and port = 0 or 1, or C=1. Corrupts A and X.
+.match_port
+    LDX #word_a - words
+    JSR match_choice
+    LDA choice
+    STA port
+    RTS
+
 ; Z=1 if (CMD_PTR),Y is the end of the line
 .at_end
     LDA (CMD_PTR), Y
@@ -405,6 +410,7 @@ str_ptr   = ws + 6          ; 2 bytes: print_inline's pointer
 .words
 .word_spitfire  EQUS "SPITFIRE", 0
 .word_joystick  EQUS "JOYSTICK", 0
+.word_settype   EQUS "SETTYPE", 0
 .word_use       EQUS "USE", 0
 .word_on        EQUS "ON", 0            ; Choices, in order of index
                 EQUS "OFF", 0, 0

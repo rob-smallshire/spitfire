@@ -93,15 +93,15 @@ check(joystick_byte[0] == 0x05, f"OFF kept other bits: {joystick_byte[0]:02X}")
 check(avr.eeprom_writes == 0, "ON/OFF or status wrote the EEPROM")
 
 # --- Port types ---
-for text, config in (("SPITFIRE JOYSTICK B NONE", 0x41), ("SPITFIRE JOYSTICK a single", 0x42),
-                     ("SPITFIRE JOYSTICK A 14b", 0x43), ("SPITFIRE JOYSTICK B TWIN", 0x47),
-                     ("SPITFIRE JOYSTICK A TWIN", 0x45)):
+for text, config in (("SPITFIRE JOYSTICK SETTYPE B NONE", 0x41), ("SPITFIRE JOYSTICK SETTYPE a single", 0x42),
+                     ("SPITFIRE JOYSTICK SETTYPE A 14b", 0x43), ("SPITFIRE JOYSTICK SETTYPE B TWIN", 0x47),
+                     ("SPITFIRE JOYSTICK SETTYPE A TWIN", 0x45)):
     a, out, osb, err = run(4, text)
     check(a == 0 and not out and not err and avr.config == config and avr.eeprom == config,
           f"*{text}: {a} {out!r} {err} config {avr.config:02X}")
 a, out, _, _ = run(4, "SPITFIRE JOYSTICK")
 check(out == "Joystick off, Port A 1\nPorts A 3B Twin, B 3B Twin\n", f"status: {out!r}")
-run(4, "SPITFIRE JOYSTICK B 14B")
+run(4, "SPITFIRE JOYSTICK SETTYPE B 14B")
 a, out, _, _ = run(4, "SPITFIRE JOYSTICK")
 check(out.endswith("Ports A 3B Twin, B 14B\n"), f"status B 14B: {out!r}")
 
@@ -117,16 +117,16 @@ for text, h in (("SPITFIRE JOYSTICK USE A 2", 1), ("SPITFIRE JOYSTICK USE B", 2)
 
 # --- The EEPROM is written only when a value changes ---
 writes = avr.eeprom_writes
-for text in ("SPITFIRE JOYSTICK A TWIN", "SPITFIRE JOYSTICK USE A", "SPITFIRE JOYSTICK B 14B"):
+for text in ("SPITFIRE JOYSTICK SETTYPE A TWIN", "SPITFIRE JOYSTICK USE A", "SPITFIRE JOYSTICK SETTYPE B 14B"):
     run(4, text)
 check(avr.eeprom_writes == writes, f"unchanged settings wrote the EEPROM {avr.eeprom_writes - writes} times")
-run(4, "SPITFIRE JOYSTICK B TWIN")
+run(4, "SPITFIRE JOYSTICK SETTYPE B TWIN")
 check(avr.eeprom_writes == writes + 1, "a change was not saved")
 
 # --- No AVR ---
 for mode in ("high", "low"):
     avr.absent = mode
-    a, out, _, err = run(4, "SPITFIRE JOYSTICK A NONE")
+    a, out, _, err = run(4, "SPITFIRE JOYSTICK SETTYPE A NONE")
     check(err == "SPItFIRE not responding", f"absent ({mode}) set: {err}")
     a, out, _, err = run(4, "SPITFIRE JOYSTICK")
     check(out == "Joystick off, SPItFIRE not responding\n", f"absent ({mode}) status: {out!r}")
@@ -135,8 +135,9 @@ check(avr.config == 0x45, f"config changed while absent: {avr.config:02X}")
 
 # --- Syntax errors ---
 for text in ("SPITFIRE FOO", "SPITFIRE JOYSTICK MAYBE", "SPITFIRE JOYSTICK ON X",
-             "SPITFIRE JOYSTICKS", "SPITFIRE JOY", "SPITFIRE JOYSTICK A",
-             "SPITFIRE JOYSTICK C TWIN", "SPITFIRE JOYSTICK A TWINS", "SPITFIRE JOYSTICK A TWIN X",
+             "SPITFIRE JOYSTICKS", "SPITFIRE JOY", "SPITFIRE JOYSTICK A", "SPITFIRE JOYSTICK A TWIN", "SPITFIRE JOYSTICK SETTYPE",
+             "SPITFIRE JOYSTICK SETTYPE A", "SPITFIRE JOYSTICK SETTYPE TWIN", "SPITFIRE JOYSTICK SETTYPEA TWIN",
+             "SPITFIRE JOYSTICK SETTYPE C TWIN", "SPITFIRE JOYSTICK SETTYPE A TWINS", "SPITFIRE JOYSTICK SETTYPE A TWIN X",
              "SPITFIRE JOYSTICK USE", "SPITFIRE JOYSTICK USE A 3", "SPITFIRE JOYSTICK USE A 1 2",
              "SPITFIRE JOYSTICK USE 1"):
     config = avr.config
@@ -162,7 +163,7 @@ joystick_byte[0] = 0x05
 a, out, _, _ = run(9, "SPITFIRE")
 check(a == 9 and "SPITFIRE JOYSTICK USE A|B [1|2]" in out and "  SPITFIRE\n" in out, f"*HELP SPITFIRE: {out!r}")
 a, out, _, _ = run(9, "spitfire joystick")
-check(a == 9 and "SPITFIRE JOYSTICK A|B <type>" in out and "  SPITFIRE\n" not in out,
+check(a == 9 and "SPITFIRE JOYSTICK SETTYPE A|B <type>" in out and "  SPITFIRE\n" not in out,
       f"*HELP SPITFIRE JOYSTICK: {out!r}")
 check(max(len(l) for l in out.split("\n")) <= 40, f"*HELP wider than MODE 7: {out!r}")
 for text in ("JOYSTICK", "MOS", "SPITFIRE MOUSE"):

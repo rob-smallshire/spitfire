@@ -159,7 +159,7 @@ This is a working sketch, not a final design:
 | `*SPITFIRE` | Version and modules |
 | `*SPITFIRE JOYSTICK` | The joystick settings |
 | `*SPITFIRE JOYSTICK ON\|OFF` | Set or clear bit 7 of the MOS joystick byte, keeping the rest |
-| `*SPITFIRE JOYSTICK A\|B NONE\|TWIN\|SINGLE\|14B` | Set and save a port's type |
+| `*SPITFIRE JOYSTICK SETTYPE A\|B NONE\|TWIN\|SINGLE\|14B` | Set and save a port's type |
 | `*SPITFIRE JOYSTICK USE A\|B [1\|2]` | Set and save which handset is the BBC's joystick (1 = CH0/CH1, 2 = CH2/CH3) |
 
 `*HELP SPITFIRE [JOYSTICK]` lists the commands, and plain `*HELP` lists

@@ -151,6 +151,15 @@ This is a working sketch, not a final design:
 | `*SPITFIRE RTC INFO` | Show RTC status (oscillator stop flag, temperature, aging) |
 | `*SPITFIRE SD INFO` | Show SD card status |
 
+### Implemented so far
+`beeb/rom/src/commands.asm`: `*SPITFIRE` (version and modules),
+`*SPITFIRE JOYSTICK` (status) and `*SPITFIRE JOYSTICK ON|OFF` (sets or
+clears bit 7 of the MOS joystick byte, keeping the rest), with
+`*HELP SPITFIRE [JOYSTICK]`. Plain `*HELP` lists `SPITFIRE` as a topic.
+Keywords match in either case; anything else after `*SPITFIRE` is a
+Syntax error. Selecting the handset and port type waits for somewhere to
+keep the setting (`*CONFIGURE`).
+
 ### Implementation Note
 Each module registers its own `*SPITFIRE <name>` subcommand handler.
 The top-level `*SPITFIRE` parser dispatches to the appropriate module
@@ -362,8 +371,10 @@ Seddon's [MOS disassembly][mos-disassembly] (`handleDigitalJoystick` in
   (Bitstik, 3B Single and so on), on/off. `*CONFIGURE` options through
   service calls &28/&29; bits 3 and 4 of the CMOS joystick byte are
   unused.
-- The second joystick (`ADVAL(3)`/`(4)`) needs BYTEV, as the Mertec
-  Companion did, because OSBYTE &80 reads only two analogue channels.
+- The second joystick (`ADVAL(3)`/`(4)`) needs BYTEV, because OSBYTE
+  &80 reads only two analogue channels. The Mertec Companion, with four
+  channels, probably hooked BYTEV for the same reason; whether it also
+  used &2C is not known (its ROM has not been disassembled).
 - ADC conversion events and the `ADVAL(0)` channel byte.
 
 An Acorn Bitstik works in the firmware's 3B Twin mode. It needs a

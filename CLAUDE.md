@@ -56,7 +56,7 @@ Programs are saved as raw binaries plus `.inf` files for Econet/disk transfer. L
 ```bash
 cd beeb/rom
 make        # Builds build/SPITFIRE (+ .inf for the Econet file server)
-make test   # Emulator regression tests of the RTC and joystick modules (needs uv)
+make test   # Emulator regression tests of the RTC and joystick modules and *SPITFIRE commands (needs uv)
 ```
 
 Builds the Sideways ROM image: header, service dispatch, SPI core, the RTC module (OSWORD &0E/&0F, so `*TIME` and `TIME$` use the DS3234) and the joystick module (MOS 5.x service call &2C: a joystick on Port A becomes `ADVAL(0)`-`(2)`, read from the `spijoy` firmware at 50 Hz). Load it on the Compact with `*SRLOAD SPITFIRE 8000 <bank>` in a bank above ANFS. Other modules are still under design - see `docs/rom-design.md`.
@@ -124,7 +124,7 @@ This is embedded hardware, so most testing is on the machine. Each piece of func
 - Flash firmware → load BBC test program → exercise hardware → observe results on the BBC display.
 - The `beeb/spitest/` programs are the regression suite. Re-run them after firmware changes. SPITEST, SPI256, SPIT256 and SPITTEST need the `spitest` firmware; with other firmware the AVR replies `FF` and nearly every transfer counts as bad. SPIJOY (MODE 1 plotter for Delta 3B Single/Twin, 14B and Bitstik on either port, plus a Quinkey x4 chord decoder) needs the `spijoy` firmware.
 - Build verification is "does it compile clean with `-Werror`" plus the size report from `avr-size`.
-- The exceptions are the ROM's RTC and joystick modules, which have emulator tests (`beeb/rom/test/test_rtc.py` and `test_joystick.py`, `make test` in `beeb/rom`): they run the ROM on py65 against a model DS3234 or AVR that decodes the bit-banged SPI. Run them after changing `beeb/rom/src/`.
+- The exceptions are the ROM's RTC and joystick modules, which have emulator tests (`beeb/rom/test/test_rtc.py`, `test_joystick.py` and `test_commands.py`, `make test` in `beeb/rom`): they run the ROM on py65 against a model DS3234 or AVR that decodes the bit-banged SPI. Run them after changing `beeb/rom/src/`.
 
 ## Coding Conventions
 

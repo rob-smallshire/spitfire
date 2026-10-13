@@ -42,6 +42,8 @@ GUARD &C000
 .service
     CMP #&2C
     BEQ service_joystick
+    CMP #&04
+    BEQ service_command
     CMP #&08
     BEQ service_osword
     CMP #&09
@@ -80,29 +82,32 @@ GUARD &C000
 .service_pass
     RTS
 
-; Service &09: *HELP. With no argument, print the title and version.
+; Service &04: unrecognised *command
+.service_command
+    PHA
+    TXA
+    PHA
+    TYA
+    PHA
+    JSR cmd_star            ; C=0 if claimed
+    PLA
+    TAY
+    PLA
+    TAX
+    PLA
+    BCS service_command_pass
+    LDA #0
+.service_command_pass
+    RTS
+
+; Service &09: *HELP. Never claimed.
 .service_help
     PHA
     TXA
     PHA
     TYA
     PHA
-    LDA (CMD_PTR), Y
-    CMP #13
-    BNE help_done
-    JSR OSNEWL
-    LDX #0
-.help_title
-    LDA title, X
-    BNE help_char
-    LDA #' '                ; The zero between title and version
-.help_char
-    JSR OSASCI
-    INX
-    CPX #(copyright - title)
-    BNE help_title
-    JSR OSNEWL
-.help_done
+    JSR cmd_help
     PLA
     TAY
     PLA
@@ -113,6 +118,7 @@ GUARD &C000
 INCLUDE "src/spi.asm"
 INCLUDE "src/rtc.asm"
 INCLUDE "src/joystick.asm"
+INCLUDE "src/commands.asm"
 
 .rom_end
 

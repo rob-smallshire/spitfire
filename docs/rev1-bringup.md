@@ -367,6 +367,9 @@ in [protocol.md](protocol.md)).
 - The ON/OFF state is the MOS's and is unaffected by an AVR power cycle.
   Ctrl-Break on the Compact turned it on again (service &27), and the
   handset was still `Port A 2`.
+- `USE A 1`, `USE A 2`, `USE B 1` and `USE B 2` each moved `ADVAL(0)`,
+  `ADVAL(1)` and `ADVAL(2)` to the chosen handset. All four handsets on
+  both ports work as the BBC's joystick.
 
 A first attempt showed the handset back at `Port A 1` after the power
 cycle, but with B 14B saved. It was probably mistyped and did not

@@ -38,13 +38,14 @@ evolve as we implement and learn.
 │  Module: Mouse (optional)               │
 │    - Hooks BYTEV, EVENTV                │
 │    - Uses SPI Core                      │
-│    - Provides ADVAL 7-9, OSWORD &40     │
+│    - Provides ADVAL 5-9, OSWORD &40     │
 │    - *MOUSE [ON|OFF|TYPE]               │
 ├─────────────────────────────────────────┤
 │  Module: Joystick (optional)            │
 │    - MOS 5.x service call &2C (100 Hz)  │
 │    - Uses SPI Core                      │
-│    - Provides ADVAL 0-2 (BYTEV later)   │
+│    - Provides ADVAL 0-2 (done); 3-4,    │
+│      10-11, 16-20, 26-27 via BYTEV      │
 ├─────────────────────────────────────────┤
 │  Module: RTC (optional)                 │
 │    - Service call &08: OSWORD &0E/&0F   │
@@ -192,8 +193,11 @@ handler need not be present if the module is excluded from the build.
 
 ## Module: Mouse
 
-Replicates the JGH/AMX mouse API. Polls the SPItFIRE AVR via SPI on a
-periodic timer event instead of using CB1/CB2 IRQs.
+Replicates the JGH/AMX mouse API, and the Master Compact's own PMFS
+driver's. Polls the SPItFIRE AVR via SPI on a periodic timer event
+instead of using CB1/CB2 IRQs. What is known about these drivers, and
+the sources, is in
+[adval-and-mouse-conventions.md](adval-and-mouse-conventions.md).
 
 ### MOS-facing API (drop-in compatible)
 | Call | Description |
@@ -201,7 +205,7 @@ periodic timer event instead of using CB1/CB2 IRQs.
 | `*MOUSE ON` | Enable mouse |
 | `*MOUSE OFF` | Disable mouse |
 | `*HELP MOUSE` | Show help text |
-| `ADVAL(5)` | Mouse X boundary (max X) |
+| `ADVAL(5)` | Mouse X boundary (our meaning: max X; see below) |
 | `ADVAL(6)` | Mouse Y boundary (max Y) |
 | `ADVAL(7)` | X position (graphics units, 0-1279) |
 | `ADVAL(8)` | Y position (graphics units, 0-1023) |
@@ -209,7 +213,29 @@ periodic timer event instead of using CB1/CB2 IRQs.
 | `INKEY-10` | Left button (-1 if pressed) |
 | `INKEY-11` | Middle button |
 | `INKEY-12` | Right button |
+| `INKEY-107`/`-108`/`-109` | The same buttons as AMX software reads them (JGH's driver answers both sets) |
 | `OSWORD &40` | Full mouse state to user buffer (see below) |
+
+Corrections from the research:
+- AMX software reads the buttons as `INKEY-107` to `-109` (AMX guide),
+  not -10 to -12, so we answer both, as JGH's driver does.
+- "Boundary" is all any source says about `ADVAL(5)`/`(6)`. JGH's driver
+  doesn't implement them, so "max X/Y" is our own meaning. PMFS returns
+  its `*TMAX` limits there, which agrees.
+- JGH's transient driver also takes `*MOUSE AMX|COMPACT|MARCONI|RB5`.
+
+#### Compatibility with the Compact's PMFS driver
+The Master Compact's Welcome disc drives its pointer with PMFS, a
+sideways ROM. SPItFIRE can't run alongside it: PMFS makes port B all
+inputs and counts CB1 edges. Welcome-era software expects its interface:
+- `ADVAL(7)`/`(8)`, the pointer in graphics units;
+- `*POINTER [0|2]` (a software pointer), `*TSET x,y` and `*TMAX x,y`;
+- buttons as keys in the keyboard buffer: RETURN, &C0, and TAB's code.
+
+The one conflict is `ADVAL(9)`. PMFS returns the device mode there,
+with 0 meaning mouse, where JGH and AMX return the buttons. Welcome's
+TimPaint tests `ADVAL(9)=0` to detect a mouse, and a buttons answer is 0
+too while nothing is pressed. So we keep the JGH/AMX meaning.
 
 ### OSWORD &40 buffer format
 7 bytes returned at the address pointed to by XY:
@@ -390,16 +416,127 @@ Seddon's [MOS disassembly][mos-disassembly] (`handleDigitalJoystick` in
   VIA's 1 MHz accesses: roughly 0.7 ms every 20 ms (3.5%). Calls in
   between take 72 cycles.
 
-### Later steps
-- Calibration (centre and range per axis), kept in the AVR's EEPROM
-  with the rest of the configuration, and a Bitstik type (below).
-- Perhaps `*CONFIGURE` options through service calls &28/&29, as a
-  second way to reach the same AVR settings.
-- The second joystick (`ADVAL(3)`/`(4)`) needs BYTEV, because OSBYTE
-  &80 reads only two analogue channels. The Mertec Companion, with four
-  channels, probably hooked BYTEV for the same reason; whether it also
-  used &2C is not known (its ROM has not been disassembled).
+### Design: presets and the ADVAL channel map
+This is the design the module is heading towards. It was agreed in
+discussion; nothing beyond `ADVAL(0)`-`(2)` is built yet. The research
+behind it is in
+[adval-and-mouse-conventions.md](adval-and-mouse-conventions.md).
+
+#### Aims
+- **Simple uses need no configuration.** A joystick plugged into Port A
+  should just work.
+- **Everything else is reachable,** through a fuller command set, without
+  every user having to learn it.
+- **Classic software sees a BBC Micro.** `ADVAL(0)`-`(4)` behave exactly
+  as on a BBC with an analogue port.
+
+#### Presets
+A preset is a named configuration: the port types plus where each
+port's inputs appear. Choosing one replaces the whole configuration in
+the AVR's EEPROM. The expert commands then adjust it, and the status
+shows `Preset <name>` or `Custom`. The AVR holds the presets; the ROM
+needs only their names and numbers.
+
+| Preset | `ADVAL(1)`-`(4)` | `ADVAL(17)`-`(20)` | Keypads |
+|---|---|---|---|
+| **BBC** (default) | Port A CH0-CH3 | None | None |
+| **14B/1** | Port A CH0/CH1 (rear), then Port B CH0/CH1 (side) | None | Both, `ADVAL(10)`/`(11)` |
+| **Four players** | Port A CH0-CH3 | Port B CH0-CH3 | None |
+
+What each preset covers:
+- **BBC:** Port A is the BBC's analogue port. A Delta 3B Twin is two
+  joysticks. A single joystick with two buttons sees both buttons as
+  `ADVAL(0)` bits 0 and 1, which is how a Delta 14B behaves on a BBC's
+  analogue port. A Bitstik keeps its quirks, as its software expects.
+- **14B/1:** Port A and Port B act as the rear and side sockets of a
+  Voltmace Delta 14B/1 interface, with every key of both keypads
+  available.
+- **Four players:** new territory, for games written for SPItFIRE.
+
+No preset needs `*SPITFIRE JOYSTICK USE`, which makes any handset the
+MOS's joystick. It was built first but is more flexibility than anyone
+needs, and is likely to go.
+
+#### The channel map
+Joysticks 3 and 4 repeat the layout of joysticks 1 and 2 sixteen channels
+up. Setting bit 4 of the channel number moves from one block to the
+other: `ORA #16` in machine code, `ADVAL(16+n)` in BASIC.
+
+| Channel | Use |
+|---|---|
+| 0 | Buttons: bit 0 joystick 1 fire, bit 1 joystick 2 fire (BBC). Bits 4-7: joystick 1 directions (Compact). High byte: the channel number |
+| 1, 2 | Joystick 1 X, Y |
+| 3, 4 | Joystick 2 X, Y |
+| 5-9 | Mouse (the mouse module): 5, 6 limits; 7, 8 position; 9 buttons |
+| 10 | Joystick 1's keypad: bit n = Delta 14B button n (0-11), 1 = pressed |
+| 11 | Joystick 2's keypad |
+| 16 | Buttons: bit 0 joystick 3 fire, bit 1 joystick 4 fire |
+| 17, 18 | Joystick 3 X, Y |
+| 19, 20 | Joystick 4 X, Y |
+| 26 | Joystick 3's keypad |
+| 27 | Joystick 4's keypad |
+
+Notes on the map:
+- **Other channels:** 12-15, 21-25 and 28-126 are unused. 127 is a Tube
+  16-bit GET, and 128 upwards are buffers.
+- **Mouse buttons in `ADVAL(0)`:** on the Compact, MOS 5 sets aside bits
+  1-3 for mouse buttons, but nothing fills them. Using bit 1 for joystick
+  2's fire follows the BBC instead. That suits the two-button joystick,
+  whose second button is bit 1 on a BBC.
+- **Keypads by joystick:** they are numbered by joystick, not port, so
+  the bit-4 rule holds for them too. Bits 12-15 are 0, and a handset
+  without a keypad reads 0. In the 14B/1 preset, `ADVAL(10)` is the rear
+  socket and `ADVAL(11)` the side, as Voltmace numbered them.
+- **Fire bits in the 14B/1 preset:** bits 0 and 1 are the rear and side
+  handsets' fire buttons. Voltmace's own JOYSTIK driver read fire as a
+  keypad key, so no existing software depends on this.
+
+#### How it is served
+- **The poll:** the 50 Hz poll (service call &2C) reads one burst from
+  the AVR. It stores `ADVAL(0)`-`(2)` in the MOS's workspace, as now. The
+  other values go to the ROM's own workspace.
+- **BYTEV:** a hook, installed at each reset through an extended vector,
+  answers OSBYTE &80 for the channels above. Everything else goes to the
+  previous BYTEV, so it chains with other drivers.
+- **No SPI from BYTEV:** values come from the poll's copy. Software that
+  reads the keypads once per key per frame, such as a ported Elite, then
+  costs only the OSBYTE call.
+- **Burst size:** the AVR sends only what the preset uses, because a full
+  burst is 22 bytes:
+  - BBC: switches and four channels, 9 bytes;
+  - 14B/1: adds two keypads, 13 bytes;
+  - Four players: everything.
+  
+  At about 150 cycles a byte, the full burst would take some 10% of the
+  6502's time, against 3.5% now.
+- **Detection:** without our ROM, MOS 5 answers every channel with a copy
+  of `ADVAL(1)` or `(2)`. So software needs a separate call to find
+  SPItFIRE and learn what is configured: an OSBYTE, or an OSWORD.
+- **Workspace:** the poll (in the interrupt) and the BYTEV hook (usually
+  in the foreground) must both reach it. Private workspace on the Master
+  is in hidden RAM (HAZEL), so whether that is paged in for service call
+  &2C has to be checked first.
+
+#### Still to decide
+- The detection call's number and format.
+- The preset and expert command syntax, and whether presets can be
+  shown and chosen with `*CONFIGURE` (service calls &28/&29).
+- How a 14B in 14B mode reports its fire bits in the BBC preset: perhaps
+  as on a BBC's analogue port, where buttons 9-11 are one button and 6-8
+  the other.
+- A Bitstik type, and calibration kept in the AVR's EEPROM.
 - ADC conversion events and the `ADVAL(0)` channel byte.
+
+#### Delta 14B background
+- On a BBC's analogue port, a 14B is a single joystick on CH0/CH1. The
+  top five buttons act as fire 1 (PB0), the next three as fire 2 (PB1),
+  and the bottom six do nothing.
+- The 14B/1 interface added the user port: two handsets as `ADVAL(1)`/`(2)`
+  (rear) and `(3)`/`(4)` (side). Each keypad is a 3x4 matrix, strobed on
+  User VIA PB4-PB6 and read on PB0-PB3, with PB7 choosing the handset.
+- Software used the keypads through Voltmace's driver generators, or by
+  scanning the matrix directly as Mark Moxon's Delta 14B Elite-A does.
+  See the conventions document for references.
 
 An Acorn Bitstik works in the firmware's 3B Twin mode. It needs a
 Bitstik type in the ROM because of three quirks, measured in
@@ -709,7 +846,8 @@ the RTC module comes first and brings the ROM skeleton with it:
 2. **Mouse module** - first input feature, hardware proven
 3. **Joystick module** - first step done: one handset, chosen with
    `*SPITFIRE JOYSTICK USE` and kept in the AVR's EEPROM, as
-   `ADVAL(0)`-`(2)` through MOS 5.x service call &2C
+   `ADVAL(0)`-`(2)` through MOS 5.x service call &2C. Next: the presets
+   and the channel map above (BYTEV, keypads, joysticks 3 and 4)
 4. **Single-config build first** - all modules in one ROM, configurable later
 5. **SD card** - done, as a separate MMFS ROM; still to do is the bus
    access protocol shared with the mouse module
@@ -737,6 +875,9 @@ the RTC module comes first and brings the ROM skeleton with it:
 - Internal: [spi-interface.md](spi-interface.md) - hardware layer
 - Internal: [peripheral-pinouts.md](peripheral-pinouts.md) - device pinouts
 - Internal: [mouse-trackball-peripheral.md](mouse-trackball-peripheral.md) - mouse details
+- Internal: [adval-and-mouse-conventions.md](adval-and-mouse-conventions.md) -
+  OSBYTE &80 channel uses, mouse drivers (JGH, AMX, the Compact's PMFS),
+  multi-joystick precedents
 
 [compact-joystick]: https://blog.smallshire.no/blog/compact-joystick/acorn-bbc-master-compact-joystick/
 [mos-disassembly]: https://github.com/tom-seddon/acorn_mos_disassembly

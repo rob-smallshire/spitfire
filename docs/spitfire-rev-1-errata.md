@@ -149,6 +149,31 @@ path.
   `Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder` makes the
   BOM and placement files read correctly.
 
+### 10. Label J10's VCC and GND pins on the silkscreen
+
+J10, the 2x3 ISP header, is a shrouded and keyed IDC header, but the
+USBasp's female 2x3 header has no key, so it is easy to plug in
+backwards. The USBasp's pins are labelled, so labelling J10's +5V (pin 2)
+and GND (pin 6) on the silkscreen lets the two be lined up by eye. A
+pin 1 marker alone is less useful, because MISO is not marked on the
+programmer.
+
+J10 pinout (standard Atmel 6-pin ISP): 1 MISO, 2 +5V, 3 SCK, 4 MOSI,
+5 RESET, 6 GND.
+
+### 11. Mounting holes for add-on boards on J6-J9
+
+The expansion headers J6-J9 are single-row 1x6 sockets, so a board
+plugged into one is held at one edge only and will rock. Add M2 holes
+next to each header (or one shared pattern per pair) for standoffs to
+support an add-on's far edge. Rev 1 has eight M2 holes: four at the
+corners (H301-H304), and four in a 20.3 mm square (H305-H308) around the
+area of the RTC and SD card breakouts, but none near J6-J9.
+
+With Rev 2 adding J9 on Y0 (item 3), consider fixing a standard add-on
+footprint (header position plus hole positions) and recording it in the
+docs, so that add-on boards can be designed to it.
+
 ## Not yet verified on Rev 1
 
 These parts may still have faults that should be found before Rev 2 is

@@ -167,8 +167,8 @@ The expansion headers J6-J9 are single-row 1x6 sockets, so a board
 plugged into one is held at one edge only and will rock. Add M2 holes
 next to each header (or one shared pattern per pair) for standoffs to
 support an add-on's far edge. Rev 1 has eight M2 holes: four at the
-corners (H301-H304), and four in a 20.3 mm square (H305-H308) around the
-area of the RTC and SD card breakouts, but none near J6-J9.
+corners (H301-H304) and four in a 20.3 mm square (H305-H308) around
+U1, next to the SD card header J4, but none near J6-J9.
 
 With Rev 2 adding J9 on Y0 (item 3), consider fixing a standard add-on
 footprint (header position plus hole positions) and recording it in the

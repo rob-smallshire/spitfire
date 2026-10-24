@@ -82,9 +82,23 @@ new constant, `%00000000` (Y0).
 
 **Rev 1 workaround.** Keep J9 empty.
 
+### 4. Crystal load capacitors C2 and C6 are 0201
+
+**Problem.** C2 (XTAL1 to GND) and C6 (XTAL2 to GND), the load
+capacitors for the 18.432 MHz crystal Y1, use the 0201 footprint
+(`Capacitor_SMD:C_0201_0603Metric`). That is at the limit of what can be
+placed by hand. All the other passives are 0603 hand-solder footprints.
+Their value field is also still the placeholder `C_Small`.
+
+**Fix.** Change both to `Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder`,
+like C1 and C4-C10, and set the value to 15 pF. That is the value proven
+with this crystal; 22 pF failed on the breadboard (see
+[avr-programming-notes.md](avr-programming-notes.md)). Keep them close to
+Y1 and the AVR's XTAL pins when re-routing for the larger pads.
+
 ## Optional improvements
 
-### 4. Weak pull-ups on the decoder inputs A0-A2
+### 5. Weak pull-ups on the decoder inputs A0-A2
 
 47k-100k from each of A0-A2 to +5V, so that the decoder also rests on Y7
 (no device) when the board is powered without the Compact, for example
@@ -92,7 +106,7 @@ from the USBasp. Not 10k: in parallel with the Compact's 4.1k, the VIA
 would sink about 1.7 mA per line when driving low, above its 1.6 mA
 rating. Goes with item 3.
 
-### 5. Protect the 5V rail from two supplies
+### 6. Protect the 5V rail from two supplies
 
 J1 pin 7 connects the Compact's +5V straight to the board's 5V rail, and
 the ISP header's VCC is on the same rail. A USBasp with its 5V jumper
@@ -105,16 +119,16 @@ about 4.7 V, which is still within the AVR's 4.5-5.5 V at 18.432 MHz.
 A related caveat that a board change cannot remove: an unpowered USBasp
 left attached holds the AVR in reset through RESET, SCK and MOSI.
 
-### 6. Supply voltage margin
+### 7. Supply voltage margin
 
 The board's rail measured 4.85 V when powered from the Compact through a
 0.5 m cable. That leaves 0.35 V above the AVR's 4.5 V minimum at
 18.432 MHz, and only about 0.5 V above a 4.3 V brown-out threshold
-(item 7). Keep the supply path short and wide on Rev 2, and keep any
-series element (such as item 5's diode) out of the Compact's supply
+(item 8). Keep the supply path short and wide on Rev 2, and keep any
+series element (such as item 6's diode) out of the Compact's supply
 path.
 
-### 7. Fuses for production boards (no PCB change)
+### 8. Fuses for production boards (no PCB change)
 
 - **Brown-out detection** is off (extended fuse `0xFF`). `0xFC` resets
   the AVR below about 4.3 V, which protects the EEPROM configuration
@@ -123,6 +137,17 @@ path.
 - **EESAVE** is off (high fuse `0xD9`), so every reflash erases the saved
   joystick configuration. Useful during development; `0xD1` keeps the
   EEPROM across reflashes.
+
+### 9. Footprint library tidy-ups (no electrical change)
+
+- C3 (10 uF, +5V to GND) uses an LED footprint
+  (`LED_SMD:LED_0603_1608Metric_Pad1.05x0.95mm_HandSolder`). The pads are
+  practically the same size as the capacitor's, but the footprint should
+  be `Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder`, so that
+  no LED polarity marking appears on the silkscreen or assembly drawing.
+- R1-R6 use the 0603 capacitor footprint. Again harmless, but
+  `Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder` makes the
+  BOM and placement files read correctly.
 
 ## Not yet verified on Rev 1
 

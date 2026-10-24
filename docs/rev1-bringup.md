@@ -652,6 +652,9 @@ SCK and MOSI need no resistors: devices ignore them while deselected.
 
 ### Rev 2 errata
 
+Summarised, with optional improvements, in
+[spitfire-rev-1-errata.md](spitfire-rev-1-errata.md).
+
 | # | Issue | Fix |
 |---|---|---|
 | 1 | J13 male DE-9 footprint mirrored (pins 1-5, 2-4, 6-9, 7-8 swapped) | Negate pad X coordinates in the custom male DE-9 footprint so it mirrors the female footprint |

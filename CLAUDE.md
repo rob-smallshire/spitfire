@@ -14,6 +14,7 @@ SPItFIRE is an analogue joystick and quadrature mouse adapter for the Acorn BBC 
 - `hardware/` - KiCad schematics and PCB
 - `docs/` - design docs and datasheets (start with `protocol.md`, `spi-interface.md`, `peripheral-pinouts.md`)
 - `docs/rom-design.md` - the in-progress ROM architecture proposal
+- `docs/spitfire-rev-1-errata.md` - Rev 1 PCB errata and the changes planned for Rev 2
 - SD card filing system: a separate MMFS ROM with a SPItFIRE device driver (`MMC_Spitfire.asm`, device `S`), on the `spitfire` branch of the fork at `~/Code/MMFS` (`origin` = rob-smallshire/MMFS, `upstream` = hoglet67/MMFS). See "SD Card Filing System" in `docs/rom-design.md`
 
 ## Build Commands
@@ -106,7 +107,8 @@ Mouse deltas are clamped to int8 and drained on read; large movements spread acr
 
 ### Standard BBC Mouse APIs
 The ROM should implement standard BBC Micro mouse interfaces for ecosystem compatibility:
-- `*MOUSE ON/OFF`, `ADVAL(7/8/9)`, `INKEY-10/-11/-12`, `OSWORD &40`
+- `*MOUSE ON/OFF`, `ADVAL(7/8/9)`, `INKEY-10/-11/-12` (and `-107/-108/-109`, which AMX software uses), `OSWORD &40`
+- The Master Compact's own mouse driver (PMFS, on the Welcome disc) also uses `ADVAL(5)`-`(9)`, with `ADVAL(9)` as its device mode. ADVAL channel uses, mouse drivers and the planned joystick channel map (joysticks 3/4 at `ADVAL(16)`-`(20)`, keypads at 10/11/26/27) are in `docs/adval-and-mouse-conventions.md` and `docs/rom-design.md`
 - SPItFIRE-specific configuration goes under a `*SPITFIRE <subsystem> ...` namespace (not `*MOUSE`)
 - BBC graphics coordinates: **bottom-left origin**, 0-1279 X, 0-1023 Y. Text coordinates: top-left.
 - See `docs/rom-design.md` for the full design proposal.

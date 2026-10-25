@@ -174,6 +174,10 @@ With Rev 2 adding J9 on Y0 (item 3), consider fixing a standard add-on
 footprint (header position plus hole positions) and recording it in the
 docs, so that add-on boards can be designed to it.
 
+### 12. Ground pours on front and back copper
+
+These were just forgotten in Rev 1.
+
 ## Not yet verified on Rev 1
 
 These parts may still have faults that should be found before Rev 2 is

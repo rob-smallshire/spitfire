@@ -76,7 +76,28 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        [
+          "starved_thermal|120015000|86360000|086b11e0-ca46-4d50-ac6c-dfc0fe09be5e|dc92feca-ebd6-4d5c-8fbe-5e4d606691cf|F.Cu",
+          ""
+        ],
+        [
+          "starved_thermal|132942500|100965000|086b11e0-ca46-4d50-ac6c-dfc0fe09be5e|792e3726-3e0f-43ab-94dc-ca6c42dba153|F.Cu",
+          ""
+        ],
+        [
+          "starved_thermal|137577500|91492500|086b11e0-ca46-4d50-ac6c-dfc0fe09be5e|0a388852-8189-4a8b-af1c-7cdda060c751|F.Cu",
+          ""
+        ],
+        [
+          "starved_thermal|142240000|91212500|086b11e0-ca46-4d50-ac6c-dfc0fe09be5e|09d72d1c-57e3-482d-8e64-43221482e8b1|F.Cu",
+          ""
+        ],
+        [
+          "starved_thermal|143008679|67811319|3ef3b2a3-4d1f-46af-87f8-b72cb5809238|7ed19168-ccf3-42b7-b32d-77486a3bccb9|B.Cu",
+          ""
+        ]
+      ],
       "meta": {
         "version": 2
       },
@@ -111,7 +132,7 @@
         "malformed_courtyard": "error",
         "microvia_drill_out_of_range": "error",
         "mirrored_text_on_front_layer": "warning",
-        "missing_courtyard": "ignore",
+        "missing_courtyard": "error",
         "missing_footprint": "warning",
         "missing_tuning_profile": "warning",
         "net_conflict": "warning",

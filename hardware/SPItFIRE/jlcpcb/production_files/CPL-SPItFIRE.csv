@@ -1,0 +1,49 @@
+Designator,Val,Package,Mid X,Mid Y,Rotation,Layer
+C1,100nF,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,96.2025,-54.61,180.0,top
+C10,100nF,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,140.335,-91.0325,-90.0,top
+C2,27pF,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,121.285,-97.79,180.0,top
+C3,10uF,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,132.715,-80.645,180.0,top
+C4,100nF,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,120.015,-85.4975,-90.0,top
+C5,100nF,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,121.285,-88.265,180.0,top
+C6,27pF,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,121.285,-90.17,0.0,top
+C7,100nF,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,132.08,-100.965,0.0,top
+C8,100nF,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,132.6025,-82.55,180.0,top
+C9,100nF,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,142.24,-92.075,90.0,top
+D1,1N4148W,D_SOD-123,116.84,-86.36,90.0,top
+D2,LED,LED_0603_1608Metric_Pad1.05x0.95mm_HandSolder,172.085,-84.201,-90.0,top
+H301,MountingHole_Pad,MountingHole_2.2mm_M2_DIN965_Pad,78.74,-129.54,0.0,top
+H302,MountingHole_Pad,MountingHole_2.2mm_M2_DIN965_Pad,154.94,-129.54,0.0,top
+H303,MountingHole_Pad,MountingHole_2.2mm_M2_DIN965_Pad,154.94,-53.34,0.0,top
+H304,MountingHole_Pad,MountingHole_2.2mm_M2_DIN965_Pad,78.74,-53.34,0.0,top
+H305,MountingHole_Pad,MountingHole_2.2mm_M2_DIN965_Pad,86.36,-73.914,0.0,top
+H306,MountingHole_Pad,MountingHole_2.2mm_M2_DIN965_Pad,106.68,-73.914,0.0,top
+H307,MountingHole_Pad,MountingHole_2.2mm_M2_DIN965_Pad,106.68,-53.594,0.0,top
+H308,MountingHole_Pad,MountingHole_2.2mm_M2_DIN965_Pad,86.36,-53.594,0.0,top
+J1,Compact Host,DE9_Female_Horizontal_P2.74x2.84mm_EdgePinOffset10.40mm_Housed_MountingHolesOffset12.5mm,71.07,-66.245,-90.0,top
+J10,ISP,IDC-Header_2x03_P2.54mm_Vertical,101.6,-88.9,-90.0,top
+J11,Joystick A,DA15_Female_Horizontal_P2.74x2.84mm_EdgePinOffset10.40mm_Housed_MountingHolesOffset16.66mm,131.38,-61.795635,180.0,top
+J12,Joystick B,DA15_Female_Horizontal_P2.74x2.84mm_EdgePinOffset10.40mm_Housed_MountingHolesOffset16.66mm,131.38,-122.54,0.0,top
+J13,Peripheral DE-9,DE9_Male_Horizontal_P2.74x2.84mm_EdgePinOffset10.40mm_Housed_MountingHolesOffset12.5mm_1,162.61,-66.245,90.0,top
+J14,Peripheral User Port,IDC-Header_2x10_P2.54mm_Latch_Horizontal,161.925,-109.22,0.0,top
+J2,User Port Host,IDC-Header_2x10_P2.54mm_Latch_Horizontal,71.12,-109.22,180.0,top
+J3,User Port Passthrough,IDC-Header_2x10_P2.54mm_Vertical,80.3275,-109.22,180.0,top
+J4,SD Card Adapter,PinSocket_1x08_P2.54mm_Vertical,96.52,-81.28,90.0,top
+J5,DeadOnRTC,PinSocket_1x07_P2.54mm_Vertical,99.06,-127.0,90.0,top
+J6,SPI_4,PinSocket_1x06_P2.54mm_Vertical,119.38,-115.57,90.0,top
+J7,SPI_5,PinSocket_1x06_P2.54mm_Vertical,143.51,-115.57,90.0,top
+J8,SPI_6,PinSocket_1x06_P2.54mm_Vertical,143.51,-68.58,-90.0,top
+J9,SPI_7,PinSocket_1x06_P2.54mm_Vertical,119.38,-68.58,-90.0,top
+L1,10uH,L_0805_2012Metric_Pad1.05x1.20mm_HandSolder,144.145,-92.075,-90.0,top
+R1,10K,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,122.555,-85.4975,90.0,top
+R10,100K,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,82.296,-59.182,-90.0,top
+R2,560R,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,167.767,-84.201,-90.0,top
+R3,1K,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,128.27,-79.1475,-90.0,top
+R4,1K,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,125.73,-79.1475,-90.0,top
+R5,1K,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,120.65,-79.1475,-90.0,top
+R6,1K,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,115.57,-79.1475,-90.0,top
+R7,10K,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,118.11,-75.565,90.0,top
+R8,100K,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,77.978,-59.182,-90.0,top
+R9,100K,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,86.868,-59.182,-90.0,top
+U1,74HC138,SOIC-16_3.9x9.9mm_P1.27mm,96.2675,-61.595,270.0,top
+U2,ATmega1284P-A,TQFP-44_10x10mm_P0.8mm,131.915,-91.4925,270.0,top
+Y1,Crystal,Crystal_SMD_5032-4Pin_5.0x3.2mm,121.285,-93.98,90.0,top

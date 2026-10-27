@@ -1,0 +1,41 @@
+Comment,Designator,Footprint,LCSC,Quantity
+27pF,C6,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,,1
+Peripheral User Port,J14,IDC-Header_2x10_P2.54mm_Latch_Horizontal,,1
+10K,R7,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,,1
+1K,R6,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,,1
+100K,R8,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,,1
+LED,D2,LED_0603_1608Metric_Pad1.05x0.95mm_HandSolder,,1
+1N4148W,D1,D_SOD-123,,1
+100K,R9,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,,1
+SPI_5,J7,PinSocket_1x06_P2.54mm_Vertical,,1
+DeadOnRTC,J5,PinSocket_1x07_P2.54mm_Vertical,,1
+100nF,C7,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,,1
+27pF,C2,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,,1
+74HC138,U1,SOIC-16_3.9x9.9mm_P1.27mm,,1
+SPI_6,J8,PinSocket_1x06_P2.54mm_Vertical,,1
+Joystick B,J12,DA15_Female_Horizontal_P2.74x2.84mm_EdgePinOffset10.40mm_Housed_MountingHolesOffset16.66mm,,1
+1K,R3,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,,1
+SPI_4,J6,PinSocket_1x06_P2.54mm_Vertical,,1
+100nF,C10,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,,1
+ISP,J10,IDC-Header_2x03_P2.54mm_Vertical,,1
+ATmega1284P-A,U2,TQFP-44_10x10mm_P0.8mm,,1
+1K,R4,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,,1
+10uF,C3,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,,1
+User Port Host,J2,IDC-Header_2x10_P2.54mm_Latch_Horizontal,,1
+Crystal,Y1,Crystal_SMD_5032-4Pin_5.0x3.2mm,,1
+User Port Passthrough,J3,IDC-Header_2x10_P2.54mm_Vertical,,1
+560R,R2,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,,1
+100nF,C1,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,,1
+Peripheral DE-9,J13,DE9_Male_Horizontal_P2.74x2.84mm_EdgePinOffset10.40mm_Housed_MountingHolesOffset12.5mm_1,,1
+SD Card Adapter,J4,PinSocket_1x08_P2.54mm_Vertical,,1
+10uH,L1,L_0805_2012Metric_Pad1.05x1.20mm_HandSolder,,1
+100nF,C5,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,,1
+100nF,C8,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,,1
+1K,R5,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,,1
+100K,R10,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,,1
+100nF,C9,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,,1
+10K,R1,R_0603_1608Metric_Pad0.98x0.95mm_HandSolder,,1
+100nF,C4,C_0603_1608Metric_Pad1.08x0.95mm_HandSolder,,1
+SPI_7,J9,PinSocket_1x06_P2.54mm_Vertical,,1
+Compact Host,J1,DE9_Female_Horizontal_P2.74x2.84mm_EdgePinOffset10.40mm_Housed_MountingHolesOffset12.5mm,,1
+Joystick A,J11,DA15_Female_Horizontal_P2.74x2.84mm_EdgePinOffset10.40mm_Housed_MountingHolesOffset16.66mm,,1

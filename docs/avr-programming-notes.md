@@ -99,6 +99,8 @@ No changes. BOD (Brown-Out Detection) remains disabled.
 
 ## Serial Debugging Setup
 
+**Superseded:** we now use a CP2102 adapter with macOS's built-in driver. See [usb-serial-adapters.md](usb-serial-adapters.md).
+
 **macOS Sequoia FTDI Driver Issue**: Apple's built-in FTDI DEXT (`com.apple.DriverKit-AppleUSBFTDI.dext`) causes terminal hangs when accessing FTDI serial ports via standard tools (picocom, screen, cat).
 
 **Workaround**: Use "Serial 2" app from Decisive Tactics, which includes its own FTDI driver.

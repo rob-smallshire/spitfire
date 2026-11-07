@@ -74,7 +74,7 @@ Use `uv run --python 3.10` if your system Python is older than 3.10 (the script 
 
 ## Hardware Configuration
 
-- MCU: ATMega1284p @ 18.432 MHz external crystal
+- MCU: ATMega1284 (non-P; `1E 97 06`) @ 18.432 MHz external crystal. The build defaults to `AVR_MCU=atmega1284` / `AVR_PART=m1284`; the P part's picoPower features aren't used. Rev 1 Board 1 has an ATMega1284P (`1E 97 05`), which avrdude refuses under `m1284`: configure with `-DAVR_MCU=atmega1284p -DAVR_PART=m1284p` for that board
 - Programmer: USBasp
 - Fuses: L=0xf7 (external crystal), H=0xd9, E=0xff
 - **Rev 1 PCB J13 erratum:** the Peripheral DE-9 (J13) footprint is mirrored, so fitted normally it puts +5V on pin 8 and GND on pin 7. Board 1 has J13 fitted on the **reverse side**, which corrects it. Never plug a mouse into a component-side J13 on a Rev 1 board. See `docs/rev1-bringup.md` (erratum 1).

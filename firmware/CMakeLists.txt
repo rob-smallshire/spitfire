@@ -10,17 +10,18 @@ project(spitfire
 )
 
 # Target MCU configuration
-set(AVR_MCU "atmega1284p" CACHE STRING "Target AVR microcontroller")
+set(AVR_MCU "atmega1284" CACHE STRING "Target AVR microcontroller")
+set(AVR_PART "m1284" CACHE STRING "avrdude part name matching AVR_MCU")
 set(AVR_MCU_SPEED "18432000UL" CACHE STRING "MCU clock frequency")
 set(AVR_PROGRAMMER "usbasp" CACHE STRING "Programmer type for avrdude")
 set(AVR_PROGRAMMER_PORT "" CACHE STRING "Programmer port (leave empty for USB)")
 
-# Fuse settings for ATMega1284p with external crystal
+# Fuse settings for ATMega1284 with external crystal (same on the 1284P)
 set(AVR_H_FUSE "0xd9" CACHE STRING "High fuse byte")
 set(AVR_L_FUSE "0xf7" CACHE STRING "Low fuse byte")
 set(AVR_E_FUSE "0xff" CACHE STRING "Extended fuse byte")
 
-message(STATUS "Target MCU: ${AVR_MCU}")
+message(STATUS "Target MCU: ${AVR_MCU} (avrdude part ${AVR_PART})")
 message(STATUS "MCU Speed: ${AVR_MCU_SPEED}")
 message(STATUS "Programmer: ${AVR_PROGRAMMER}")
 
@@ -107,7 +108,7 @@ if(AVR_PROGRAMMER_PORT)
 endif()
 
 add_custom_target(upload
-    COMMAND avrdude -c ${AVR_PROGRAMMER} -p m1284p ${AVRDUDE_OPTIONS}
+    COMMAND avrdude -c ${AVR_PROGRAMMER} -p ${AVR_PART} ${AVRDUDE_OPTIONS}
         -U flash:w:${PROJECT_NAME}.hex:i
     DEPENDS ${PROJECT_NAME}
     COMMENT "Uploading ${PROJECT_NAME}.hex to ${AVR_MCU}"
@@ -115,7 +116,7 @@ add_custom_target(upload
 
 # Upload EEPROM target
 add_custom_target(upload_eeprom
-    COMMAND avrdude -c ${AVR_PROGRAMMER} -p m1284p ${AVRDUDE_OPTIONS}
+    COMMAND avrdude -c ${AVR_PROGRAMMER} -p ${AVR_PART} ${AVRDUDE_OPTIONS}
         -U eeprom:w:${PROJECT_NAME}.eep:i
     DEPENDS ${PROJECT_NAME}
     COMMENT "Uploading ${PROJECT_NAME}.eep to ${AVR_MCU}"
@@ -123,13 +124,13 @@ add_custom_target(upload_eeprom
 
 # Fuse programming targets
 add_custom_target(read_fuses
-    COMMAND avrdude -c ${AVR_PROGRAMMER} -p m1284p ${AVRDUDE_OPTIONS}
+    COMMAND avrdude -c ${AVR_PROGRAMMER} -p ${AVR_PART} ${AVRDUDE_OPTIONS}
         -U hfuse:r:-:h -U lfuse:r:-:h -U efuse:r:-:h
     COMMENT "Reading fuses from ${AVR_MCU}"
 )
 
 add_custom_target(write_fuses
-    COMMAND avrdude -c ${AVR_PROGRAMMER} -p m1284p ${AVRDUDE_OPTIONS}
+    COMMAND avrdude -c ${AVR_PROGRAMMER} -p ${AVR_PART} ${AVRDUDE_OPTIONS}
         -U hfuse:w:${AVR_H_FUSE}:m -U lfuse:w:${AVR_L_FUSE}:m -U efuse:w:${AVR_E_FUSE}:m
     COMMENT "Writing fuses to ${AVR_MCU}"
 )
@@ -195,7 +196,7 @@ add_custom_command(TARGET spitest POST_BUILD
 )
 
 add_custom_target(upload_spitest
-    COMMAND avrdude -c ${AVR_PROGRAMMER} -p m1284p ${AVRDUDE_OPTIONS}
+    COMMAND avrdude -c ${AVR_PROGRAMMER} -p ${AVR_PART} ${AVRDUDE_OPTIONS}
         -U flash:w:spitest.hex:i
     DEPENDS spitest
     COMMENT "Uploading spitest.hex to ${AVR_MCU}"
@@ -255,7 +256,7 @@ add_custom_command(TARGET spimouse POST_BUILD
 )
 
 add_custom_target(upload_spimouse
-    COMMAND avrdude -c ${AVR_PROGRAMMER} -p m1284p ${AVRDUDE_OPTIONS}
+    COMMAND avrdude -c ${AVR_PROGRAMMER} -p ${AVR_PART} ${AVRDUDE_OPTIONS}
         -U flash:w:spimouse.hex:i
     DEPENDS spimouse
     COMMENT "Uploading spimouse.hex to ${AVR_MCU}"
@@ -317,7 +318,7 @@ add_custom_command(TARGET spijoy POST_BUILD
 )
 
 add_custom_target(upload_spijoy
-    COMMAND avrdude -c ${AVR_PROGRAMMER} -p m1284p ${AVRDUDE_OPTIONS}
+    COMMAND avrdude -c ${AVR_PROGRAMMER} -p ${AVR_PART} ${AVRDUDE_OPTIONS}
         -U flash:w:spijoy.hex:i
     DEPENDS spijoy
     COMMENT "Uploading spijoy.hex to ${AVR_MCU}"

@@ -11,7 +11,8 @@
             "hidden": true,
             "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
-                "AVR_MCU": "atmega1284p",
+                "AVR_MCU": "atmega1284",
+                "AVR_PART": "m1284",
                 "AVR_MCU_SPEED": "18432000UL",
                 "AVR_PROGRAMMER": "usbasp"
             }

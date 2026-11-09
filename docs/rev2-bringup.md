@@ -172,3 +172,16 @@ Reworking and cleaning the joint cleared it.
 After the rework, every joystick type available (Delta 3B Single, 3B
 Twin and 14B, Acorn Bitstik) and the Microwriter Quinkey (on the
 four-way adapter) worked on both Port A and Port B.
+
+### SD card (J4)
+
+Adafruit Micro SD Card Breakout Board+ on J4. J4's pin order (+5V, n/c,
+GND, SCK, MISO, MOSI, ~SS_2, n/c) matches the adapter's (5V, 3V, GND,
+CLK, DO, DI, CS, CD). With `spimouse` still on the AVR, SPISD passed
+every step, as on Rev 1: power-up clocks, CMD0, CMD8, ACMD41, CMD58,
+CMD10 (CID) and CMD17 (sector 0 with the `55 AA` signature).
+
+### DS3234 RTC (J5)
+
+DS3234 module on J5 (Y3). SPISETTIME set the clock, and SPIRTC then
+reported it running correctly, with a sensible temperature reading.

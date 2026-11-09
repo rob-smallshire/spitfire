@@ -104,3 +104,71 @@ AVR running the `spitest` firmware (reply = received byte XOR &55):
 
 As on Rev 1, throughput is set by the 6502 transfer loops, so matching
 figures are expected.
+
+## Board 1 - 2026-11-08 to 2026-11-09
+
+### Remaining connectors
+
+All the remaining connectors were fitted together, to avoid repeated
+soldering, cleaning and drying cycles.
+
+### Peripheral DE-9 (J13)
+
+Rev 2 corrects the Rev 1 mirroring (erratum 1): J13's pad coordinates are
+now the mirror image of J1's. On the fitted connector, pin 7 measured
++4.98 V and pin 8 GND, with good continuity to ground, so J13 is fitted on
+the component side as designed.
+
+Serial (USART0), `spitfire` firmware, CP2102 adapter (TXD to pin 1, RXD to
+pin 2, GND to pin 8), 115200 8N1:
+
+- Transmit (PD1, pin 2): status lines received cleanly every 100 ms.
+- Receive (PD0, pin 1): `1` set Port A to Delta 3B Twin, confirmed by the
+  firmware; `0` restored `No Joystick`.
+
+### Flux residue on the SPI lines
+
+With `spimouse` running, SPIMOUSE at first worked, then reported both
+axes counting steadily down and all three buttons pressed, with or
+without a mouse and in every mode. That is every reply reading `&FF`
+(-1 as a delta, all bits set as buttons): `spimouse` answers `&FF` to
+any command it does not recognise. The heartbeat kept running, so the
+AVR was not in reset, and SS was toggling. With `spitest` reflashed,
+SPITEST, clean for an hour before the other connectors were fitted, now
+showed many bad transfers.
+
+SCK, MOSI, MISO and A0-A2 all run through the User Port headers (J2,
+J3) on closely spaced 0.1" pins, and SCK, MOSI and MISO through J4-J9.
+**A thorough clean and dry of the whole board fixed it**, and SPITEST
+was clean again. As with the A1 fault on J1, residual flux between
+fine-pitch connector pins is enough to break the SPI bus: clean
+thoroughly after every soldering session.
+
+### Mouse on the Peripheral DE-9 (J13)
+
+`spimouse` firmware, SPIMOUSE on the Compact. An Amiga mouse (mode 2) and
+an Atari mouse (mode 3) on J13 both worked correctly: axes, direction and
+buttons.
+
+J14 (the 20-way AMX mouse header) was then fully soldered. With the AVR
+reflashed with `spimouse` and nothing on J13 (J13 and J14 share PD0-PD6),
+an AMX mouse on J14 in AMX mode (1) worked correctly: axes, direction and
+all three buttons.
+
+### Joystick ports (J11, J12)
+
+`spijoy` firmware, SPIJOY on the Compact. A Delta 14B on Port B (J12)
+worked fully: both axes and buttons 0-11. On Port A (J11), each
+left-column button (0, 3, 6, 9) also lit the other two buttons in its row,
+while the middle and right columns were correct.
+
+The keypad scan drives one column low at a time with the others released,
+and reads the pulled-up rows. A column stuck low makes any of its buttons
+pull that row low during every column's strobe, which lights the whole
+row. So Port A's COL0 (PB0, J11 pin 5) was stuck low. PB0 is TQFP pin 40,
+next to GND on pin 39: a solder bridge between them measured 0.1 Ω.
+Reworking and cleaning the joint cleared it.
+
+After the rework, every joystick type available (Delta 3B Single, 3B
+Twin and 14B, Acorn Bitstik) and the Microwriter Quinkey (on the
+four-way adapter) worked on both Port A and Port B.

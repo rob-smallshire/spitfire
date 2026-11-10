@@ -623,6 +623,39 @@ mouse module.
   the interrupt) and the BYTEV hook (in the foreground) both reach. See
   "Workspace" below.
 
+#### `*STATUS` and `*CONFIGURE`
+`*STATUS` on its own prints the MOS's settings and then issues service
+call &29, so that ROMs can add theirs; `*CONFIGURE` on its own does the
+same with &28 for the list of options. A keyword the MOS does not know
+reaches the ROMs through the same calls (`src/configure_table_driven.s65`
+in the MOS disassembly). Where a ROM keeps its settings is up to it, so
+SPItFIRE's stay in the AVR's EEPROM.
+
+- **`*STATUS`** (service &29, no keyword): the ROM prints the joystick
+  settings, as `*SPITFIRE JOYSTICK` does, then two notes:
+  ```
+  SPItFIRE: Joystick on
+  Port A: Standard dual joystick
+          Joysticks 1, 2
+  Port B: No joystick
+  Proportional, Switched, Stick unused
+  Configure with *SPITFIRE JOYSTICK
+  ```
+  The MOS's own `Proportional`, `Switched` and `Stick` options do nothing
+  while SPItFIRE has the joystick: they configure MOS code that the
+  service call &2C hand-over skips. `*STATUS SPITFIRE` prints the same
+  lines. Without workspace, the lines are replaced by the Ctrl-Break
+  reminder.
+- **`*CONFIGURE`:** not used. Setting the ports there would duplicate
+  `*SPITFIRE JOYSTICK PORT`, would want an awkward keyword, and
+  `*CONFIGURE` settings conventionally take effect at the next reset
+  while ours apply at once. It can be added later if users ask. Any
+  keyword must avoid MOS 5's: Baud, Boot, Caps, Country, Data, Delay,
+  Dir, ExTube, Fdrive, File, Floppy, Hard, Ignore, InTube, Lang, Loud,
+  Mode, NoBoot, NoCaps, NoDir, NoScroll, NoTube, NoSRWipe, Print, Quiet,
+  Repeat, Scroll, ShCaps, SRWipe, Tube, TubeWait, Proportional,
+  Switched, Stick, TV.
+
 #### Enumeration: OSWORD &3F
 SPItFIRE-aware software finds SPItFIRE and learns what is plugged in
 with OSWORD &3F. The number is unallocated in both the
@@ -710,8 +743,6 @@ development, so the ROM must cope:
   power-on and always gets the full start-up.
 
 #### Still to decide
-- Whether the port types can be shown and set with `*CONFIGURE`
-  (service calls &28/&29).
 - Bitstik calibration (its axes span only about 0-630) kept in the AVR's
   EEPROM, and whether the ROM should scale or leave the readings raw.
 - ADC conversion events and the `ADVAL(0)` channel byte.

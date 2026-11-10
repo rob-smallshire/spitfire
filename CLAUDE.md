@@ -12,7 +12,7 @@ SPItFIRE is an analogue joystick and quadrature mouse adapter for the Acorn BBC 
 - `beeb/spitest/` - 6502 BBC Micro test programs (SPITEST, SPIPERF, SPIMOUSE, etc.) - foreground utilities for proving each piece of hardware
 - `beeb/rom/` - the SPItFIRE Sideways ROM (the eventual user-facing driver)
 - `hardware/` - KiCad schematics and PCB
-- `docs/` - design docs and datasheets (start with `protocol.md`, `spi-interface.md`, `peripheral-pinouts.md`)
+- `docs/` - design docs and datasheets (start with `protocol.md`, `spi-interface.md`, `peripheral-pinouts.md`). `joystick-programming.md` is the public interface for software that reads SPItFIRE joysticks (detection with OSWORD &3F, the ADVAL channel map, 14B keypads)
 - `docs/rom-design.md` - the in-progress ROM architecture proposal
 - `docs/spitfire-rev-1-errata.md` - Rev 1 PCB errata and the changes planned for Rev 2
 - SD card filing system: a separate MMFS ROM with a SPItFIRE device driver (`MMC_Spitfire.asm`, device `S`), on the `spitfire` branch of the fork at `~/Code/MMFS` (`origin` = rob-smallshire/MMFS, `upstream` = hoglet67/MMFS). See "SD Card Filing System" in `docs/rom-design.md`

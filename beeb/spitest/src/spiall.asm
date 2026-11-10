@@ -3,7 +3,8 @@
 ; and shows it in MODE 7: the header, the raw bytes in hex, and the ADVAL
 ; channels they carry. The A and B keys cycle each port through the
 ; eight port types without saving (JOY_PORT_); S saves the types shown
-; (CFG_PORT_). See docs/protocol.md, "Joystick allocation".
+; (CFG_PORT_). Escape puts the saved types back before leaving. See
+; docs/protocol.md, "Joystick allocation".
 
 ORG &1900
 
@@ -92,7 +93,25 @@ tmp_ptr  = &7C              ; String pointer (2 bytes)
     CPX #&FF
     BNE main_loop
     LDA #&7E : JSR OSBYTE
+    JSR restore_types
     LDA #22 : JSR OSWRCH : LDA #7 : JMP OSWRCH
+
+; Put back the AVR's saved port types, which JOY_PORT_ changed without
+; saving, so the ROM and other programs see what JOY_CONFIG reports
+.restore_types
+    LDA #&58                ; JOY_CONFIG
+    JSR spi_cmd
+    PHA
+    AND #7
+    ORA #&E0                ; JOY_PORT_A + type
+    JSR spi_cmd
+    PLA
+    LSR A
+    LSR A
+    LSR A
+    AND #7
+    ORA #&E8                ; JOY_PORT_B + type
+    JMP spi_cmd
 
 ; Wait 0.1 s
 .wait_tenth

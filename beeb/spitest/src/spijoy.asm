@@ -3,7 +3,8 @@
 ; positions as crosses in boxes, raw 10-bit values, and buttons. The A
 ; and B keys cycle each port through None, Delta 3B Single, Delta 3B
 ; Twin, Delta 14B, Acorn Bitstik and Quinkey x4 (up to four Microwriter
-; Quinkeys on the four-way adapter, decoded to characters).
+; Quinkeys on the four-way adapter, decoded to characters). The types are
+; not saved, and Escape puts the saved types back before leaving.
 
 ORG &1900
 
@@ -101,9 +102,27 @@ ny       = &89              ; 2 bytes
 
     LDA #&7E                ; Acknowledge Escape
     JSR OSBYTE
+    JSR restore_types
     LDX #LO(vdu_exit)
     LDY #HI(vdu_exit)
     JMP vdu_list
+
+; Put back the AVR's saved port types, which JOY_PORT_ changed without
+; saving, so the ROM and other programs see what JOY_CONFIG reports
+.restore_types
+    LDA #&58                ; JOY_CONFIG
+    JSR spi_cmd
+    PHA
+    AND #7
+    ORA #&E0                ; JOY_PORT_A + type
+    JSR spi_cmd
+    PLA
+    LSR A
+    LSR A
+    LSR A
+    AND #7
+    ORA #&E8                ; JOY_PORT_B + type
+    JMP spi_cmd
 
 ; ------ Ports ------
 

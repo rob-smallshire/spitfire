@@ -616,12 +616,47 @@ mouse module.
 - **The AVR does the allocation.** It knows both port types, so it can
   lay the burst out in slot order, and the ROM stores bytes without
   knowing the rules.
-- **Detection:** without our ROM, MOS 5 answers every channel with a copy
-  of `ADVAL(1)` or `(2)`. So software needs a separate call to find
-  SPItFIRE and learn what is configured: an OSBYTE, or an OSWORD.
+- **Detection and enumeration:** without our ROM, MOS 5 answers every
+  channel with a copy of `ADVAL(1)` or `(2)`, and no standard call lists
+  joysticks. SPItFIRE-aware software uses OSWORD &3F (below).
 - **Workspace:** one page of private HAZEL workspace, which the poll (in
   the interrupt) and the BYTEV hook (in the foreground) both reach. See
   "Workspace" below.
+
+#### Enumeration: OSWORD &3F
+SPItFIRE-aware software finds SPItFIRE and learns what is plugged in
+with OSWORD &3F. The number is unallocated in both the
+[mdfs.net](https://mdfs.net/Docs/Comp/BBC/Oswords) and
+[BeebWiki](https://beebwiki.mdfs.net/OSWORDs) lists, and sits just below
+AMX Super Art's mouse calls (&40, &41). MOS 5 offers it to the ROMs as
+service call 8 (it handles only &00-&0F and &42/&43 itself, and sends
+&E0 upwards to USERV), the route the RTC module already takes. Being
+below &80 it needs no length bytes: the default Tube transfer of 16 bytes
+each way covers the block.
+
+Reason code 0, describe joysticks:
+
+| Offset | On entry | On exit |
+|---|---|---|
+| 0 | 0 (reason code) | &53 ("S"): SPItFIRE answered |
+| 1 | | API version (1) |
+| 2 | | Port A type (0-7, as [protocol.md](protocol.md)) |
+| 3 | | Port B type |
+| 4 | | n, joysticks allocated (0-4) |
+| 5 | | Keypad mask: bit j-1 set if joystick j has a keypad |
+| 6-9 | | Joysticks 1-4: bit 7 the port (0 = A, 1 = B), bits 0-2 its type; &FF if not allocated |
+| 10 | | Flags: bit 0 set if the ROM has no workspace (press Ctrl-Break) |
+
+- **Detection:** software puts 0 in byte 0 and makes the call. If no ROM
+  claims it, the MOS returns the block unchanged, so byte 0 still holds
+  0; &53 means SPItFIRE answered.
+- **No workspace:** after `*SRLOAD ... I` without a reset, the call still
+  answers, with flag bit 0 set and n = 0.
+- **Unknown reason codes** are not claimed, so the block comes back
+  unchanged. Later reasons might set a port type from software or read
+  the AVR firmware's version.
+- To make the number official, ask the mdfs.net/BeebWiki maintainer to
+  list &3F for SPItFIRE once it is built.
 
 #### Workspace
 Checked in the MOS 5.00 disassembly (`acorn_mos_disassembly`, whose
@@ -675,7 +710,6 @@ development, so the ROM must cope:
   power-on and always gets the full start-up.
 
 #### Still to decide
-- The detection call's number and format.
 - Whether the port types can be shown and set with `*CONFIGURE`
   (service calls &28/&29).
 - Bitstik calibration (its axes span only about 0-630) kept in the AVR's

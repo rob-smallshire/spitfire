@@ -131,6 +131,111 @@ An Acorn-standard joystick such as the Bitstik uses 3B Twin, which grounds
 pins 3, 5 and 6 and reads all four channels. `beeb/spitest` SPIJOY exercises
 every command.
 
+### Joystick allocation (planned)
+
+This is the protocol for the ROM design in
+[rom-design.md](rom-design.md) ("Design: port types and joystick
+allocation"). It is not built yet. It replaces JOY_ADVAL, JOY_MOS,
+CFG_HANDSET and the four-type CFG_TYPE_/JOY_TYPE_ commands above; the raw
+reads (0x40-0x4B) stay for test programs.
+
+#### Port types
+
+| Number | Type | Name | Joysticks | Electrical mode |
+|---|---|---|---|---|
+| 0 | `NONE` | No joystick | 0 | None |
+| 1 | `SINGLE` | Standard single joystick | 1 | 3B Twin |
+| 2 | `DUAL` | Standard dual joystick | 2 | 3B Twin |
+| 3 | `3BS` | Voltmace Delta 3B Single | 2 | 3B Single |
+| 4 | `3BT` | Voltmace Delta 3B Twin | 2 | 3B Twin |
+| 5 | `14B` | Voltmace Delta 14B | 1 | 14B (keypad scan) |
+| 6 | `BITSTIK` | Acorn Bitstik | 2 | 3B Twin |
+| 7 | `QUINKEY` | Microwriter Quinkey | 2 | 3B Twin |
+
+The electrical mode is how the AVR drives and reads the port: the same
+three modes as now. The other types differ only in allocation and in how
+fire and direction bits are derived. `DUAL` and `3BT` behave identically;
+both are kept so that the status shows what the user chose.
+
+#### Commands
+
+| Command | Code | Response |
+|---------|------|----------|
+| JOY_ALL | 0x55 | The allocation burst (below) |
+| JOY_CONFIG | 0x58 | The saved configuration (below) |
+| CFG_PORT_A | 0xD0-0xD7 | Set Port A to type 0-7 and save it; echoes the command |
+| CFG_PORT_B | 0xD8-0xDF | The same for Port B |
+| JOY_PORT_A | 0xE0-0xE7 | Set Port A's type until the next reset or CFG_ command (not saved); echoes the command |
+| JOY_PORT_B | 0xE8-0xEF | The same for Port B |
+
+#### Saved configuration
+
+| Bits | Content |
+|------|---------|
+| 0-2 | Port A type (0-7) |
+| 3-5 | Port B type (0-7) |
+| 6 | Always 1 |
+| 7 | Always 0 |
+
+As before, bits 6 and 7 show the AVR answered. The EEPROM record gets a
+new marker, so a record saved by the old firmware reads as blank and gives
+the defaults: Port A `DUAL`, Port B `NONE` (joysticks 1 and 2 on Port A).
+
+#### JOY_ALL burst
+
+Slots are allocated as in the ROM design: Port A's joysticks first, then
+Port B's, giving joysticks 1-4 (channel pairs (1,2), (3,4), (17,18),
+(19,20)). The burst carries only the groups that are allocated, in this
+order, in one chip select:
+
+| Group | Bytes | Present | Content |
+|---|---|---|---|
+| Header | 2 | Always | Byte 0: &A0 OR n, n = joysticks allocated (0-4). Byte 1: &50 OR k, k = keypad mask (bit j-1 set if joystick j has a keypad) |
+| J1 | 5 | Always | `ADVAL(0)` switches, then `ADVAL(1)` and `(2)`: exactly MOS 5's &02B6-&02BA |
+| J2 | 4 | n >= 2 | `ADVAL(3)`, `(4)` |
+| J3 | 5 | n >= 3 | `ADVAL(16)` switches, then `ADVAL(17)`, `(18)` |
+| J4 | 4 | n = 4 | `ADVAL(19)`, `(20)` |
+| Keypads | 2 each | Per bit of k, joystick order | Keys 0-11, 1 = pressed, low byte first, bits 12-15 zero |
+
+- **Values** are 16-bit ADVAL values, low byte first, `v<<6 OR v>>4`
+  from the 10-bit reading, as now.
+- **Switch bytes** (`ADVAL(0)` and `(16)`): bit 0 is the first joystick
+  of the pair's fire, bit 1 the second's; bits 4-7 are the first
+  joystick's directions (left, down, up, right) beyond a quarter of full
+  scale from centre. Bits 2 and 3 are 0.
+- **J1 is always sent**, as zeros when nothing is allocated, so the ROM
+  always writes the MOS's five bytes and an empty configuration reads 0.
+- **The ROM zeroes** the groups that are not sent, so unallocated
+  channels, fire bits and keypads read 0.
+- **Fire and directions by type:**
+  - `SINGLE`, `DUAL`, `3BT`: each handset's fire input is its joystick's
+    fire bit.
+  - `3BS`: pin 13 (two buttons) is the first joystick's fire, pin 10 (one
+    button) the second's.
+  - `14B`: key 10 is the fire bit; the keypad carries all twelve keys.
+  - `BITSTIK`: the two digital buttons are the two fire bits; channels
+    are raw, with the third button on CH3.
+  - `QUINKEY`: no fire or direction bits; channels are raw.
+- **Validity:** the two header marker nibbles (&A, &5) cannot come from a
+  floating or stuck MISO. The ROM ignores a burst whose header is wrong,
+  or whose n or k is out of range.
+- **Length:** 7 bytes with none or one joystick, 11 with two, 16 with
+  three and 20 with four, plus 2 per keypad. Only a `14B` has a keypad,
+  and it is one joystick, so the longest bursts are 20 bytes (four
+  joysticks), 18 (`DUAL` and `14B`) and 15 (two `14B`s). With today's
+  bit-bang loop, about 100 µs a byte, 20 bytes would cost about 10% of
+  the 6502 at 50 Hz, against 3.5% now. The ROM will read the burst with a
+  receive-only loop to cut that; see [performance.md](performance.md).
+  Raising SS ends a burst early.
+
+#### Empty ports
+A port set to a joystick type with nothing plugged in floats (about
+700/1023 on Rev 1, with J11 not fitted), not 0, and can look like a
+joystick to software that checks for centred readings. It is up to the
+user to set an unused port to `NONE`. The AVR does not try to detect an
+empty port: floating analogue inputs on the AVR show a lot of crosstalk,
+so any presence test would be unreliable.
+
 ### Joystick Data Format
 
 Joystick position values are 8-bit unsigned (0-255):

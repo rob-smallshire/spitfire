@@ -146,9 +146,8 @@ This is a working sketch, not a final design:
 | `*SPITFIRE MOUSE TYPE AMX\|AMIGA\|ATARI` | Select pinout (AVR mode) |
 | `*SPITFIRE MOUSE SENSITIVITY sx [,sy]` | Set per-axis sensitivity (2^sx GU/pulse) |
 | `*SPITFIRE MOUSE INFO` | Report current state, pulse counts, mode |
-| `*SPITFIRE JOYSTICK A 14B\|3B\|3B-TWIN\|...` | Configure joystick port A |
-| `*SPITFIRE JOYSTICK B ...` | Configure joystick port B |
-| `*SPITFIRE JOYSTICK INFO` | Report joystick state |
+| `*SPITFIRE JOYSTICK PORT A\|B <type>` | Set a port's type; see "Design: port types and joystick allocation" |
+| `*SPITFIRE JOYSTICK` | Report joystick state |
 | `*SPITFIRE RTC INFO` | Show RTC status (oscillator stop flag, temperature, aging) |
 | `*SPITFIRE SD INFO` | Show SD card status |
 
@@ -416,99 +415,154 @@ Seddon's [MOS disassembly][mos-disassembly] (`handleDigitalJoystick` in
   VIA's 1 MHz accesses: roughly 0.7 ms every 20 ms (3.5%). Calls in
   between take 72 cycles.
 
-### Design: presets and the ADVAL channel map
+### Design: port types and joystick allocation
 This is the design the module is heading towards. It was agreed in
-discussion; nothing beyond `ADVAL(0)`-`(2)` is built yet. The research
-behind it is in
-[adval-and-mouse-conventions.md](adval-and-mouse-conventions.md).
+discussion on 2026-11-10 and replaces an earlier design built on presets,
+`SETTYPE` and `USE`, which was flexible but confusing. Nothing beyond
+`ADVAL(0)`-`(2)` is built yet. The research behind the channel numbers is
+in [adval-and-mouse-conventions.md](adval-and-mouse-conventions.md).
 
 #### Aims
-- **Simple uses need no configuration.** A joystick plugged into Port A
-  should just work.
-- **Everything else is reachable,** through a fuller command set, without
-  every user having to learn it.
-- **Classic software sees a BBC Micro.** `ADVAL(0)`-`(4)` behave exactly
-  as on a BBC with an analogue port.
+- **One idea to learn:** say what is plugged into each port. Joystick
+  numbers follow from that, like counters dropped into Connect Four.
+- **Multiplayer games just work.** Two, three or four handsets become
+  joysticks 1-4 with no mapping to set up.
+- **Classic software sees a BBC Micro.** Joysticks 1 and 2 are
+  `ADVAL(0)`-`(4)`, exactly as on a BBC with an analogue port.
+- More deliberate mapping tools can come later, on top of this.
 
-#### Presets
-A preset is a named configuration: the port types plus where each
-port's inputs appear. Choosing one replaces the whole configuration in
-the AVR's EEPROM. The expert commands then adjust it, and the status
-shows `Preset <name>` or `Custom`. The AVR holds the presets; the ROM
-needs only their names and numbers.
+#### Commands
+```
+*SPITFIRE JOYSTICK                    Status
+*SPITFIRE JOYSTICK PORT A|B <type>    Set and save a port's type
+*SPITFIRE JOYSTICK ON|OFF             The MOS's joystick byte, as now
+```
 
-| Preset | `ADVAL(1)`-`(4)` | `ADVAL(17)`-`(20)` | Keypads |
+`SETTYPE` and `USE` go, and with them the idea of choosing a "handset".
+
+#### Port types
+
+| Type | Hardware | Channels | Joysticks |
 |---|---|---|---|
-| **BBC** (default) | Port A CH0-CH3 | None | None |
-| **14B/1** | Port A CH0/CH1 (rear), then Port B CH0/CH1 (side) | None | Both, `ADVAL(10)`/`(11)` |
-| **Four players** | Port A CH0-CH3 | Port B CH0-CH3 | None |
+| `NONE` | Nothing | 0 | 0 |
+| `SINGLE` | One ordinary two-axis joystick | 2 | 1 |
+| `DUAL` | Two ordinary joysticks on one port | 4 | 2 |
+| `3BT` | Delta 3B Twin: a synonym for `DUAL` | 4 | 2 |
+| `3BS` | Delta 3B Single: one stick wired to both channel pairs, so four logical axes | 4 | 2 |
+| `14B` | Delta 14B: one stick and a 3x4 keypad | 2 | 1 |
+| `BITSTIK` | Acorn Bitstik: X, Y, twist, and a button on an analogue channel | 4 | 2 slots, one device |
+| `QUINKEY` | Up to four Microwriter Quinkeys on the four-way adapter, one channel each | 4 | 4 handsets in 2 slots |
 
-What each preset covers:
-- **BBC:** Port A is the BBC's analogue port. A Delta 3B Twin is two
-  joysticks. A single joystick with two buttons sees both buttons as
-  `ADVAL(0)` bits 0 and 1, which is how a Delta 14B behaves on a BBC's
-  analogue port. A Bitstik keeps its quirks, as its software expects.
-- **14B/1:** Port A and Port B act as the rear and side sockets of a
-  Voltmace Delta 14B/1 interface, with every key of both keypads
-  available.
-- **Four players:** new territory, for games written for SPItFIRE.
+A `3BS` works fine as a `SINGLE`. `3BS` is for software that wants the
+Delta 3B Single's unusual behaviour: one stick seen as two joysticks.
 
-No preset needs `*SPITFIRE JOYSTICK USE`, which makes any handset the
-MOS's joystick. It was built first but is more flexibility than anyone
-needs, and is likely to go.
+#### Allocation
+The analogue slots are `ADVAL(1)`-`(4)` and then `ADVAL(17)`-`(20)`.
+Port A's channels take slots from the start, in order, and Port B's
+carry on from where Port A's ended.
+
+| A | B | 1 | 2 | 3 | 4 | 17 | 18 | 19 | 20 | Use |
+|---|---|---|---|---|---|---|---|---|---|---|
+| SINGLE | NONE | A | A | | | | | | | One player |
+| NONE | SINGLE | B | B | | | | | | | The same, from Port B |
+| SINGLE | SINGLE | A | A | B | B | | | | | Two players |
+| DUAL/3BT | NONE | A | A | A | A | | | | | Two players on one port |
+| 3BS | NONE | A | A | A | A | | | | | Two-player game, one stick |
+| 14B | NONE | A | A | | | | | | | One player with keypad |
+| 14B | 14B | A | A | B | B | | | | | Two players with keypads |
+| DUAL/3BT | SINGLE | A | A | A | A | B | B | | | Three players |
+| DUAL/3BT | DUAL/3BT | A | A | A | A | B | B | B | B | Four players |
+| BITSTIK | NONE | A | A | A | A | | | | | Bitstik software |
+| BITSTIK | BITSTIK | A | A | A | A | B | B | B | B | Two Bitstiks |
+| QUINKEY | NONE | A | A | A | A | | | | | Four Quinkeys |
+
+Properties:
+- **It always fits.** A port uses at most four channels, so the two
+  ports never need more than the eight slots.
+- **X and Y stay together.** Every type uses an even number of channels,
+  so each joystick lands on (1,2), (3,4), (17,18) or (19,20). Joystick
+  n is the nth pair.
+- **Port A's type moves Port B's joysticks.** Port B's stick is
+  joystick 2 behind a `SINGLE` but joystick 3 behind a `DUAL`. The
+  status shows the result:
+  ```
+  Port A 3BT     Joysticks 1, 2
+  Port B SINGLE  Joystick 3
+  ```
+
+#### Buttons and keypads
+One fire bit per joystick, and keypads by joystick number, so both
+follow the allocation:
+
+| Joystick | X, Y | Fire | Keypad |
+|---|---|---|---|
+| 1 | `ADVAL(1)`, `(2)` | `ADVAL(0)` bit 0 | `ADVAL(10)` |
+| 2 | `ADVAL(3)`, `(4)` | `ADVAL(0)` bit 1 | `ADVAL(11)` |
+| 3 | `ADVAL(17)`, `(18)` | `ADVAL(16)` bit 0 | `ADVAL(26)` |
+| 4 | `ADVAL(19)`, `(20)` | `ADVAL(16)` bit 1 | `ADVAL(27)` |
+
+- **Joysticks 1 and 2** behave as on a BBC, so two-player BBC games work
+  unchanged. On the Compact, `ADVAL(0)` bits 4-7 also carry joystick 1's
+  directions, so digital-joystick software keeps working.
+- **`SINGLE`, `DUAL`, `3BT`:** each handset's button is its joystick's
+  fire bit.
+- **`3BS`:** as wired, two buttons on the first joystick's fire bit and
+  one on the second's, as on a BBC.
+- **`14B`:** fire is key 10, which the two side buttons are wired in
+  parallel with. Every key, 10 included, is also in the keypad channel
+  (bit n = key n, 1 = pressed, bits 12-15 zero). On a BBC's analogue port
+  a 14B gives two fire buttons (keys 9-11 one, 6-8 the other); no known
+  game relies on that without the 14B/1 box, so one fire bit per
+  joystick wins.
+- **`BITSTIK`:** two slots, so two fire bits, which is where its two
+  digital buttons are on a BBC. The third button stays on its analogue
+  channel, and the readings are passed through unchanged, as Bitstik
+  software expects the real hardware.
+- **`QUINKEY`:** no fire bits; each Quinkey's thumb key is part of its
+  chord on its channel.
+- A joystick with no keypad reads 0 in its keypad channel.
 
 #### The channel map
-Joysticks 3 and 4 repeat the layout of joysticks 1 and 2 sixteen channels
-up. Setting bit 4 of the channel number moves from one block to the
-other: `ORA #16` in machine code, `ADVAL(16+n)` in BASIC.
 
 | Channel | Use |
 |---|---|
-| 0 | Buttons: bit 0 joystick 1 fire, bit 1 joystick 2 fire (BBC). Bits 4-7: joystick 1 directions (Compact). High byte: the channel number |
-| 1, 2 | Joystick 1 X, Y |
-| 3, 4 | Joystick 2 X, Y |
-| 5-9 | Mouse (the mouse module): 5, 6 limits; 7, 8 position; 9 buttons |
-| 10 | Joystick 1's keypad: bit n = Delta 14B button n (0-11), 1 = pressed |
-| 11 | Joystick 2's keypad |
-| 16 | Buttons: bit 0 joystick 3 fire, bit 1 joystick 4 fire |
-| 17, 18 | Joystick 3 X, Y |
-| 19, 20 | Joystick 4 X, Y |
-| 26 | Joystick 3's keypad |
-| 27 | Joystick 4's keypad |
+| 0 | Fire bits for joysticks 1 and 2 (bits 0, 1). Bits 4-7: joystick 1's directions (Compact). High byte: the channel number |
+| 1-4 | Joysticks 1 and 2 |
+| 5-9 | Mouse. Left to the mouse module, or passed on to the next BYTEV handler. PMFS uses 5-9 (with 9 as its device mode); JGH and AMX use 7-9 |
+| 10, 11 | Keypads of joysticks 1 and 2 |
+| 16 | Fire bits for joysticks 3 and 4 (bits 0, 1) |
+| 17-20 | Joysticks 3 and 4 |
+| 26, 27 | Keypads of joysticks 3 and 4 |
 
-Notes on the map:
-- **Other channels:** 12-15, 21-25 and 28-126 are unused. 127 is a Tube
-  16-bit GET, and 128 upwards are buffers.
-- **Mouse buttons in `ADVAL(0)`:** on the Compact, MOS 5 sets aside bits
-  1-3 for mouse buttons, but nothing fills them. Using bit 1 for joystick
-  2's fire follows the BBC instead. That suits the two-button joystick,
-  whose second button is bit 1 on a BBC.
-- **Keypads by joystick:** they are numbered by joystick, not port, so
-  the bit-4 rule holds for them too. Bits 12-15 are 0, and a handset
-  without a keypad reads 0. In the 14B/1 preset, `ADVAL(10)` is the rear
-  socket and `ADVAL(11)` the side, as Voltmace numbered them.
-- **Fire bits in the 14B/1 preset:** bits 0 and 1 are the rear and side
-  handsets' fire buttons. Voltmace's own JOYSTIK driver read fire as a
-  keypad key, so no existing software depends on this.
+Setting bit 4 of a channel number moves from joysticks 1 and 2 to 3 and
+4: `ORA #16` in machine code, `ADVAL(16+n)` in BASIC. Channels 12-15,
+21-25 and 28-126 are unused; 127 is a Tube 16-bit GET, and 128 upwards
+are buffers. None of the joystick channels collides with any mouse
+driver's: PMFS passes 0-4 and 10 upwards to the previous BYTEV, so the
+two chain in either order (checked against the PMFS 136 analysis in the
+acorn-compact-mouse-driver project). PMFS itself can never run with
+SPItFIRE, because its mouse interrupts are on CB1 and CB2, which carry
+SCK and MISO; a PMFS-compatible API could come later from our own
+mouse module.
 
 #### How it is served
 - **The poll:** the 50 Hz poll (service call &2C) reads one burst from
   the AVR. It stores `ADVAL(0)`-`(2)` in the MOS's workspace, as now. The
   other values go to the ROM's own workspace.
 - **BYTEV:** a hook, installed at each reset through an extended vector,
-  answers OSBYTE &80 for the channels above. Everything else goes to the
-  previous BYTEV, so it chains with other drivers.
+  answers OSBYTE &80 for channels 3, 4, 10, 11, 16-20, 26 and 27.
+  Everything else, 5-9 included, goes to the previous BYTEV, so it chains
+  with other drivers.
 - **No SPI from BYTEV:** values come from the poll's copy. Software that
   reads the keypads once per key per frame, such as a ported Elite, then
   costs only the OSBYTE call.
-- **Burst size:** the AVR sends only what the preset uses, because a full
-  burst is 22 bytes:
-  - BBC: switches and four channels, 9 bytes;
-  - 14B/1: adds two keypads, 13 bytes;
-  - Four players: everything.
-  
-  At about 150 cycles a byte, the full burst would take some 10% of the
-  6502's time, against 3.5% now.
+- **Burst size:** the AVR sends only what the port types use: the
+  switches, two bytes per allocated channel and two per keypad. At about
+  150 cycles a byte, a full burst of some 22 bytes would take about 10%
+  of the 6502's time, against 3.5% now.
+- **The AVR does the allocation.** It knows both port types, so it can
+  lay the burst out in slot order, and the ROM stores bytes without
+  knowing the rules.
 - **Detection:** without our ROM, MOS 5 answers every channel with a copy
   of `ADVAL(1)` or `(2)`. So software needs a separate call to find
   SPItFIRE and learn what is configured: an OSBYTE, or an OSWORD.
@@ -519,13 +573,13 @@ Notes on the map:
 
 #### Still to decide
 - The detection call's number and format.
-- The preset and expert command syntax, and whether presets can be
-  shown and chosen with `*CONFIGURE` (service calls &28/&29).
-- How a 14B in 14B mode reports its fire bits in the BBC preset: perhaps
-  as on a BBC's analogue port, where buttons 9-11 are one button and 6-8
-  the other.
-- A Bitstik type, and calibration kept in the AVR's EEPROM.
+- Whether the port types can be shown and set with `*CONFIGURE`
+  (service calls &28/&29).
+- Bitstik calibration (its axes span only about 0-630) kept in the AVR's
+  EEPROM, and whether the ROM should scale or leave the readings raw.
 - ADC conversion events and the `ADVAL(0)` channel byte.
+- Whether the AVR's `SINGLE` and `DUAL` need their own firmware types or
+  are the 3B Twin reading with a different allocation.
 
 #### Delta 14B background
 - On a BBC's analogue port, a 14B is a single joystick on CH0/CH1. The
@@ -846,8 +900,9 @@ the RTC module comes first and brings the ROM skeleton with it:
 2. **Mouse module** - first input feature, hardware proven
 3. **Joystick module** - first step done: one handset, chosen with
    `*SPITFIRE JOYSTICK USE` and kept in the AVR's EEPROM, as
-   `ADVAL(0)`-`(2)` through MOS 5.x service call &2C. Next: the presets
-   and the channel map above (BYTEV, keypads, joysticks 3 and 4)
+   `ADVAL(0)`-`(2)` through MOS 5.x service call &2C. Next: port types
+   and joystick allocation, above (`PORT`, BYTEV, keypads, joysticks
+   3 and 4)
 4. **Single-config build first** - all modules in one ROM, configurable later
 5. **SD card** - done, as a separate MMFS ROM; still to do is the bus
    access protocol shared with the mouse module

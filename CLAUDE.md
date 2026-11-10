@@ -60,7 +60,7 @@ make        # Builds build/SPITFIRE (+ .inf for the Econet file server)
 make test   # Emulator regression tests of the RTC and joystick modules and *SPITFIRE commands (needs uv)
 ```
 
-Builds the Sideways ROM image: header, service dispatch, SPI core, the RTC module (OSWORD &0E/&0F, so `*TIME` and `TIME$` use the DS3234) and the joystick module (MOS 5.x service call &2C: the configured handset becomes `ADVAL(0)`-`(2)`, read from the `spijoy` firmware at 50 Hz), with `*SPITFIRE JOYSTICK` commands that keep the port types and handset in the AVR's EEPROM. Load it on the Compact with `*SRLOAD SPITFIRE 8000 <bank>` in a bank above ANFS. Other modules are still under design - see `docs/rom-design.md`.
+Builds the Sideways ROM image: header, service dispatch, SPI core, the RTC module (OSWORD &0E/&0F, so `*TIME` and `TIME$` use the DS3234) and the joystick module (MOS 5.x service call &2C polls the `spijoy` firmware's JOY_ALL burst at 50 Hz: joysticks 1-4 are allocated from the two ports' types; `ADVAL(0)`-`(2)` go to the MOS's workspace, the rest to one page of private HAZEL workspace, answered by a BYTEV hook), with `*SPITFIRE JOYSTICK PORT` keeping the port types in the AVR's EEPROM, `*SPITFIRE ADVAL`, `*STATUS` lines and OSWORD &3F. Load it on the Compact with `*SRLOAD SPITFIRE 8000 <bank>` in a bank above ANFS, then Ctrl-Break: the workspace is only claimed at a hard reset, so `*SRLOAD ... I` alone leaves the joystick commands asking for Ctrl-Break. Other modules are still under design - see `docs/rom-design.md`.
 
 ### Mouse Lookup Tables
 

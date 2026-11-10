@@ -1,6 +1,7 @@
 ; SPItFIRE Sideways ROM
 ; Prototype: ROM header, service call dispatch, SPI core, the RTC module
-; (OSWORD &0E/&0F) and the joystick module (MOS 5.x service call &2C).
+; (OSWORD &0E/&0F) and the joystick module (MOS 5.x service call &2C, a
+; BYTEV hook, and one page of private HAZEL workspace).
 ; See docs/rom-design.md.
 ;
 ; Build with beebasm from beeb/rom (see Makefile).
@@ -31,7 +32,7 @@ GUARD &C000
     EQUS "SPItFIRE"
     EQUB 0
 .version
-    EQUS "0.01"
+    EQUS "0.02"
 .copyright
     EQUB 0
     EQUS "(C)2026 Robert Smallshire", 0
@@ -50,6 +51,25 @@ GUARD &C000
     BEQ service_help
     CMP #&27
     BEQ service_reset
+    CMP #&29
+    BEQ service_status
+    CMP #&22
+    BEQ service_claim_ws
+    CMP #&24
+    BEQ service_count_ws
+    RTS
+
+; Service &24: count private HAZEL workspace (Y counts down). Not claimed.
+.service_count_ws
+    JSR joy_count_ws
+    LDA #&24
+    RTS
+
+; Service &22: claim private HAZEL workspace (Y = our page, stepped past
+; it). Not claimed.
+.service_claim_ws
+    JSR joy_claim_ws
+    LDA #&22
     RTS
 
 ; Service &2C: Master Compact joystick poll (in the interrupt). Claimed.
@@ -72,6 +92,9 @@ GUARD &C000
     TYA
     PHA
     JSR rtc_osword          ; C=0 if claimed
+    BCC service_osword_done
+    JSR joy_osword          ; OSWORD &3F
+.service_osword_done
     PLA
     TAY
     PLA
@@ -98,6 +121,24 @@ GUARD &C000
     BCS service_command_pass
     LDA #0
 .service_command_pass
+    RTS
+
+; Service &29: *STATUS
+.service_status
+    PHA
+    TXA
+    PHA
+    TYA
+    PHA
+    JSR cmd_status          ; C=0 if claimed
+    PLA
+    TAY
+    PLA
+    TAX
+    PLA
+    BCS service_status_pass
+    LDA #0
+.service_status_pass
     RTS
 
 ; Service &09: *HELP. Never claimed.

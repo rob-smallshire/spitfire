@@ -159,30 +159,22 @@ This is a working sketch, not a final design:
 | `*SPITFIRE` | Version and modules |
 | `*SPITFIRE JOYSTICK` | The joystick settings |
 | `*SPITFIRE JOYSTICK ON\|OFF` | Set or clear bit 7 of the MOS joystick byte, keeping the rest |
-| `*SPITFIRE JOYSTICK SETTYPE A\|B NONE\|TWIN\|SINGLE\|14B` | Set and save a port's type |
-| `*SPITFIRE JOYSTICK USE A\|B [1\|2]` | Set and save which handset is the BBC's joystick (1 = CH0/CH1, 2 = CH2/CH3) |
+| `*SPITFIRE JOYSTICK PORT A\|B <type>` | Set and save a port's type (NONE, SINGLE, DUAL, 3BS, 3BT, 14B, BITSTIK, QUINKEY) |
+| `*SPITFIRE ADVAL [ALL]` | The channels SPItFIRE answers, with their values |
+| `*STATUS [SPITFIRE]` | The settings, after the MOS's |
+| OSWORD &3F | Describe the joysticks, for software |
 
 `*HELP SPITFIRE [JOYSTICK]` lists the commands, and plain `*HELP` lists
 `SPITFIRE` as a topic. Both end with the settings, as the network filing
-systems show their station number:
+systems show their station number, in the layout under "Status display"
+below. "on" or "off" is the MOS's joystick byte; the rest is read from
+the AVR (JOY_CONFIG). "SPItFIRE not responding" replaces it if the AVR
+does not answer, and is the error if a setting cannot be made. Keywords
+match in either case; anything else after `*SPITFIRE` is a Syntax error.
 
-```
-  Joystick on, Port A 1
-  Ports A 3B Twin, B 3B Twin
-```
-
-"on" or "off" is the MOS's joystick byte. The rest is read from the AVR
-(JOY_CONFIG), which keeps the port types and handset in its EEPROM (see
-[protocol.md](protocol.md)); "SPItFIRE not responding" replaces it if the
-AVR does not answer, and is the error if a setting cannot be made.
-Keywords match in either case; anything else after `*SPITFIRE` is a
-Syntax error.
-
-The EEPROM is written only by the commands that set a port type or the
-handset, and the AVR rewrites only bytes that differ, so repeating a
-setting costs nothing. The poll, `*HELP` and the status command only read
-it. ON and OFF are not kept in the AVR: the MOS byte is set at every reset
-(service &27).
+The EEPROM is written only by `PORT`, and the AVR rewrites only bytes
+that differ, so repeating a setting costs nothing. ON and OFF are not
+kept in the AVR: the MOS byte is set at every reset (service &27).
 
 ### Implementation Note
 Each module registers its own `*SPITFIRE <name>` subcommand handler.
@@ -391,13 +383,18 @@ Seddon's [MOS disassembly][mos-disassembly] (`handleDigitalJoystick` in
 
 ### How the module works
 
-- **Every second call (50 Hz, the field rate)** it reads the AVR's
-  JOY_MOS burst for the configured handset ([protocol.md](protocol.md)):
-  a status
-  byte and the five workspace bytes, already scaled to 16 bits with the
-  direction bits derived from position. The AVR does all the arithmetic;
-  the 6502 stores five bytes. Switch bits 0 and 1 are the two fire inputs,
-  as `ADVAL(0) AND 3` on a BBC with an analogue port.
+The design below ("Design: port types and joystick allocation") is
+built, in `beeb/rom/src/joystick.asm` and `commands.asm`:
+
+- **Every second call (50 Hz, the field rate)** reads the AVR's JOY_ALL
+  burst ([protocol.md](protocol.md)). The five bytes for `ADVAL(0)`-`(2)`
+  go straight into the MOS's workspace; the rest go to the private HAZEL
+  page, cleared first so that unallocated channels read 0. The AVR does
+  the scaling, allocation and direction bits; the 6502 only copies.
+- **The BYTEV hook** answers OSBYTE &80 for channels 3, 4, 10, 11, 16-20,
+  26 and 27 from the page, reading each 16-bit value with interrupts
+  off, and passes everything else to the previous handler (kept in the
+  page) by pushing its address and returning to it.
 - **Bus sharing.** The poll runs in the interrupt, so it can arrive
   during a foreground SPI transaction. It runs only when the decoder
   rests on Y7: MMFS keeps the SD card selected for a whole card operation
@@ -406,14 +403,13 @@ Seddon's [MOS disassembly][mos-disassembly] (`handleDigitalJoystick` in
   low (the AVR's idle; MMFS leaves it high) with no device selected,
   selects the AVR, and restores everything afterwards. The joystick
   values hold during disc access.
-- **Robustness.** The status byte (&A0 OR the port type) shows the AVR
-  answered: a floating MISO cannot produce it, and a bad status leaves
-  the values alone, as does a handset on a port set to None. The AVR
-  applies its saved port types and handset at power-up, so the poll needs
-  no presence check or set-up and never sends a configuration command.
-- **Cost.** About 1,050 cycles per poll in the emulator, plus the User
-  VIA's 1 MHz accesses: roughly 0.7 ms every 20 ms (3.5%). Calls in
-  between take 72 cycles.
+- **Robustness.** The two header bytes (&A0 OR n, &50 OR k) show the AVR
+  answered: a floating MISO cannot produce them, and a bad header leaves
+  the values alone. The AVR applies its saved port types at power-up, so
+  the poll needs no presence check or set-up and never sends a
+  configuration command.
+- **Cost.** The poll's receive loop is already receive-only (two port
+  writes a bit); see [performance.md](performance.md).
 
 ### Design: port types and joystick allocation
 This is the design the module is heading towards. It was agreed in
@@ -748,9 +744,6 @@ development, so the ROM must cope:
 - ADC conversion events and the `ADVAL(0)` channel byte.
 - Whether the AVR's `SINGLE` and `DUAL` need their own firmware types or
   are the 3B Twin reading with a different allocation.
-- The current module leaves the values alone when the configured port is
-  `NONE` (see "Robustness" above). Under the zero rule it must write 0
-  instead, while still ignoring a burst whose status byte is bad.
 
 #### Delta 14B background
 - On a BBC's analogue port, a 14B is a single joystick on CH0/CH1. The

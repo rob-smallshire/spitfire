@@ -1,26 +1,105 @@
 """A model of the spijoy firmware's SPI slave, as the ROM tests see it.
 
 Decodes the bit-banged SPI (mode 0) from the User VIA port B writes, through
-the 74HC138 decoder, and answers JOY_ADVAL, JOY_MOS, JOY_CONFIG, the CFG_
-commands (which save the configuration in a model EEPROM) and JOY_TYPE_.
-Attach it to a py65 ObservableMemory with `attach`.
+the 74HC138 decoder, and answers JOY_ALL, JOY_CONFIG, the CFG_PORT_ commands
+(which save the configuration in a model EEPROM) and JOY_PORT_, building the
+JOY_ALL burst as firmware/src/spijoy.cpp does. Attach it to a py65
+ObservableMemory with `attach`.
 """
 import random
 
 IORB, SR = 0xFE60, 0xFE6A
 Y1 = 1
-CONFIG_DEFAULT = 0x40 | 1 | 1 << 2           # Both ports 3B Twin, handset 0
+NONE, SINGLE, DUAL, D3BS, D3BT, D14B, BITSTIK, QUINKEY = range(8)
+JOYSTICKS = [0, 1, 2, 2, 2, 1, 2, 2]
+CONFIG_DEFAULT = 0x40 | DUAL | NONE << 3          # Port A Dual, Port B None
+KEY_FIRE_14B = 1 << 10
+
+def adval_value(v):
+    return ((v << 6) | (v >> 4)) & 0xFFFF
 
 class AVR:
     def __init__(self):
         self.iorb = 0xFF; self.sr = 0; self.cs = False
         self.config = CONFIG_DEFAULT
-        self.type = [self.config & 3, (self.config >> 2) & 3]
+        self.type = [self.config & 7, (self.config >> 3) & 7]
         self.eeprom = self.config; self.eeprom_writes = 0
-        self.adval = [[random.randrange(256) for _ in range(5)] for _ in range(4)]
+        self.randomise()
         self.absent = None                       # None, "high" or "low"
         self.transactions = 0; self.commands = []
         self.y0 = False
+
+    def randomise(self):
+        """New readings: 10-bit channels CH0-CH3, fire inputs (b0 pin 13,
+        b1 pin 10) and 14B keys, per port."""
+        self.channels = [[random.randrange(1024) for _ in range(4)] for _ in range(2)]
+        self.fire = [random.randrange(4) for _ in range(2)]
+        self.keys = [random.randrange(4096) for _ in range(2)]
+
+    def sticks(self):
+        """The allocated joysticks, Port A's first, as the firmware sees them."""
+        out = []
+        for p in range(2):
+            t = self.type[p]
+            for j in range(JOYSTICKS[t]):
+                x, y = self.channels[p][2 * j], self.channels[p][2 * j + 1]
+                keypad = self.keys[p] if t == D14B else None
+                if t == D14B: fire = bool(self.keys[p] & KEY_FIRE_14B)
+                elif t == QUINKEY: fire = False
+                else: fire = bool((self.fire[p] >> j) & 1)
+                out.append(dict(x=x, y=y, fire=fire, dirs=t != QUINKEY, keypad=keypad))
+        return out
+
+    @staticmethod
+    def directions(s):
+        if not s["dirs"]: return 0
+        d = 0
+        if s["x"] >= 768: d |= 0x10
+        if s["x"] < 256: d |= 0x80
+        if s["y"] >= 768: d |= 0x40
+        if s["y"] < 256: d |= 0x20
+        return d
+
+    def burst(self):
+        sticks = self.sticks()
+        n = len(sticks)
+        k = sum(1 << i for i, s in enumerate(sticks) if s["keypad"] is not None)
+        out = [0xA0 | n, 0x50 | k]
+        def value(v): out.extend([adval_value(v) & 0xFF, adval_value(v) >> 8])
+        for pair in (0, 1):
+            first = 2 * pair
+            if first and n <= first: break
+            sw, x, y = 0, 0, 0
+            if first < n:
+                s = sticks[first]
+                sw = self.directions(s) | int(s["fire"]); x, y = s["x"], s["y"]
+            if first + 1 < n and sticks[first + 1]["fire"]: sw |= 2
+            out.append(sw); value(x); value(y)
+            if first + 1 < n:
+                value(sticks[first + 1]["x"]); value(sticks[first + 1]["y"])
+        for s in sticks:
+            if s["keypad"] is not None:
+                out.extend([s["keypad"] & 0xFF, s["keypad"] >> 8])
+        return out
+
+    def expected(self):
+        """What the ROM should hold afterwards: ADVAL(0)-(2) as the MOS's five
+        bytes, and every hooked channel's 16-bit value (0 if unallocated)."""
+        sticks = self.sticks()
+        n = len(sticks)
+        def sw(first):
+            if first >= n: return 0
+            v = self.directions(sticks[first]) | int(sticks[first]["fire"])
+            if first + 1 < n and sticks[first + 1]["fire"]: v |= 2
+            return v
+        def xy(i, axis):
+            return adval_value(sticks[i]["xy"[axis]]) if i < n else 0
+        mos = [sw(0), xy(0, 0) & 0xFF, xy(0, 0) >> 8, xy(0, 1) & 0xFF, xy(0, 1) >> 8]
+        ch = {3: xy(1, 0), 4: xy(1, 1), 16: sw(2), 17: xy(2, 0), 18: xy(2, 1),
+              19: xy(3, 0), 20: xy(3, 1)}
+        for c, i in ((10, 0), (11, 1), (26, 2), (27, 3)):
+            ch[c] = sticks[i]["keypad"] if i < n and sticks[i]["keypad"] is not None else 0
+        return mos, ch
 
     def attach(self, mem):
         mem.subscribe_to_write([IORB], self.write_iorb)
@@ -32,11 +111,11 @@ class AVR:
         dev = (v >> 2) & 7
         if dev == 0: self.y0 = True
         if dev != Y1:
-            if self.cs: self.burst = []          # SS rising ends a burst
+            if self.cs: self.pending = []        # SS rising ends a burst
             self.cs = False; return
         if not self.cs:
             assert not (v & 2), "AVR selected with SCK high"
-            self.cs = True; self.bits = 0; self.rx = 0; self.burst = []
+            self.cs = True; self.bits = 0; self.rx = 0; self.pending = []
             self.out = 0xFF; self.transactions += 1
         if (v & 2) and not (prev & 2):           # Rising edge
             if self.bits == 0: self.tx = self.out
@@ -47,24 +126,23 @@ class AVR:
 
     def isr(self, b):
         if self.absent: return                   # Nothing there to act on it
-        if self.burst:
-            self.out = self.burst.pop(0); return
+        if self.pending:
+            self.out = self.pending.pop(0); return
         self.commands.append(b)
-        if 0x50 <= b <= 0x54:
-            h = (self.config >> 4) & 3 if b == 0x54 else b - 0x50
-            data = [0xA0 | self.type[h >> 1]] + self.adval[h]
-            self.out = data[0]; self.burst = data[1:] + [0xFF]
+        if b == 0x55:
+            data = self.burst()
+            self.out = data[0]; self.pending = data[1:] + [0xFF]
         elif b == 0x58:
             self.out = self.config
-        elif 0xD0 <= b <= 0xDB:
-            shift = 2 * ((b >> 2) & 3)
-            self.config = (self.config & ~(3 << shift)) | ((b & 3) << shift)
-            self.type = [self.config & 3, (self.config >> 2) & 3]
+        elif 0xD0 <= b <= 0xDF:
+            shift = 3 * ((b >> 3) & 1)
+            self.config = (self.config & ~(7 << shift)) | ((b & 7) << shift)
+            self.type = [self.config & 7, (self.config >> 3) & 7]
             if self.eeprom != self.config:       # eeprom_update_block
                 self.eeprom = self.config; self.eeprom_writes += 1
             self.out = b
-        elif 0xE0 <= b <= 0xE7:
-            self.type[(b >> 2) & 1] = b & 3; self.out = b
+        elif 0xE0 <= b <= 0xEF:
+            self.type[(b >> 3) & 1] = b & 7; self.out = b
         else:
             self.out = 0xFF
 

@@ -485,6 +485,14 @@ Properties:
 - **X and Y stay together.** Every type uses an even number of channels,
   so each joystick lands on (1,2), (3,4), (17,18) or (19,20). Joystick
   n is the nth pair.
+- **Unallocated channels read 0,** as do their fire bits and keypads.
+  That is what a Compact returns for `ADVAL(1)` after power-up with no
+  joystick (checked on the real machine), and software that detects a
+  joystick by looking for roughly centred readings must not be fooled.
+  The BYTEV hook answers 3, 4 and 17-20 itself even when nothing is
+  allocated to them, rather than passing them to MOS 5, which would
+  return copies of `ADVAL(1)` and `(2)`. With no joystick 1, the poll
+  writes 0 to `ADVAL(1)` and `(2)` in the MOS's workspace.
 - **Port A's type moves Port B's joysticks.** Port B's stick is
   joystick 2 behind a `SINGLE` but joystick 3 behind a `DUAL`. The
   status shows the result.
@@ -625,6 +633,9 @@ mouse module.
 - ADC conversion events and the `ADVAL(0)` channel byte.
 - Whether the AVR's `SINGLE` and `DUAL` need their own firmware types or
   are the 3B Twin reading with a different allocation.
+- The current module leaves the values alone when the configured port is
+  `NONE` (see "Robustness" above). Under the zero rule it must write 0
+  instead, while still ignoring a burst whose status byte is bad.
 
 #### Delta 14B background
 - On a BBC's analogue port, a 14B is a single joystick on CH0/CH1. The

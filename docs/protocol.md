@@ -71,73 +71,18 @@ inputs continuously), so it is ready for the host's dummy byte.
 | JOY_BTN | 0x49 | Fire inputs, 1 = pressed: b0 A pin 13, b1 A pin 10, b2 B pin 13, b3 B pin 10 |
 | JOY_KEY_A | 0x4A | Port A 14B keypad buttons 0-7, 1 = pressed; latches buttons 8-11 |
 | JOY_KEY_B | 0x4B | The same for Port B |
-| JOY_ADVAL | 0x50-0x53 | Burst of 6 bytes for handset n (below) |
-| JOY_MOS | 0x54 | The JOY_ADVAL burst for the configured handset |
-| JOY_CONFIG | 0x58 | The saved configuration (below) |
-| CFG_TYPE_A | 0xD0-0xD3 | Set Port A to None, 3B Twin, 3B Single or 14B and save it; echoes the command |
-| CFG_TYPE_B | 0xD4-0xD7 | The same for Port B |
-| CFG_HANDSET | 0xD8-0xDB | Set the handset for JOY_MOS and save it; echoes the command |
-| JOY_TYPE_A | 0xE0-0xE3 | Set Port A's type until the next reset or CFG_ command (not saved); echoes the command |
-| JOY_TYPE_B | 0xE4-0xE7 | The same for Port B |
 
-JOY_ADVAL is the protocol's first multi-byte response: after the command,
-the host clocks out 6 bytes with 6 dummies, in one chip select. Handset 0 is
-Port A CH0/CH1, 1 is Port A CH2/CH3, and 2 and 3 are the same for Port B.
-The bytes are exactly what MOS 5.x keeps for `ADVAL(0)`-`(2)` (&02B6-&02BA),
-so the ROM stores them without work:
+The commands that set port types and read joystick data for the ROM are
+under "Joystick allocation" below. Test programs use the raw reads above:
+SPIJOY plots each port, and SPIALL shows the JOY_ALL burst.
 
-| Byte | Content |
-|------|---------|
-| 0 | Status: &A0 OR the port's type (None, 3BT, 3BS, 14B = 0-3) |
-| 1 | Switches: b0 fire pin 13, b1 fire pin 10, b4 left, b5 down, b6 up, b7 right |
-| 2, 3 | X as a 16-bit ADVAL value, low byte first |
-| 4, 5 | Y, the same |
-
-The 10-bit reading v becomes `v<<6 OR v>>4`, so 0 is &0000 and 1023 is
-&FFFF. Readings are not inverted: Acorn joysticks already read high at the
-left and at the top. A direction bit is set beyond a quarter of full scale
-from centre. Raising SS ends a burst early. The status byte lets the host
-tell that the AVR answered (a floating MISO cannot produce it) and which
-type the port is.
-
-#### Saved configuration
-
-The port types and the handset that JOY_MOS reports live in the AVR's
-EEPROM, and the AVR applies them at power-up. JOY_CONFIG returns them in
-one byte:
-
-| Bits | Content |
-|------|---------|
-| 0-1 | Port A type (None, 3BT, 3BS, 14B = 0-3) |
-| 2-3 | Port B type |
-| 4-5 | Handset for JOY_MOS (0-3, as JOY_ADVAL) |
-| 6 | Always 1 |
-| 7 | Always 0 |
-
-Bits 6 and 7 let the host tell the AVR answered: a floating MISO, or MISO
-stuck at either level, cannot produce them. A blank or corrupt EEPROM
-record (a marker, the byte and its complement) gives both ports 3B Twin
-and handset 0. The CFG_ commands take effect in JOY_CONFIG at once; the
-main loop then sets up the ports and writes the EEPROM, rewriting only
-bytes that differ, so repeating a setting costs no write cycles. Only the
-CFG_ commands write the EEPROM. Test programs use JOY_TYPE_ so that they
-leave the saved configuration alone.
-
-The fuses leave EESAVE unprogrammed (high fuse 0xD9), so the chip erase
-before each upload also erases the EEPROM, and the AVR comes back with the
-defaults after reflashing.
-
-An Acorn-standard joystick such as the Bitstik uses 3B Twin, which grounds
-pins 3, 5 and 6 and reads all four channels. `beeb/spitest` SPIJOY exercises
-every command.
-
-### Joystick allocation (planned)
+### Joystick allocation
 
 This is the protocol for the ROM design in
 [rom-design.md](rom-design.md) ("Design: port types and joystick
-allocation"). It is not built yet. It replaces JOY_ADVAL, JOY_MOS,
-CFG_HANDSET and the four-type CFG_TYPE_/JOY_TYPE_ commands above; the raw
-reads (0x40-0x4B) stay for test programs.
+allocation"), implemented in the `spijoy` firmware. It replaced JOY_ADVAL,
+JOY_MOS, CFG_HANDSET and the four-type CFG_TYPE_/JOY_TYPE_ commands of the
+first ROM; the raw reads (0x40-0x4B) stay for test programs.
 
 #### Port types
 
@@ -180,6 +125,15 @@ both are kept so that the status shows what the user chose.
 As before, bits 6 and 7 show the AVR answered. The EEPROM record gets a
 new marker, so a record saved by the old firmware reads as blank and gives
 the defaults: Port A `DUAL`, Port B `NONE` (joysticks 1 and 2 on Port A).
+The CFG_ commands take effect in JOY_CONFIG at once; the main loop then
+sets up the ports and writes the EEPROM, rewriting only bytes that
+differ, so repeating a setting costs no write cycles. JOY_PORT_ changes
+the active type only, so test programs leave the saved configuration
+alone.
+
+The fuses leave EESAVE unprogrammed (high fuse 0xD9), so the chip erase
+before each upload also erases the EEPROM, and the AVR comes back with the
+defaults after reflashing.
 
 #### JOY_ALL burst
 

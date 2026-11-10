@@ -32,7 +32,7 @@ CMD_JOY_A0   = &40          ; +port*4+channel: channel low byte
 CMD_JOY_HI   = &48          ; latched high byte
 CMD_JOY_BTN  = &49          ; fire inputs
 CMD_JOY_KEY  = &4A          ; +port: 14B keypad buttons 0-7
-CMD_JOY_TYPE = &E0          ; +port*4+firmware type
+CMD_JOY_PORT = &E0          ; +port*8+port type: set until reset, not saved
 
 ; Joystick types, in the order the A and B keys cycle through them
 T_NONE    = 0
@@ -130,9 +130,10 @@ ny       = &89              ; 2 bytes
 .set_port_type
     JSR port_setup
     LDY type, X
-    LDA fw_type, Y
-    ORA chbase
-    ORA #CMD_JOY_TYPE
+    LDA chbase              ; port*4, so port*8 for the command
+    ASL A
+    ORA fw_type, Y
+    ORA #CMD_JOY_PORT
     JSR spi_cmd
     JMP draw_panel
 
@@ -1323,10 +1324,10 @@ ny       = &89              ; 2 bytes
 
 ; ------ Data ------
 
-; Firmware type for each of our types: None, 3BT, 3BS, 14B = 0-3. The
-; Bitstik is wired as an Acorn port, which is the firmware's 3BT.
+; Firmware port type for each of our types (docs/protocol.md): None 0,
+; 3B Single 3, 3B Twin 4, 14B 5, Bitstik 6, Quinkey 7.
 .fw_type
-    EQUB 0, 2, 1, 3, 1, 1
+    EQUB 0, 3, 4, 5, 6, 7
 
 ; Axes whose readings run opposite to the screen, by type. Acorn-standard
 ; joysticks (the Deltas) read high at the left and at the top; the Bitstik

@@ -35,7 +35,7 @@ The firmware has **multiple standalone executables** built from different source
 | `spitfire` (default) | `main.cpp` + supporting files | Production joystick firmware |
 | `spitest` | `spi_slave.cpp` | Minimal SPI slave (returns XOR pattern) |
 | `spimouse` | `mouse.cpp` | Quadrature mouse firmware |
-| `spijoy` | `spijoy.cpp` | Analogue joysticks and keypads on both DA-15 ports over SPI; port types and the MOS handset saved in EEPROM |
+| `spijoy` | `spijoy.cpp` | Analogue joysticks and keypads on both DA-15 ports over SPI: eight port types saved in EEPROM, joysticks allocated to ADVAL slots and sent as one JOY_ALL burst (`docs/protocol.md`) |
 
 When adding a new standalone target, follow the pattern in `CMakeLists.txt`:
 1. Add the source file to the exclude regex
@@ -124,7 +124,7 @@ BBC test programs for the other SPI devices: SPIRTC and SPISETTIME (DS3234 RTC o
 
 This is embedded hardware, so most testing is on the machine. Each piece of functionality is proven with a small standalone test program:
 - Flash firmware → load BBC test program → exercise hardware → observe results on the BBC display.
-- The `beeb/spitest/` programs are the regression suite. Re-run them after firmware changes. SPITEST, SPI256, SPIT256 and SPITTEST need the `spitest` firmware; with other firmware the AVR replies `FF` and nearly every transfer counts as bad. SPIJOY (MODE 1 plotter for Delta 3B Single/Twin, 14B and Bitstik on either port, plus a Quinkey x4 chord decoder) needs the `spijoy` firmware.
+- The `beeb/spitest/` programs are the regression suite. Re-run them after firmware changes. SPITEST, SPI256, SPIT256 and SPITTEST need the `spitest` firmware; with other firmware the AVR replies `FF` and nearly every transfer counts as bad. SPIJOY (MODE 1 plotter for Delta 3B Single/Twin, 14B and Bitstik on either port, plus a Quinkey x4 chord decoder) and SPIALL (MODE 7 view of the JOY_ALL allocation burst; A/B cycle the port types, S saves) need the `spijoy` firmware.
 - Build verification is "does it compile clean with `-Werror`" plus the size report from `avr-size`.
 - The exceptions are the ROM's RTC and joystick modules, which have emulator tests (`beeb/rom/test/test_rtc.py`, `test_joystick.py` and `test_commands.py`, `make test` in `beeb/rom`): they run the ROM on py65 against a model DS3234 or AVR (`test/avr_model.py`) that decodes the bit-banged SPI. Run them after changing `beeb/rom/src/`.
 

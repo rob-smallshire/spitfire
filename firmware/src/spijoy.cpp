@@ -28,35 +28,44 @@
  *   0x4A      JOY_KEY_A - Port A 14B keypad buttons 0-7, active high;
  *                         latches buttons 8-11 for JOY_HI
  *   0x4B      JOY_KEY_B - the same for Port B
- *   0x50-0x53 JOY_ADVAL - burst of 6 bytes for handset n (0 = Port A
- *                         CH0/CH1, 1 = Port A CH2/CH3, 2 and 3 the same
- *                         for Port B), clocked out by 6 dummy bytes:
- *                           status   0xA0 | the port's type
- *                           switches ADVAL(0) low byte: b0 fire pin 13,
- *                                    b1 fire pin 10, b4 left, b5 down,
- *                                    b6 up, b7 right
- *                           X lo, X hi, Y lo, Y hi  16-bit ADVAL values
- *   0x54      JOY_MOS   - the JOY_ADVAL burst for the configured handset
+ *   0x55      JOY_ALL   - the allocation burst (below)
  *   0x58      JOY_CONFIG - the saved configuration:
- *                         b0-1 Port A type, b2-3 Port B type,
- *                         b4-5 handset for JOY_MOS, b6 = 1, b7 = 0
- *   0xD0-0xD3 CFG_TYPE_A - set and save Port A's type
- *   0xD4-0xD7 CFG_TYPE_B - set and save Port B's type
- *   0xD8-0xDB CFG_HANDSET - set and save the handset for JOY_MOS
- *   0xE0-0xE3 JOY_TYPE_A - set Port A to None, 3BT, 3BS or 14B until the
- *                         next reset or CFG_ command (not saved)
- *   0xE4-0xE7 JOY_TYPE_B - the same for Port B
- *                         (CFG_ and JOY_TYPE_ reply with the command byte)
+ *                         b0-2 Port A type, b3-5 Port B type, b6 = 1,
+ *                         b7 = 0
+ *   0xD0-0xD7 CFG_PORT_A - set and save Port A's type (0-7)
+ *   0xD8-0xDF CFG_PORT_B - set and save Port B's type
+ *   0xE0-0xE7 JOY_PORT_A - set Port A's type until the next reset or CFG_
+ *                         command (not saved)
+ *   0xE8-0xEF JOY_PORT_B - the same for Port B
+ *                         (CFG_ and JOY_PORT_ reply with the command byte)
  *
- * The JOY_ADVAL bytes are the MOS 5.x ADVAL workspace (&02B6-&02BA), so
- * the ROM's service call &2C handler just stores them. Raising SS ends a
- * burst early.
+ * Port types (see docs/protocol.md): 0 None, 1 Single, 2 Dual, 3 Delta 3B
+ * Single, 4 Delta 3B Twin, 5 Delta 14B, 6 Bitstik, 7 Quinkey. Each is
+ * driven in one of the joystick module's electrical modes; the others
+ * differ only in how many joysticks they give and how fire and direction
+ * bits are derived.
+ *
+ * Joysticks are allocated to ADVAL slot pairs (1,2), (3,4), (17,18),
+ * (19,20): Port A's first, then Port B's. JOY_ALL sends only what is
+ * allocated, in one chip select:
+ *   header  0xA0 | n (joysticks, 0-4), 0x50 | k (keypad mask)
+ *   J1      ADVAL(0) switches, ADVAL(1), ADVAL(2)  (always)
+ *   J2      ADVAL(3), ADVAL(4)                     (n >= 2)
+ *   J3      ADVAL(16) switches, ADVAL(17), (18)    (n >= 3)
+ *   J4      ADVAL(19), ADVAL(20)                   (n = 4)
+ *   keypads keys 0-11, low byte first, for each joystick in k
+ * ADVAL values are 16-bit, low byte first. A switch byte has the pair's
+ * fire bits in b0 and b1 and the first joystick's directions in b4-7
+ * (left, down, up, right). The J1 bytes are the MOS 5.x ADVAL workspace
+ * (&02B6-&02BA), so the ROM's service call &2C handler just stores them.
+ * Raising SS ends a burst early.
  *
  * The configuration lives in EEPROM and is applied at power-up; a blank
- * or corrupt record gives both ports 3B Twin (the Acorn standard) and
- * handset 0. The SPI interrupt updates it at once, so JOY_CONFIG reads
- * back a change straight away; the main loop applies it to the ports
- * and writes the EEPROM (3.3 ms a byte, too long for the interrupt).
+ * or corrupt record (including one saved by the old four-type firmware)
+ * gives Port A Dual and Port B None. The SPI interrupt updates it at
+ * once, so JOY_CONFIG reads back a change straight away; the main loop
+ * applies it to the ports and writes the EEPROM (3.3 ms a byte, too long
+ * for the interrupt).
  */
 
 #include <avr/io.h>
@@ -76,36 +85,40 @@ namespace {
     constexpr uint8_t CMD_JOY_BTN    = 0x49;
     constexpr uint8_t CMD_JOY_KEY_A  = 0x4A;
     constexpr uint8_t CMD_JOY_KEY_B  = 0x4B;
-    constexpr uint8_t CMD_JOY_ADVAL  = 0x50;
-    constexpr uint8_t CMD_JOY_ADVAL_LAST = 0x53;
-    constexpr uint8_t CMD_JOY_MOS    = 0x54;
+    constexpr uint8_t CMD_JOY_ALL    = 0x55;
     constexpr uint8_t CMD_JOY_CONFIG = 0x58;
-    constexpr uint8_t CMD_CFG_FIRST  = 0xD0;
-    constexpr uint8_t CMD_CFG_LAST   = 0xDB;
-    constexpr uint8_t CMD_JOY_TYPE_A = 0xE0;
-    constexpr uint8_t CMD_JOY_TYPE_B = 0xE7;
+    constexpr uint8_t CMD_CFG_PORT_A = 0xD0;
+    constexpr uint8_t CMD_CFG_LAST   = 0xDF;
+    constexpr uint8_t CMD_JOY_PORT_A = 0xE0;
+    constexpr uint8_t CMD_JOY_PORT_LAST = 0xEF;
 
     constexpr uint8_t NO_REQUEST = 0xFF;
 
-    constexpr uint8_t ADVAL_STATUS = 0xA0;  // | port type
-    constexpr uint8_t ADVAL_BYTES = 5;      // Switches, X lo/hi, Y lo/hi
-    constexpr uint8_t BURST_BYTES = 1 + ADVAL_BYTES;
+    // Port types, as the protocol numbers them
+    enum class PortType : uint8_t {
+        NONE, SINGLE, DUAL, DELTA_3BS, DELTA_3BT, DELTA_14B, BITSTIK, QUINKEY
+    };
+    constexpr uint8_t TYPE_MASK = 7;
 
-    // Switch bits, as in MOS 5.x ADVAL(0). Bits 0 and 1 are the fire
-    // inputs, as joystick::fire_buttons() returns them.
+    // Switch bits, as in MOS 5.x ADVAL(0). Bits 0 and 1 are fire.
     constexpr uint8_t SW_LEFT    = 0x10;
     constexpr uint8_t SW_DOWN    = 0x20;
     constexpr uint8_t SW_UP      = 0x40;
     constexpr uint8_t SW_RIGHT   = 0x80;
 
+    // The 14B's fire button: key 10, which its two side buttons share
+    constexpr uint16_t KEY_FIRE_14B = 1 << 10;
+
     // Configuration byte, as JOY_CONFIG returns it
     constexpr uint8_t CONFIG_VALID   = 0x40;
     constexpr uint8_t CONFIG_DEFAULT = CONFIG_VALID |
-        static_cast<uint8_t>(joystick::Type::DELTA_3B_TWIN) |
-        static_cast<uint8_t>(joystick::Type::DELTA_3B_TWIN) << 2;
+        static_cast<uint8_t>(PortType::DUAL) |
+        static_cast<uint8_t>(PortType::NONE) << 3;
 
-    // EEPROM record: a marker, the configuration and its complement
-    constexpr uint8_t RECORD_MARKER = 0x53;
+    // EEPROM record: a marker, the configuration and its complement. The
+    // marker differs from the four-type firmware's (0x53), so its records
+    // read as blank.
+    constexpr uint8_t RECORD_MARKER = 0x54;
     struct Record {
         uint8_t marker;
         uint8_t config;
@@ -117,6 +130,12 @@ namespace {
     constexpr uint16_t LOW_THRESHOLD = 256;
     constexpr uint16_t HIGH_THRESHOLD = 768;
 
+    // JOY_ALL: a 2-byte header, groups of 5, 4, 5 and 4 bytes for
+    // joysticks 1-4, and at most two keypads (only a 14B has one)
+    constexpr uint8_t HEADER_N = 0xA0;
+    constexpr uint8_t HEADER_K = 0x50;
+    constexpr uint8_t MAX_BURST = 2 + 5 + 4 + 5 + 4 + 2 * 2;
+
     // --- Written by interrupts ---
     volatile uint16_t samples[8];          // ADC interrupt
     volatile uint8_t type_request = NO_REQUEST;  // SPI interrupt
@@ -125,12 +144,16 @@ namespace {
 
     // --- Written by the main loop, read by the SPI interrupt ---
     volatile uint16_t keys[2];             // Active high, bit N = button N
-    volatile uint8_t adval[4][ADVAL_BYTES];  // JOY_ADVAL, by handset
+    volatile uint8_t staged[MAX_BURST];    // The next JOY_ALL burst
+    volatile uint8_t staged_len = 0;
 
     // --- SPI and pin change interrupts ---
-    volatile uint8_t burst[BURST_BYTES];
+    volatile uint8_t burst[MAX_BURST];
     volatile uint8_t burst_pos = 0;
     volatile uint8_t burst_len = 0;        // 0 when no burst is running
+
+    // --- Main loop only ---
+    PortType port_types[2] = {PortType::NONE, PortType::NONE};
 
     uint8_t adc_channel = 0;
     uint8_t latched_hi = 0;
@@ -163,13 +186,38 @@ namespace {
                (joystick::fire_buttons(joystick::Port::PORT_B) << 2);
     }
 
-    joystick::Type config_type(uint8_t value, uint8_t port) {
-        return static_cast<joystick::Type>((value >> (2 * port)) & 3);
+    // The joystick module's electrical mode for each port type
+    joystick::Type electrical_mode(PortType type) {
+        switch (type) {
+            case PortType::NONE:      return joystick::Type::NO_JOYSTICK;
+            case PortType::DELTA_3BS: return joystick::Type::DELTA_3B_SINGLE;
+            case PortType::DELTA_14B: return joystick::Type::DELTA_14B;
+            default:                  return joystick::Type::DELTA_3B_TWIN;
+        }
+    }
+
+    // How many joysticks (slot pairs) each port type takes
+    uint8_t joysticks_of(PortType type) {
+        switch (type) {
+            case PortType::NONE:      return 0;
+            case PortType::SINGLE:
+            case PortType::DELTA_14B: return 1;
+            default:                  return 2;
+        }
+    }
+
+    void set_port(uint8_t port, PortType type) {
+        port_types[port] = type;
+        joystick::configure(static_cast<joystick::Port>(port), electrical_mode(type));
+    }
+
+    PortType config_type(uint8_t value, uint8_t port) {
+        return static_cast<PortType>((value >> (3 * port)) & TYPE_MASK);
     }
 
     void apply_config(uint8_t value) {
-        joystick::configure(joystick::Port::PORT_A, config_type(value, 0));
-        joystick::configure(joystick::Port::PORT_B, config_type(value, 1));
+        set_port(0, config_type(value, 0));
+        set_port(1, config_type(value, 1));
     }
 
     // Read the saved configuration, or the default if there is none
@@ -204,16 +252,13 @@ namespace {
         uint8_t request = type_request;
         if (request != NO_REQUEST) {
             type_request = NO_REQUEST;
-            auto port = static_cast<joystick::Port>((request >> 2) & 1);
-            auto type = static_cast<joystick::Type>(request & 3);
-            joystick::configure(port, type);
+            set_port((request >> 3) & 1, static_cast<PortType>(request & TYPE_MASK));
         }
 
         for (uint8_t p = 0; p < 2; p++) {
-            auto port = static_cast<joystick::Port>(p);
             uint16_t value = 0;
-            if (joystick::get_type(port) == joystick::Type::DELTA_14B) {
-                value = ~keypad::scan(port) & 0x0FFF;
+            if (port_types[p] == PortType::DELTA_14B) {
+                value = ~keypad::scan(static_cast<joystick::Port>(p)) & 0x0FFF;
             }
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
                 keys[p] = value;
@@ -221,34 +266,110 @@ namespace {
         }
     }
 
-    // Build the JOY_ADVAL bytes for each handset. Acorn joysticks read
-    // high at the left and at the top, which is the ADVAL convention, so
-    // nothing is inverted.
-    void update_adval() {
-        for (uint8_t h = 0; h < 4; h++) {
-            uint8_t port = h >> 1;
-            uint8_t first = 4 * (h & 1) + port;    // samples[] index of X
-            uint16_t x, y;
-            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-                x = samples[first];
-                y = samples[first + 2];
-            }
+    // One allocated joystick, as JOY_ALL reports it
+    struct Stick {
+        uint16_t x, y;      // 10-bit readings
+        bool fire;
+        bool has_dirs;
+        bool has_keypad;
+        uint16_t keypad;
+    };
 
-            uint8_t switches = joystick::fire_buttons(static_cast<joystick::Port>(port));
-            if (x >= HIGH_THRESHOLD) switches |= SW_LEFT;
-            if (x < LOW_THRESHOLD) switches |= SW_RIGHT;
-            if (y >= HIGH_THRESHOLD) switches |= SW_UP;
-            if (y < LOW_THRESHOLD) switches |= SW_DOWN;
+    // Describe joystick j (0 or 1) of a port
+    Stick describe(uint8_t port, uint8_t j) {
+        Stick s;
+        uint8_t first = 4 * j + port;      // samples[] index of X: CH(2j)
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            s.x = samples[first];
+            s.y = samples[first + 2];
+        }
+        PortType type = port_types[port];
+        uint8_t buttons = joystick::fire_buttons(static_cast<joystick::Port>(port));
+        s.has_keypad = type == PortType::DELTA_14B;
+        s.keypad = s.has_keypad ? keys[port] : 0;
+        s.has_dirs = type != PortType::QUINKEY;
+        if (type == PortType::DELTA_14B) {
+            s.fire = (s.keypad & KEY_FIRE_14B) != 0;
+        } else if (type == PortType::QUINKEY) {
+            s.fire = false;
+        } else {
+            // Pin 13 is the first joystick's fire, pin 10 the second's
+            s.fire = (buttons >> j) & 1;
+        }
+        return s;
+    }
 
-            uint16_t ax = adval_value(x);
-            uint16_t ay = adval_value(y);
-            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-                adval[h][0] = switches;
-                adval[h][1] = static_cast<uint8_t>(ax);
-                adval[h][2] = static_cast<uint8_t>(ax >> 8);
-                adval[h][3] = static_cast<uint8_t>(ay);
-                adval[h][4] = static_cast<uint8_t>(ay >> 8);
+    // Acorn joysticks read high at the left and at the top, which is the
+    // ADVAL convention, so nothing is inverted.
+    uint8_t directions(const Stick& s) {
+        if (!s.has_dirs) return 0;
+        uint8_t switches = 0;
+        if (s.x >= HIGH_THRESHOLD) switches |= SW_LEFT;
+        if (s.x < LOW_THRESHOLD) switches |= SW_RIGHT;
+        if (s.y >= HIGH_THRESHOLD) switches |= SW_UP;
+        if (s.y < LOW_THRESHOLD) switches |= SW_DOWN;
+        return switches;
+    }
+
+    uint8_t put_value(uint8_t* out, uint8_t pos, uint16_t reading) {
+        uint16_t value = adval_value(reading);
+        out[pos++] = static_cast<uint8_t>(value);
+        out[pos++] = static_cast<uint8_t>(value >> 8);
+        return pos;
+    }
+
+    // Build the next JOY_ALL burst from the current readings
+    void update_burst() {
+        Stick sticks[4];
+        uint8_t n = 0;
+        for (uint8_t p = 0; p < 2; p++) {
+            for (uint8_t j = 0; j < joysticks_of(port_types[p]); j++) {
+                sticks[n++] = describe(p, j);
             }
+        }
+
+        uint8_t out[MAX_BURST];
+        uint8_t k = 0;
+        for (uint8_t i = 0; i < n; i++) {
+            if (sticks[i].has_keypad) k |= 1 << i;
+        }
+        out[0] = HEADER_N | n;
+        out[1] = HEADER_K | k;
+        uint8_t pos = 2;
+
+        // Joystick pairs: J1 (and J2), then J3 (and J4). J1 is always sent.
+        for (uint8_t pair = 0; pair < 2; pair++) {
+            uint8_t first = 2 * pair;
+            if (first > 0 && n <= first) break;
+            uint8_t switches = 0;
+            uint16_t x = 0, y = 0;
+            if (first < n) {
+                switches = directions(sticks[first]) | (sticks[first].fire ? 1 : 0);
+                x = sticks[first].x;
+                y = sticks[first].y;
+            }
+            if (first + 1 < n && sticks[first + 1].fire) switches |= 2;
+            out[pos++] = switches;
+            pos = put_value(out, pos, x);
+            pos = put_value(out, pos, y);
+            if (first + 1 < n) {
+                pos = put_value(out, pos, sticks[first + 1].x);
+                pos = put_value(out, pos, sticks[first + 1].y);
+            }
+        }
+
+        for (uint8_t i = 0; i < n; i++) {
+            if (sticks[i].has_keypad) {
+                out[pos++] = static_cast<uint8_t>(sticks[i].keypad);
+                out[pos++] = static_cast<uint8_t>(sticks[i].keypad >> 8);
+            }
+        }
+
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            for (uint8_t i = 0; i < pos; i++) {
+                staged[i] = out[i];
+            }
+            staged_len = pos;
         }
     }
 
@@ -284,16 +405,16 @@ ISR(SPI_STC_vect) {
     uint8_t response;
     uint16_t value;
 
-    if ((cmd >= CMD_JOY_ADVAL && cmd <= CMD_JOY_ADVAL_LAST) || cmd == CMD_JOY_MOS) {
-        uint8_t h = cmd == CMD_JOY_MOS ? (config >> 4) & 3 : cmd - CMD_JOY_ADVAL;
-        auto port = static_cast<joystick::Port>(h >> 1);
-        burst[0] = ADVAL_STATUS | static_cast<uint8_t>(joystick::get_type(port));
-        for (uint8_t i = 0; i < ADVAL_BYTES; i++) {
-            burst[1 + i] = adval[h][i];
+    if (cmd == CMD_JOY_ALL) {
+        // Answer the header at once; the copy finishes long before the
+        // host asks for the second byte.
+        SPDR = staged[0];
+        uint8_t len = staged_len;
+        for (uint8_t i = 0; i < len; i++) {
+            burst[i] = staged[i];
         }
-        SPDR = burst[0];
         burst_pos = 1;
-        burst_len = BURST_BYTES;
+        burst_len = len;
         return;
     } else if (cmd >= CMD_JOY_A0 && cmd <= CMD_JOY_B3) {
         uint8_t index = cmd - CMD_JOY_A0;
@@ -310,13 +431,13 @@ ISR(SPI_STC_vect) {
         response = static_cast<uint8_t>(value);
     } else if (cmd == CMD_JOY_CONFIG) {
         response = config;
-    } else if (cmd >= CMD_CFG_FIRST && cmd <= CMD_CFG_LAST) {
-        uint8_t shift = 2 * ((cmd >> 2) & 3);  // Port A, Port B, handset
-        config = (config & ~(3 << shift)) | ((cmd & 3) << shift);
+    } else if (cmd >= CMD_CFG_PORT_A && cmd <= CMD_CFG_LAST) {
+        uint8_t shift = 3 * ((cmd >> 3) & 1);  // Port A, Port B
+        config = (config & ~(TYPE_MASK << shift)) | ((cmd & TYPE_MASK) << shift);
         config_changed = true;
         response = cmd;
-    } else if (cmd >= CMD_JOY_TYPE_A && cmd <= CMD_JOY_TYPE_B) {
-        type_request = cmd & 7;
+    } else if (cmd >= CMD_JOY_PORT_A && cmd <= CMD_JOY_PORT_LAST) {
+        type_request = cmd & 0x0F;
         response = cmd;
     } else {
         response = 0xFF;
@@ -341,6 +462,6 @@ int main() {
     while (true) {
         service_config();
         service_ports();
-        update_adval();
+        update_burst();
     }
 }

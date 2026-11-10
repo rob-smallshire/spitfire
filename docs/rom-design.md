@@ -619,10 +619,60 @@ mouse module.
 - **Detection:** without our ROM, MOS 5 answers every channel with a copy
   of `ADVAL(1)` or `(2)`. So software needs a separate call to find
   SPItFIRE and learn what is configured: an OSBYTE, or an OSWORD.
-- **Workspace:** the poll (in the interrupt) and the BYTEV hook (usually
-  in the foreground) must both reach it. Private workspace on the Master
-  is in hidden RAM (HAZEL), so whether that is paged in for service call
-  &2C has to be checked first.
+- **Workspace:** one page of private HAZEL workspace, which the poll (in
+  the interrupt) and the BYTEV hook (in the foreground) both reach. See
+  "Workspace" below.
+
+#### Workspace
+Checked in the MOS 5.00 disassembly (`acorn_mos_disassembly`, whose
+joystick commentary is ours):
+
+- **Both paths see HAZEL.** `makeROMServiceCall` (`src/mos.s65`) pages
+  HAZEL in before calling each ROM, so service call &2C, issued from the
+  interrupt, sees it. `extendedVectorEntryPoint` does the same before
+  entering a ROM through an extended vector, so the BYTEV hook sees it.
+  Each restores the previous state afterwards.
+- **Passing BYTEV on is safe with HAZEL paged in.** The MOS's handler,
+  `osbyteEntryPoint`, is at &EF8B and OSBYTE &80 at &EDC5, both above the
+  HAZEL window (&C000-&DFFF).
+- **Claiming a page.** At a hard reset (power-on or Ctrl-Break, not a
+  soft Break), `utils.s65` asks for private HAZEL workspace in two calls,
+  answered as the MMFS fork does (`mmfs100.asm`):
+  - &24 (count): `DEY` once per page needed (one), and don't claim.
+  - &22 (claim): store Y in `&0DF0,X` (X = our ROM number), `INY`, and
+    don't claim.
+- **Finding the page.** The poll gets it from `&0DF0,X`, X being the ROM
+  number on a service call. The hook gets the ROM number from `&F4`,
+  which the extended vector has just set. Both reach the page through a
+  zero-page pointer saved on the stack and restored.
+- **Every reset (service &27)** clears the page's values and installs the
+  BYTEV extended vector, as well as handing the joystick to &2C.
+
+#### Starting without a reset
+`*SRLOAD SPITFIRE 8000 <bank> I` does not give the ROM its workspace.
+The `I` flag only copies the ROM type byte (`&8006`) into the MOS's ROM
+table (`LF8D1`, `src/sram_access_helpers_3.s65`). It issues none of the
+reset service calls: no &24/&22, so no page, and no &27, so no BYTEV
+hook and no joystick hand-over. The ROM does receive the calls after
+that (`*` commands, `*HELP`, OSWORD), and `&0DF0+<bank>` holds whatever
+was there before. A page cannot be safely claimed later, because the
+MOS hands HAZEL out in one pass at reset and other ROMs (DFS, ADFS) take
+theirs then.
+
+This affects anyone running SPItFIRE from sideways RAM, not only
+development, so the ROM must cope:
+- **Trust the page only when it is marked as ours.** On &22 the ROM
+  writes a signature into its page (a few bytes plus its ROM number).
+  Until the signature is found through `&0DF0,X`, it treats the entry as
+  stale and does not touch that page. A SPItFIRE image reloaded into the
+  same bank without a reset finds its own signature, and that page is
+  still legitimately its own.
+- **Offer what works without a page.** The RTC module and the commands
+  work. `*SPITFIRE JOYSTICK` and `*SPITFIRE ADVAL` print
+  `Press Ctrl-Break to start SPItFIRE` instead of their output, and
+  `*SPITFIRE` and `*HELP SPITFIRE` show the same reminder.
+- **In ROM** (for example a One ROM Fire 28) the image is present at
+  power-on and always gets the full start-up.
 
 #### Still to decide
 - The detection call's number and format.

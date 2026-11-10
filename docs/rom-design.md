@@ -436,22 +436,25 @@ in [adval-and-mouse-conventions.md](adval-and-mouse-conventions.md).
 *SPITFIRE JOYSTICK                    Status
 *SPITFIRE JOYSTICK PORT A|B <type>    Set and save a port's type
 *SPITFIRE JOYSTICK ON|OFF             The MOS's joystick byte, as now
+*SPITFIRE ADVAL [ALL]                 The channel allocation, with values
 ```
 
 `SETTYPE` and `USE` go, and with them the idea of choosing a "handset".
 
 #### Port types
 
-| Type | Hardware | Channels | Joysticks |
-|---|---|---|---|
-| `NONE` | Nothing | 0 | 0 |
-| `SINGLE` | One ordinary two-axis joystick | 2 | 1 |
-| `DUAL` | Two ordinary joysticks on one port | 4 | 2 |
-| `3BT` | Delta 3B Twin: a synonym for `DUAL` | 4 | 2 |
-| `3BS` | Delta 3B Single: one stick wired to both channel pairs, so four logical axes | 4 | 2 |
-| `14B` | Delta 14B: one stick and a 3x4 keypad | 2 | 1 |
-| `BITSTIK` | Acorn Bitstik: X, Y, twist, and a button on an analogue channel | 4 | 2 slots, one device |
-| `QUINKEY` | Up to four Microwriter Quinkeys on the four-way adapter, one channel each | 4 | 4 handsets in 2 slots |
+| Type | Name | Notes | Channels | Joysticks |
+|---|---|---|---|---|
+| `NONE` | No joystick | | 0 | 0 |
+| `SINGLE` | Standard single joystick | Two axes | 2 | 1 |
+| `DUAL` | Standard dual joystick | Two handsets on one port | 4 | 2 |
+| `3BS` | Voltmace Delta 3B Single | One stick wired to both channel pairs, so four logical axes | 4 | 2 |
+| `3BT` | Voltmace Delta 3B Twin | A synonym for `DUAL` | 4 | 2 |
+| `14B` | Voltmace Delta 14B | One stick and a 3x4 keypad | 2 | 1 |
+| `BITSTIK` | Acorn Bitstik | X, Y, twist, and a button on an analogue channel | 4 | 2 slots, one device |
+| `QUINKEY` | Microwriter Quinkey | Up to four on the four-way adapter, one channel each | 4 | 4 handsets in 2 slots |
+
+The status display uses the full names.
 
 A `3BS` works fine as a `SINGLE`. `3BS` is for software that wants the
 Delta 3B Single's unusual behaviour: one stick seen as two joysticks.
@@ -484,11 +487,53 @@ Properties:
   n is the nth pair.
 - **Port A's type moves Port B's joysticks.** Port B's stick is
   joystick 2 behind a `SINGLE` but joystick 3 behind a `DUAL`. The
-  status shows the result:
-  ```
-  Port A 3BT     Joysticks 1, 2
-  Port B SINGLE  Joystick 3
-  ```
+  status shows the result.
+
+#### Status display
+`*SPITFIRE JOYSTICK`, and the end of `*HELP SPITFIRE JOYSTICK`, show the
+full type names with the allocation on its own line, so the longest name
+fits in 40 columns:
+
+```
+Joystick on
+Port A: Voltmace Delta 3B Twin
+        Joysticks 1, 2
+Port B: Standard single joystick
+        Joystick 3
+```
+
+A Bitstik or Quinkeys show their slots rather than joysticks
+(`Slots 1-4`), and an empty port shows just its name, `No joystick`.
+
+#### `*SPITFIRE ADVAL [ALL]`
+A table of the channels SPItFIRE answers, what each carries, the port it
+comes from, and its value at the moment the command runs. It doubles as a
+quick hardware test. It sits at the top level rather than under
+`JOYSTICK` so that the mouse module's channels can join it later.
+
+```
+>*SPITFIRE ADVAL
+Ch Use               Port Value
+ 0 Fire 1, 2         A    &01
+ 1 Joystick 1 X      A    32768
+ 2 Joystick 1 Y      A    30112
+ 3 Joystick 2 X      A    65520
+ 4 Joystick 2 Y      A    0
+16 Fire 3            B    &00
+17 Joystick 3 X      B    33024
+18 Joystick 3 Y      B    32640
+```
+
+- Values are what OSBYTE &80 returns: 16-bit analogue readings in
+  decimal; fire bits and keypads in hex (`ADVAL(0)` and `(16)` show
+  their low byte).
+- Without `ALL`, only the channels in use are listed. `ALL` lists every
+  channel in the map (0-4, 10, 11, 16-20, 26, 27), with `-` for those
+  unused, and adds `5-9 Passed on (mouse)`.
+- Each type names its channels in its own terms: `Bitstik X`, `Bitstik
+  twist`, `Bitstik button`; `Quinkey 1` to `Quinkey 4`;
+  `Joystick 3 keypad` for a 14B's keypad.
+- The table fits in 40 columns.
 
 #### Buttons and keypads
 One fire bit per joystick, and keypads by joystick number, so both

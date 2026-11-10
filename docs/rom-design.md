@@ -747,8 +747,10 @@ development, so the ROM must cope:
   power-on and always gets the full start-up.
 
 #### Still to decide
-- Bitstik calibration (its axes span only about 0-630) kept in the AVR's
-  EEPROM, and whether the ROM should scale or leave the readings raw.
+- A scale or sensitivity control for all joysticks, perhaps kept in the
+  AVR's EEPROM. Until then readings are raw, including the Bitstik's
+  (its axes span only about 0-630 of 1023), which Bitstik software
+  expects.
 - Whether the AVR's `SINGLE` and `DUAL` need their own firmware types or
   are the 3B Twin reading with a different allocation.
 

@@ -410,6 +410,14 @@ built, in `beeb/rom/src/joystick.asm` and `commands.asm`:
   configuration command.
 - **Cost.** The poll's receive loop is already receive-only (two port
   writes a bit); see [performance.md](performance.md).
+- **ADC emulation.** The hand-over to &2C skips the end of the MOS's own
+  routine, which raises event 3 (ADC conversion complete) every
+  centisecond with X = the current channel (`currentADCChannel`, &024C)
+  and steps that channel down, wrapping to `maximumADCChannel` (&024D,
+  set by `*FX16`). The high byte of `ADVAL(0)` is that channel, and
+  `*FX17` sets it. Every &2C call does the same, busy or not, so
+  software that waits for a conversion behaves as without the ROM.
+  (`*FX16,0` stops the MOS calling &2C at all.)
 
 ### Design: port types and joystick allocation
 This is the design the module is heading towards. It was agreed in
@@ -741,7 +749,6 @@ development, so the ROM must cope:
 #### Still to decide
 - Bitstik calibration (its axes span only about 0-630) kept in the AVR's
   EEPROM, and whether the ROM should scale or leave the readings raw.
-- ADC conversion events and the `ADVAL(0)` channel byte.
 - Whether the AVR's `SINGLE` and `DUAL` need their own firmware types or
   are the 3B Twin reading with a different allocation.
 

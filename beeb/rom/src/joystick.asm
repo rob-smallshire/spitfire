@@ -14,6 +14,10 @@
 ; itself. Y is the offset in page 2 of the five bytes that OSBYTE &80
 ; returns for ADVAL(0)-(2).
 ;
+; Every call ends as the MOS's own routine does: event 3 (ADC conversion
+; complete) for the current channel, which then steps down, so the high
+; byte of ADVAL(0) and *FX16/*FX17 behave as without the ROM.
+;
 ; Every second call (50 Hz) reads the AVR's JOY_ALL burst
 ; (firmware/src/spijoy.cpp): a header, then the five bytes for
 ; ADVAL(0)-(2), ready to store in the MOS's workspace, then whatever else
@@ -69,6 +73,11 @@ wsp = ws + 4                ; Pointer to the private workspace (2 bytes).
                             ; outside a *command.
 
 OSBYTE = &FFF4
+OSEVEN = &FFBF
+
+ADC_CURRENT = &024C         ; MOS 5: the current ADC channel
+ADC_MAXIMUM = &024D         ; MOS 5: the highest channel (*FX16)
+EVENT_ADC   = 3             ; ADC conversion complete
 
 ; ------ Workspace ------
 
@@ -290,6 +299,22 @@ xv = ws + 6                 ; Extended vector table (2 bytes)
     PLA
     STA wsp
 .joy_poll_done
+    ; Do what the MOS's own joystick routine ends with, which the
+    ; hand-over to &2C skips: raise the ADC conversion event for the
+    ; current channel, then step the channel down, wrapping to the
+    ; maximum (*FX16). ADVAL(0) returns the current channel in its high
+    ; byte, and *FX17 sets it, so software that waits for a conversion
+    ; sees one every centisecond.
+    LDX ADC_CURRENT
+    LDY #EVENT_ADC
+    JSR OSEVEN
+    DEC ADC_CURRENT
+    BEQ joy_poll_wrap
+    BPL joy_poll_exit
+.joy_poll_wrap
+    LDA ADC_MAXIMUM
+    STA ADC_CURRENT
+.joy_poll_exit
     PLA
     TAY
     PLA

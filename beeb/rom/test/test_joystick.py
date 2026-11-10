@@ -22,6 +22,9 @@ Checks:
 - the hook answers OSBYTE &80 for its channels with the stored values and
   passes every other call on with A, X and Y unchanged
 - every &2C call is claimed with X, Y and the stack preserved
+- every &2C call, busy or not, raises event 3 (OSEVEN, Y=3) with X = the
+  current ADC channel (&024C), which then steps down, wrapping to the
+  maximum (&024D), as the MOS's own routine does
 
 Run from beeb/rom with `make test`, or:
     uv run --with py65 python test/test_joystick.py
@@ -55,6 +58,9 @@ HOOKED = (3, 4, 10, 11, 16, 17, 18, 19, 20, 26, 27)
 
 osbyte_calls = []
 passed_on = []
+events = []
+OSEVEN = 0xFFBF
+ADC_CURRENT, ADC_MAXIMUM = 0x024C, 0x024D
 def machine():
     mem = ObservableMemory()
     avr = AVR()
@@ -65,6 +71,8 @@ def machine():
     mem[0x0410:0x0414] = [0x20, syms["joy_bytev"] & 0xFF, syms["joy_bytev"] >> 8, 0x00]
     mem[0xFFF4:0xFFF7] = [0x4C, 0x00, 0x05]                 # OSBYTE -> &0500: RTS
     mem[0x0500] = 0x60
+    mem[OSEVEN] = 0x60
+    mem[ADC_CURRENT] = mem[ADC_MAXIMUM] = 2
     mem[OLD_BYTEV] = 0x60
     mem[BYTEV], mem[BYTEV + 1] = OLD_BYTEV & 0xFF, OLD_BYTEV >> 8
     mem[0xF4] = ROM_NUMBER
@@ -79,6 +87,8 @@ def execute(mpu, mem, start, end):
                 mpu.x, mpu.y = XVT & 0xFF, XVT >> 8
         if mpu.pc == OLD_BYTEV:
             passed_on.append((mpu.a, mpu.x, mpu.y))
+        if mpu.pc == OSEVEN:
+            events.append((mpu.x, mpu.y))
         mpu.step()
         if mpu.pc == end:
             break
@@ -227,6 +237,30 @@ for broken in ("unclaimed", "unsigned"):
     service(m2, mem2, 0x27, 0)
     check(mem2[BYTEV] | mem2[BYTEV + 1] << 8 == OLD_BYTEV, f"{broken}: hook installed")
     check((0xBE, 0x80, 0x7F) in osbyte_calls, f"{broken}: joystick not handed over")
+
+# --- ADC conversion events and the channel byte ---
+def adc_run(current, maximum, calls, iorb=None):
+    mem[ADC_CURRENT], mem[ADC_MAXIMUM] = current, maximum
+    events.clear()
+    seen = []
+    for _ in range(calls):
+        poll(mpu, mem, avr, iorb=iorb)
+        seen.append(mem[ADC_CURRENT])
+    return events[:], seen
+
+for current, maximum, raised, after in [
+    (2, 2, [2, 1, 2, 1, 2], [1, 2, 1, 2, 1]),
+    (4, 4, [4, 3, 2, 1, 4, 3], [3, 2, 1, 4, 3, 2]),
+    (4, 2, [4, 3, 2, 1, 2], [3, 2, 1, 2, 1]),       # *FX17,4 with *FX16,2
+    (1, 1, [1, 1, 1], [1, 1, 1]),
+    (0, 2, [0, 2, 1], [2, 1, 2]),
+]:
+    ev, seen = adc_run(current, maximum, len(raised))
+    check(ev == [(c, 3) for c in raised], f"ADC {current}/{maximum}: events {ev}")
+    check(seen == after, f"ADC {current}/{maximum}: channel {seen}, expected {after}")
+ev, seen = adc_run(2, 2, 4, iorb=(Y7 << 2) & ~(4 << 2))   # Busy: still raised
+check(ev == [(2, 3), (1, 3), (2, 3), (1, 3)], f"ADC while busy: {ev}")
+mem[IORB] = Y7 << 2
 
 # --- Other service calls are left alone ---
 for call in (0x01, 0x12, 0x28):

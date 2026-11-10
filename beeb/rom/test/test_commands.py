@@ -42,7 +42,7 @@ class Machine:
         self.mpu = MPU(memory=mem)
         mem[0x8000:0x8000 + len(rom)] = rom
         mem[0x0400:0x0404] = [0x20, 0x03, 0x80, 0x00]      # JSR &8003
-        for v in (OSASCI, OSNEWL, OSBYTE, MOS_BYTEV):
+        for v in (OSASCI, OSNEWL, OSBYTE, MOS_BYTEV, 0xFFBF):
             mem[v] = 0x60                                   # RTS; trapped below
         mem[0x020A], mem[0x020B] = MOS_BYTEV & 0xFF, MOS_BYTEV >> 8
         mem[0xF4] = ROM_NUMBER

@@ -381,13 +381,13 @@ up by `*CONFIGURE` options and the joystick byte (`*FX190`, OSBYTE &BE).
 SPItFIRE takes over by setting bit 7 of the joystick byte at every reset;
 the MOS then hands its whole joystick routine to the SPItFIRE ROM (service
 call &2C) instead of running its own. What follows is from the MOS 5.00
-code; the parts marked *untested* have not yet been tried on a Compact.
+code, and the joystick-as-keys behaviour has been checked on a Compact.
 
 | MOS option | With SPItFIRE |
 |---|---|
 | `*CONFIGURE PROPORTIONAL`, `SWITCHED`, `STICK <n>` | **No effect.** They configure how the MOS turns digital switches into analogue values, code that is skipped while SPItFIRE has the joystick. `*STATUS` says so. They stay in the CMOS settings and apply again if SPItFIRE is turned off |
 | `*FX190` (OSBYTE &BE), the joystick byte | Bit 7 is SPItFIRE's on/off (`*SPITFIRE JOYSTICK ON\|OFF`). **Writing the whole byte**, as `*FX190,<n>` does, clears bit 7 unless n includes it, which turns SPItFIRE off (below). To change other bits, keep bit 7 with a mask: OSBYTE &BE sets the byte to (old AND Y) EOR X, so `*FX190,64,191` sets bit 6 alone |
-| `*FX190,64` (bit 6): the joystick types cursor keys and COPY | **Works, from joystick 1** (*untested*). This part of the MOS routine runs before the hand-over, from `ADVAL(0)`'s switch byte, which SPItFIRE fills: joystick 1's directions type the cursor keys, and either fire bit (joystick 1 or 2) types COPY, with the keyboard's auto-repeat. Use it with bit 7 kept: `*FX190,64,191` |
+| `*FX190,64` (bit 6): the joystick types cursor keys and COPY | **Works, from joystick 1.** This part of the MOS routine runs before the hand-over, from `ADVAL(0)`'s switch byte, which SPItFIRE fills: joystick 1's directions type the cursor keys, and either fire bit (joystick 1 or 2) types COPY, with the keyboard's auto-repeat. Use it with bit 7 kept: `*FX190,64,191` |
 | `*FX4,3`: the cursor keys and COPY act as a joystick | **No effect.** The MOS reads these keys only in the part of its routine that is skipped. A program that wants keyboard control alongside SPItFIRE must read the keys itself |
 | `*FX16,<n>` (number of ADC channels) | `*FX16,0` stops all joystick updates: the MOS then never calls SPItFIRE. Any other value sets how far the high byte of `ADVAL(0)` counts |
 | `*FX17,<n>` (start a conversion) | Sets the high byte of `ADVAL(0)`, as without SPItFIRE |

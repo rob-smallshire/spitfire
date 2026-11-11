@@ -276,6 +276,8 @@ T_QUINKEY = 7
     BEQ adval_row_byte
     CMP #K_KEYS
     BEQ adval_row_word
+    CMP #K_SWBYTES
+    BEQ adval_row_word
     JSR print_dec16
     JMP OSNEWL
 .adval_row_byte
@@ -302,6 +304,8 @@ T_QUINKEY = 7
     BEQ print_use_fire
     CMP #K_KEYS
     BEQ print_use_keys
+    CMP #K_SWBYTES
+    BEQ print_use_switches
     STA dport               ; K_X or K_Y (0 or 1); port is printed later
     LDA dtype               ; so keep the axis in its place for now
     CMP #T_BITSTIK
@@ -350,9 +354,14 @@ T_QUINKEY = 7
     JSR print_inline
     EQUS " keypad", 0
     RTS
+.print_use_switches
+    JSR print_inline
+    EQUS "Switches ", 0
+    JMP print_use_pair
 .print_use_fire
     JSR print_inline
     EQUS "Fire ", 0
+.print_use_pair             ; The pair's joysticks: "1, 2" or "1"
     LDX row
     LDA adval_slots, X
     PHA
@@ -1058,15 +1067,16 @@ K_X        = 0
 K_Y        = 1
 K_SWITCHES = 2
 K_KEYS     = 3
+K_SWBYTES  = 4              ; A pair's switch bytes, one each
 .adval_rows
-    EQUB 0, 1, 2, 3, 4, 10, 11, 16, 17, 18, 19, 20, 26, 27
+    EQUB 0, 1, 2, 3, 4, 10, 11, 12, 16, 17, 18, 19, 20, 26, 27, 28
 .adval_rows_end
 .adval_kinds
-    EQUB K_SWITCHES, K_X, K_Y, K_X, K_Y, K_KEYS, K_KEYS
-    EQUB K_SWITCHES, K_X, K_Y, K_X, K_Y, K_KEYS, K_KEYS
+    EQUB K_SWITCHES, K_X, K_Y, K_X, K_Y, K_KEYS, K_KEYS, K_SWBYTES
+    EQUB K_SWITCHES, K_X, K_Y, K_X, K_Y, K_KEYS, K_KEYS, K_SWBYTES
 .adval_slots
-    EQUB 0, 0, 0, 1, 1, 0, 1
-    EQUB 2, 2, 2, 3, 3, 2, 3
+    EQUB 0, 0, 0, 1, 1, 0, 1, 0
+    EQUB 2, 2, 2, 3, 3, 2, 3, 2
 
 .bitstik_uses               ; By 2j + axis, offsets into bitstik_x
     EQUB bitstik_x - bitstik_x, bitstik_y - bitstik_x

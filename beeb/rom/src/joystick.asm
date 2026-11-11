@@ -6,7 +6,8 @@
 ; Each port has a type, saved in the AVR's EEPROM. The AVR allocates the
 ; ports' joysticks to ADVAL slot pairs, Port A's first: joysticks 1-4 are
 ; ADVAL(1)/(2), (3)/(4), (17)/(18) and (19)/(20), with fire bits in
-; ADVAL(0) and (16) and keypads in ADVAL(10), (11), (26) and (27).
+; ADVAL(0) and (16), each joystick's switch byte (fire and directions) in
+; ADVAL(12) and (28), and keypads in ADVAL(10), (11), (26) and (27).
 ;
 ; On reset (service &27) the module sets bit 7 of the MOS's joystick
 ; byte (*FX190,128,127), so every centisecond the MOS hands its whole
@@ -19,10 +20,12 @@
 ; byte of ADVAL(0) and *FX16/*FX17 behave as without the ROM.
 ;
 ; Every second call (50 Hz) reads the AVR's JOY_ALL burst
-; (firmware/src/spijoy.cpp): a header, then the five bytes for
-; ADVAL(0)-(2), ready to store in the MOS's workspace, then whatever else
-; is allocated. That goes to this ROM's private workspace, where a BYTEV
-; hook answers OSBYTE &80 for channels 3, 4, 10, 11, 16-20, 26 and 27.
+; (firmware/src/spijoy.cpp): a header, then a record for each allocated
+; joystick (its switch byte, X and Y), then the keypads. Joystick 1's
+; record is ADVAL(0)-(2), stored in the MOS's workspace once joystick 2's
+; fire bit has been added to ADVAL(0); everything goes to this ROM's
+; private workspace, where a BYTEV hook answers OSBYTE &80 for channels
+; 3, 4, 10-12, 16-20 and 26-28.
 ; Channels that nothing is allocated to read 0. Every other OSBYTE, and
 ; every other channel, goes on to the previous BYTEV handler.
 ;
@@ -61,12 +64,14 @@ XV_BYTEV  = 3 * 5           ; BYTEV's entry in the extended vector table
 WS_SIG    = 0               ; "SF" and the ROM number: the page is ours
 WS_N      = 3               ; Joysticks allocated (0-4)
 WS_K      = 4               ; Keypad mask: bit j-1 for joystick j
-WS_J2     = 5               ; ADVAL(3), (4), low byte first
-WS_SW16   = 9               ; ADVAL(16): fire bits for joysticks 3 and 4
-WS_J3     = 10              ; ADVAL(17), (18)
-WS_J4     = 14              ; ADVAL(19), (20)
-WS_KEYS   = 18              ; Keypads of joysticks 1-4, 2 bytes each
-WS_OLD_BYTEV = 26           ; The BYTEV handler to pass other calls to
+WS_SW     = 5               ; Switch bytes of joysticks 1-4: ADVAL(12), (28)
+WS_J2     = 9               ; ADVAL(3), (4), low byte first
+WS_SW16   = 13              ; ADVAL(16): fire bits for joysticks 3 and 4,
+                            ; and joystick 3's directions; high byte 0
+WS_J3     = 15              ; ADVAL(17), (18)
+WS_J4     = 19              ; ADVAL(19), (20)
+WS_KEYS   = 23              ; Keypads of joysticks 1-4, 2 bytes each
+WS_OLD_BYTEV = 31           ; The BYTEV handler to pass other calls to
 
 wsp = ws + 4                ; Pointer to the private workspace (2 bytes).
                             ; Saved and restored wherever it is used
@@ -353,6 +358,10 @@ xv = ws + 6                 ; Extended vector table (2 bytes)
 ; joy_bus_take), Y = ADVAL workspace offset, wsp = private workspace or
 ; wsp+1 = 0. Nothing is stored if the header is wrong: no AVR answered,
 ; or not this firmware. Corrupts Y.
+;
+; A switch byte has the joystick's fire button in b0 and its directions
+; in b4-7. ADVAL(0) and (16) are the odd joystick's switch byte with the
+; even joystick's fire button added in b1.
 .joy_read
     LDA #CMD_JOY_ALL
     JSR joy_send
@@ -367,14 +376,21 @@ xv = ws + 6                 ; Extended vector table (2 bytes)
     BCC joy_read_header_k
 .joy_read_exit
     RTS
+.joy_read_drop              ; Switch bytes of joysticks 2 and 1, then k
+    PLA
+    PLA
+.joy_read_bad
+    PLA
+    RTS
 .joy_read_header_k
     JSR joy_receive         ; Header: &50 | k
     PHA
     AND #&F0
     CMP #HEADER_K
     BNE joy_read_bad
-    JSR joy_receive
-    STA &0200, Y            ; Switches
+    JSR joy_receive         ; Joystick 1, always sent
+    STA &0200, Y            ; Switch byte
+    PHA
     JSR joy_receive
     STA &0201, Y            ; ADVAL(1)
     JSR joy_receive
@@ -383,24 +399,42 @@ xv = ws + 6                 ; Extended vector table (2 bytes)
     STA &0203, Y            ; ADVAL(2)
     JSR joy_receive
     STA &0204, Y
+    LDA JOY_SHIFT, Y
+    AND #&0F
+    CMP #2
+    LDA #0                  ; No joystick 2: its switch byte is 0
+    BCC joy_read_sw2
+    JSR joy_receive         ; Joystick 2's switch byte
+.joy_read_sw2
+    PHA
+    AND #1                  ; Its fire button into ADVAL(0) b1
+    ASL A
+    ORA &0200, Y
+    STA &0200, Y
     LDA wsp+1
-    BEQ joy_read_bad        ; No workspace: ADVAL(0)-(2) only
+    BEQ joy_read_drop       ; No workspace: ADVAL(0)-(2) only
 
-    LDA JOY_SHIFT, Y        ; Record n and k
+    LDA JOY_SHIFT, Y        ; Record n
     AND #&0F
     LDY #WS_N
     STA (wsp), Y
-    PLA
-    AND #&0F
-    INY
-    STA (wsp), Y
-    LDA #0                  ; Clear everything after them
+    LDA #0                  ; Clear everything after k
     LDY #WS_OLD_BYTEV - 1
 .joy_read_clear
     STA (wsp), Y
     DEY
-    CPY #WS_J2
+    CPY #WS_SW
     BCS joy_read_clear
+    LDY #WS_SW + 1          ; Switch bytes of joysticks 2 and 1
+    PLA
+    STA (wsp), Y
+    DEY
+    PLA
+    STA (wsp), Y
+    PLA                     ; k
+    AND #&0F
+    LDY #WS_K
+    STA (wsp), Y
 
     LDY #WS_N               ; Joysticks 2-4, as many as are allocated
     LDA (wsp), Y
@@ -413,11 +447,23 @@ xv = ws + 6                 ; Extended vector table (2 bytes)
     CMP #3
     BCC joy_read_keys
     PHA
-    JSR joy_store1          ; ADVAL(16)
+    LDY #WS_SW + 2
+    JSR joy_store1          ; Joystick 3's switch byte
+    LDY #WS_SW16
+    STA (wsp), Y            ; ADVAL(16), until joystick 4's fire is added
+    LDY #WS_J3
     JSR joy_store4          ; ADVAL(17), (18)
     PLA
     CMP #4
     BCC joy_read_keys
+    LDY #WS_SW + 3
+    JSR joy_store1          ; Joystick 4's switch byte
+    AND #1
+    ASL A
+    LDY #WS_SW16
+    ORA (wsp), Y
+    STA (wsp), Y
+    LDY #WS_J4
     JSR joy_store4          ; ADVAL(19), (20)
 
 .joy_read_keys
@@ -438,10 +484,6 @@ xv = ws + 6                 ; Extended vector table (2 bytes)
 .joy_read_key_next
     PLA
     BNE joy_read_key
-    RTS
-
-.joy_read_bad
-    PLA
 .joy_read_done
     RTS
 
@@ -491,10 +533,6 @@ xv = ws + 6                 ; Extended vector table (2 bytes)
     PHA                     ; Low byte
     INY
     LDA (wsp), Y
-    CPX #16
-    BNE joy_bytev_high
-    LDA #0                  ; ADVAL(16) is a single byte
-.joy_bytev_high
     TAY
     PLA
     TAX
@@ -565,12 +603,14 @@ xv = ws + 6                 ; Extended vector table (2 bytes)
     EQUB WS_J2, WS_J2 + 2               ; 3, 4
     EQUB &FF, &FF, &FF, &FF, &FF        ; 5-9: mouse drivers
     EQUB WS_KEYS, WS_KEYS + 2           ; 10, 11
-    EQUB &FF, &FF, &FF, &FF             ; 12-15
+    EQUB WS_SW                          ; 12
+    EQUB &FF, &FF, &FF                  ; 13-15
     EQUB WS_SW16                        ; 16
     EQUB WS_J3, WS_J3 + 2               ; 17, 18
     EQUB WS_J4, WS_J4 + 2               ; 19, 20
     EQUB &FF, &FF, &FF, &FF, &FF        ; 21-25
     EQUB WS_KEYS + 4, WS_KEYS + 6       ; 26, 27
+    EQUB WS_SW + 2                      ; 28
 .joy_channels_end
 
 ; ------ SPI ------

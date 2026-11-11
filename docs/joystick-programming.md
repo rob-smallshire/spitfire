@@ -16,6 +16,7 @@ documented later.
 | Detect SPItFIRE | OSWORD &3F, byte 0 becomes `&53` | The same |
 | Read joystick *j*'s X, Y | `ADVAL(x)`, `ADVAL(x+1)`, with x = 1, 3, 17, 19 for j = 1-4 | OSBYTE &80, X = channel; result in X (low), Y (high) |
 | Read fire buttons | `ADVAL(0) AND 3` (joysticks 1, 2), `ADVAL(16) AND 3` (3, 4) | OSBYTE &80, X = 0 or 16; bits 0 and 1 of X |
+| Read every joystick digitally (directions and fire) | `ADVAL(12)` (joysticks 1, 2), `ADVAL(28)` (3, 4): a switch byte each, low byte first | OSBYTE &80, X = 12 or 28; X = odd joystick, Y = even |
 | Read a 14B keypad | `ADVAL(10)`, `(11)`, `(26)`, `(27)` for joysticks 1-4 | OSBYTE &80, X = 10, 11, 26 or 27 |
 
 Joysticks 1 and 2 behave exactly as on a BBC Micro with an analogue port,
@@ -84,16 +85,16 @@ At most four joysticks can be allocated.
 
 ### The channel map
 
-Each joystick has an X and a Y channel, a fire bit and, for a 14B, a
-keypad channel. Joysticks 3 and 4 repeat the layout of joysticks 1 and 2
-sixteen channels up.
+Each joystick has an X and a Y channel, a fire bit, a switch byte (fire
+and directions) and, for a 14B, a keypad channel. Joysticks 3 and 4
+repeat the layout of joysticks 1 and 2 sixteen channels up.
 
-| Joystick | X | Y | Fire | Directions | Keypad |
+| Joystick | X | Y | Fire | Switch byte | Keypad |
 |---|---|---|---|---|---|
-| 1 | `ADVAL(1)` | `ADVAL(2)` | `ADVAL(0)` bit 0 | `ADVAL(0)` bits 4-7 | `ADVAL(10)` |
-| 2 | `ADVAL(3)` | `ADVAL(4)` | `ADVAL(0)` bit 1 | | `ADVAL(11)` |
-| 3 | `ADVAL(17)` | `ADVAL(18)` | `ADVAL(16)` bit 0 | `ADVAL(16)` bits 4-7 | `ADVAL(26)` |
-| 4 | `ADVAL(19)` | `ADVAL(20)` | `ADVAL(16)` bit 1 | | `ADVAL(27)` |
+| 1 | `ADVAL(1)` | `ADVAL(2)` | `ADVAL(0)` bit 0 | `ADVAL(12)` low byte | `ADVAL(10)` |
+| 2 | `ADVAL(3)` | `ADVAL(4)` | `ADVAL(0)` bit 1 | `ADVAL(12)` high byte | `ADVAL(11)` |
+| 3 | `ADVAL(17)` | `ADVAL(18)` | `ADVAL(16)` bit 0 | `ADVAL(28)` low byte | `ADVAL(26)` |
+| 4 | `ADVAL(19)` | `ADVAL(20)` | `ADVAL(16)` bit 1 | `ADVAL(28)` high byte | `ADVAL(27)` |
 
 - **Unallocated channels read 0**, as do fire bits and keypads that nothing
   is allocated to. A Master Compact with no joystick also reads 0 for
@@ -210,14 +211,43 @@ and 3 and 4, in their low byte. 1 means pressed.
 | 7 | Joystick 1 right | Joystick 3 right |
 
 Bits 2 and 3 are 0. The direction bits are set when the stick is more
-than a quarter of full scale from the centre; they suit programs that
-want digital directions. They are where the Compact's own digital joystick
-reports its directions, so software written for that works with a
-SPItFIRE joystick 1.
+than a quarter of full scale from the centre. They are where the
+Compact's own digital joystick reports its directions, so software
+written for that works with a SPItFIRE joystick 1. For directions from
+every joystick, use the switch bytes (below).
 
 The **high byte of `ADVAL(0)`** is not a button: as on every BBC, it is the
 analogue-to-digital converter's current channel. Mask it off with
 `AND 255` (or use the X register only). The high byte of `ADVAL(16)` is 0.
+
+### Switch bytes: every joystick as a digital joystick
+
+`ADVAL(12)` and `ADVAL(28)` give each joystick's fire button and
+directions in one byte, its **switch byte**:
+
+| Channel | Low byte | High byte |
+|---|---|---|
+| `ADVAL(12)` | Joystick 1 | Joystick 2 |
+| `ADVAL(28)` | Joystick 3 | Joystick 4 |
+
+| Bit | Value | Meaning |
+|---|---|---|
+| 0 | 1 | Fire |
+| 4 | 16 | Left |
+| 5 | 32 | Down |
+| 6 | 64 | Up |
+| 7 | 128 | Right |
+
+Bits 1-3 are 0. This is the layout of `ADVAL(0)`'s low byte for joystick
+1, so code that decodes joystick 1 from `ADVAL(0)` decodes any switch
+byte unchanged. A direction is set when the stick is more than a quarter
+of full scale from the centre, the same threshold as `ADVAL(0)`; two
+adjacent directions together are a diagonal. A joystick that is not
+allocated has a switch byte of 0.
+
+Two calls read four joysticks: a game that treats its players as
+eight-way digital joysticks needs nothing else, and every program that
+uses the switch bytes agrees on what counts as "up".
 
 ### Delta 3B Twin (`3BT`) and Dual (`DUAL`)
 
@@ -277,11 +307,33 @@ channel.
 1020 DEF FNfire(J%)=(ADVAL(-16*(J%>2)) AND (2+(J% MOD 2=1)))<>0
 1030 DEF FNkeys(J%)=ADVAL(9+J%-14*(J%>2))
 1040 DEF FNkey(J%,K%)=(FNkeys(J%) AND 2^K%)<>0
+1050 DEF FNsw(J%)=ADVAL(12-16*(J%>2)) DIV (1-255*(J% MOD 2=0)) AND 255
 ```
 
 In BBC BASIC a true comparison is -1, so `-12*(J%>2)` adds 12 for
 joysticks 3 and 4, and `2+(J% MOD 2=1)` is 1 for odd joysticks and 2 for
-even ones. `FNfire` and `FNkey` return TRUE or FALSE.
+even ones. `FNfire` and `FNkey` return TRUE or FALSE. `FNsw` returns the
+switch byte: the low byte of `ADVAL(12)` or `(28)` for odd joysticks, the
+high byte for even ones.
+
+### BASIC: four digital joysticks
+
+```
+10 REPEAT
+20   S%=ADVAL(12):T%=ADVAL(28)
+30   PRINT TAB(0,0);
+40   PROCsw(1,S% AND 255):PROCsw(2,S% DIV 256)
+50   PROCsw(3,T% AND 255):PROCsw(4,T% DIV 256)
+60 UNTIL FALSE
+70 DEF PROCsw(J%,W%)
+80 PRINT "Joystick ";J%;" ";
+90 IF W% AND 16 PRINT "L"; ELSE PRINT " ";
+100 IF W% AND 128 PRINT "R"; ELSE PRINT " ";
+110 IF W% AND 64 PRINT "U"; ELSE PRINT " ";
+120 IF W% AND 32 PRINT "D"; ELSE PRINT " ";
+130 IF W% AND 1 PRINT " Fire" ELSE PRINT "     "
+140 ENDPROC
+```
 
 ### BASIC: show every joystick
 
@@ -344,6 +396,26 @@ OSBYTE = &FFF4
     STY keys+1
 ```
 
+### 6502: four digital joysticks
+
+```
+; The switch bytes of joysticks 1-4 into sw (4 bytes)
+    LDA #&80
+    LDX #12
+    JSR OSBYTE
+    STX sw                  ; Joystick 1
+    STY sw+1                ; Joystick 2
+    LDA #&80
+    LDX #28
+    JSR OSBYTE
+    STX sw+2                ; Joystick 3
+    STY sw+3                ; Joystick 4
+
+; Then for joystick j (index 0-3 in X), the same code for every player
+    LDA sw, X
+    AND #&10                ; Left; &20 down, &40 up, &80 right, 1 fire
+```
+
 The channel for joysticks 3 and 4 is the joystick 1 and 2 channel with
 bit 4 set (`ORA #16`): X 17, Y 18, fire 16, keypad 26 for joystick 3.
 
@@ -355,6 +427,7 @@ bit 4 set (`ORA #16`): X 17, Y 18, fire 16, keypad 26 for joystick 3.
 .y_channel      EQUB 2, 4, 18, 20
 .fire_channel   EQUB 0, 0, 16, 16
 .fire_mask      EQUB 1, 2, 1, 2
+.switch_channel EQUB 12, 12, 28, 28     ; Low byte for 1 and 3, high for 2 and 4
 .keypad_channel EQUB 10, 11, 26, 27
 ```
 
@@ -402,7 +475,7 @@ ROM takes it again. While off:
 - `ADVAL(0)`-`(2)` come from the MOS's own routine, which reads the
   joystick port's lines. With SPItFIRE connected those lines are its SPI
   bus, so the values are meaningless.
-- The other channels (3, 4, 10, 11, 16-20, 26, 27) keep their last values:
+- The other channels (3, 4, 10-12, 16-20, 26-28) keep their last values:
   SPItFIRE still answers them but no longer updates them.
 - OSWORD &3F still describes the configured joysticks.
 

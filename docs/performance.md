@@ -24,8 +24,8 @@ cycles a byte with the call and the store.
 | SPIPERF, bit-bang loop | 4,147 bytes/s on Rev 1, 4,139 on Rev 2 |
 | SPITPERF, turbo loop | 7,388 bytes/s on Rev 1, 7,371 on Rev 2 |
 
-The JOY_ALL burst ([protocol.md](protocol.md)) is up to 20 bytes: about
-8-9% of the CPU at 50 Hz with the receive-only loop, 4-5% for two
+The JOY_ALL burst ([protocol.md](protocol.md)) is up to 22 bytes: about
+9-10% of the CPU at 50 Hz with the receive-only loop, about 5% for two
 joysticks.
 
 ## 1. A receive-only loop (done)

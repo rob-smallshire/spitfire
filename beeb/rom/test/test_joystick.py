@@ -54,7 +54,8 @@ PAGE = 0xDB                     # The HAZEL page &22 hands us
 XVT = 0x0D9F                    # Extended vector table (OSBYTE &A8)
 BYTEV = 0x020A
 OLD_BYTEV = 0x0600              # A stand-in for the MOS's handler
-HOOKED = (3, 4, 10, 11, 16, 17, 18, 19, 20, 26, 27)
+HOOKED = (3, 4, 10, 11, 12, 16, 17, 18, 19, 20, 26, 27, 28)
+OLD = 31                        # WS_OLD_BYTEV: the old BYTEV in the page
 
 osbyte_calls = []
 passed_on = []
@@ -156,7 +157,7 @@ check(mem[0x0DF0 + ROM_NUMBER] == PAGE, f"&0DF0+ROM = {mem[0x0DF0 + ROM_NUMBER]:
 check(bytes(mem[PAGE << 8:(PAGE << 8) + 3]) == b"SF" + bytes([ROM_NUMBER]), "page not marked")
 
 # --- Reset ---
-mem[(PAGE << 8) + 3:(PAGE << 8) + 26] = [0x77] * 23
+mem[(PAGE << 8) + 3:(PAGE << 8) + OLD] = [0x77] * (OLD - 3)
 osbyte_calls.clear()
 a, x, y = service(mpu, mem, 0x27, 0x42)
 check((a, x, y) == (0x27, ROM_NUMBER, 0x42), f"&27: returned A={a:02X} X={x:02X} Y={y:02X}")
@@ -164,10 +165,10 @@ check((0xBE, 0x80, 0x7F) in osbyte_calls, f"&27: OSBYTE calls {osbyte_calls}")
 check(mem[BYTEV] | mem[BYTEV + 1] << 8 == 0xFF0F, "BYTEV is not the extended entry")
 check(list(mem[XVT + 15:XVT + 18]) == [syms["joy_bytev"] & 0xFF, syms["joy_bytev"] >> 8, ROM_NUMBER],
       "extended vector not set")
-check(mem[(PAGE << 8) + 26] | mem[(PAGE << 8) + 27] << 8 == OLD_BYTEV, "old BYTEV not kept")
-check(list(mem[(PAGE << 8) + 3:(PAGE << 8) + 26]) == [0] * 23, "values not cleared")
+check(mem[(PAGE << 8) + OLD] | mem[(PAGE << 8) + OLD + 1] << 8 == OLD_BYTEV, "old BYTEV not kept")
+check(list(mem[(PAGE << 8) + 3:(PAGE << 8) + OLD]) == [0] * (OLD - 3), "values not cleared")
 service(mpu, mem, 0x27, 0x42)          # Again: the hook must not chain to itself
-check(mem[(PAGE << 8) + 26] | mem[(PAGE << 8) + 27] << 8 == OLD_BYTEV, "second &27 chained to itself")
+check(mem[(PAGE << 8) + OLD] | mem[(PAGE << 8) + OLD + 1] << 8 == OLD_BYTEV, "second &27 chained to itself")
 
 # --- Values arrive, at 50 Hz, for every pair of port types ---
 seen = 0
@@ -193,7 +194,7 @@ check(not avr.y0, "Y0 was driven")
 
 # --- The hook passes everything else on ---
 for a0, x0, y0 in [(0x80, 0, 1), (0x80, 1, 2), (0x80, 2, 3), (0x80, 5, 4), (0x80, 9, 5),
-                   (0x80, 12, 6), (0x80, 28, 7), (0x80, 0xFF, 8), (0x80, 0xF6, 9),
+                   (0x80, 13, 6), (0x80, 29, 7), (0x80, 0xFF, 8), (0x80, 0xF6, 9),
                    (0x81, 3, 10), (0x7E, 16, 11), (0x00, 0, 0)]:
     passed_on.clear()
     bytev(mpu, mem, a0, x0, y0)

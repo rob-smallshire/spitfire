@@ -387,12 +387,15 @@ The design below ("Design: port types and joystick allocation") is
 built, in `beeb/rom/src/joystick.asm` and `commands.asm`:
 
 - **Every second call (50 Hz, the field rate)** reads the AVR's JOY_ALL
-  burst ([protocol.md](protocol.md)). The five bytes for `ADVAL(0)`-`(2)`
-  go straight into the MOS's workspace; the rest go to the private HAZEL
-  page, cleared first so that unallocated channels read 0. The AVR does
-  the scaling, allocation and direction bits; the 6502 only copies.
-- **The BYTEV hook** answers OSBYTE &80 for channels 3, 4, 10, 11, 16-20,
-  26 and 27 from the page, reading each 16-bit value with interrupts
+  burst ([protocol.md](protocol.md)): a record (switch byte, X, Y) for
+  each joystick, then the keypads. Joystick 1's record goes into the
+  MOS's workspace as `ADVAL(0)`-`(2)`, with joystick 2's fire added in
+  bit 1 of `ADVAL(0)`; the rest go to the private HAZEL page, cleared
+  first so that unallocated channels read 0. The AVR does the scaling,
+  allocation and direction bits; the 6502 copies, and combines fire bits
+  into `ADVAL(0)` and `(16)`.
+- **The BYTEV hook** answers OSBYTE &80 for channels 3, 4, 10-12, 16-20
+  and 26-28 from the page, reading each 16-bit value with interrupts
   off, and passes everything else to the previous handler (kept in the
   page) by pushing its address and returning to it.
 - **Bus sharing.** The poll runs in the interrupt, so it can arrive
@@ -531,16 +534,18 @@ Ch Use               Port Value
  2 Joystick 1 Y      A    30112
  3 Joystick 2 X      A    65520
  4 Joystick 2 Y      A    0
+12 Switches 1, 2     A    &8001
 16 Fire 3            B    &00
 17 Joystick 3 X      B    33024
 18 Joystick 3 Y      B    32640
+28 Switches 3        B    &0020
 ```
 
 - Values are what OSBYTE &80 returns: 16-bit analogue readings in
-  decimal; fire bits and keypads in hex (`ADVAL(0)` and `(16)` show
-  their low byte).
+  decimal; fire bits, switch bytes and keypads in hex (`ADVAL(0)` and
+  `(16)` show their low byte).
 - Without `ALL`, only the channels in use are listed. `ALL` lists every
-  channel in the map (0-4, 10, 11, 16-20, 26, 27), with `-` for those
+  channel in the map (0-4, 10-12, 16-20, 26-28), with `-` for those
   unused, and adds `5-9 Passed on (mouse)`.
 - Each type names its channels in its own terms: `Bitstik X`, `Bitstik
   twist`, `Bitstik button`; `Quinkey 1` to `Quinkey 4`;
@@ -551,16 +556,32 @@ Ch Use               Port Value
 One fire bit per joystick, and keypads by joystick number, so both
 follow the allocation:
 
-| Joystick | X, Y | Fire | Keypad |
-|---|---|---|---|
-| 1 | `ADVAL(1)`, `(2)` | `ADVAL(0)` bit 0 | `ADVAL(10)` |
-| 2 | `ADVAL(3)`, `(4)` | `ADVAL(0)` bit 1 | `ADVAL(11)` |
-| 3 | `ADVAL(17)`, `(18)` | `ADVAL(16)` bit 0 | `ADVAL(26)` |
-| 4 | `ADVAL(19)`, `(20)` | `ADVAL(16)` bit 1 | `ADVAL(27)` |
+| Joystick | X, Y | Fire | Switch byte | Keypad |
+|---|---|---|---|---|
+| 1 | `ADVAL(1)`, `(2)` | `ADVAL(0)` bit 0 | `ADVAL(12)` low byte | `ADVAL(10)` |
+| 2 | `ADVAL(3)`, `(4)` | `ADVAL(0)` bit 1 | `ADVAL(12)` high byte | `ADVAL(11)` |
+| 3 | `ADVAL(17)`, `(18)` | `ADVAL(16)` bit 0 | `ADVAL(28)` low byte | `ADVAL(26)` |
+| 4 | `ADVAL(19)`, `(20)` | `ADVAL(16)` bit 1 | `ADVAL(28)` high byte | `ADVAL(27)` |
 
 - **Joysticks 1 and 2** behave as on a BBC, so two-player BBC games work
   unchanged. On the Compact, `ADVAL(0)` bits 4-7 also carry joystick 1's
   directions, so digital-joystick software keeps working.
+- **Switch bytes** give every joystick the same digital view: bit 0 its
+  fire, bits 4-7 its directions (left, down, up, right) in the layout of
+  `ADVAL(0)`'s low byte, bits 1-3 zero. Two calls read four joysticks
+  digitally, with one decoder for all four, and every program gets the
+  firmware's threshold (a quarter of full scale from the centre) rather
+  than its own. These came from Don't Dither!, which treats four
+  joysticks as eight-way digital inputs (GitHub issue #2). We considered
+  and rejected:
+  - an OSWORD &3F call reading everything at once, which would freeze a
+    large block layout duplicating ADVAL, and be clumsy from BASIC;
+  - a summary channel with a nibble per joystick, in a layout unlike
+    `ADVAL(0)`'s, leaving fire elsewhere;
+  - a mode that turns the high bytes of `ADVAL(0)` and `(16)` into
+    joysticks 2 and 4's switch bytes: no fewer calls, and hidden global
+    state that leaks into the next program if a game exits without
+    restoring it.
 - **`SINGLE`, `DUAL`, `3BT`:** each handset's button is its joystick's
   fire bit.
 - **`3BS`:** as wired, two buttons on the first joystick's fire bit and
@@ -587,13 +608,15 @@ follow the allocation:
 | 1-4 | Joysticks 1 and 2 |
 | 5-9 | Mouse. Left to the mouse module, or passed on to the next BYTEV handler. PMFS uses 5-9 (with 9 as its device mode); JGH and AMX use 7-9 |
 | 10, 11 | Keypads of joysticks 1 and 2 |
-| 16 | Fire bits for joysticks 3 and 4 (bits 0, 1) |
+| 12 | Switch bytes of joysticks 1 (low byte) and 2 (high byte) |
+| 16 | Fire bits for joysticks 3 and 4 (bits 0, 1). Bits 4-7: joystick 3's directions. High byte: 0 |
 | 17-20 | Joysticks 3 and 4 |
 | 26, 27 | Keypads of joysticks 3 and 4 |
+| 28 | Switch bytes of joysticks 3 (low byte) and 4 (high byte) |
 
 Setting bit 4 of a channel number moves from joysticks 1 and 2 to 3 and
-4: `ORA #16` in machine code, `ADVAL(16+n)` in BASIC. Channels 12-15,
-21-25 and 28-126 are unused; 127 is a Tube 16-bit GET, and 128 upwards
+4: `ORA #16` in machine code, `ADVAL(16+n)` in BASIC. Channels 13-15,
+21-25 and 29-126 are unused; 127 is a Tube 16-bit GET, and 128 upwards
 are buffers. None of the joystick channels collides with any mouse
 driver's: PMFS passes 0-4 and 10 upwards to the previous BYTEV, so the
 two chain in either order (checked against the PMFS 136 analysis in the
@@ -607,16 +630,15 @@ mouse module.
   the AVR. It stores `ADVAL(0)`-`(2)` in the MOS's workspace, as now. The
   other values go to the ROM's own workspace.
 - **BYTEV:** a hook, installed at each reset through an extended vector,
-  answers OSBYTE &80 for channels 3, 4, 10, 11, 16-20, 26 and 27.
+  answers OSBYTE &80 for channels 3, 4, 10-12, 16-20 and 26-28.
   Everything else, 5-9 included, goes to the previous BYTEV, so it chains
   with other drivers.
 - **No SPI from BYTEV:** values come from the poll's copy. Software that
   reads the keypads once per key per frame, such as a ported Elite, then
   costs only the OSBYTE call.
-- **Burst size:** the AVR sends only what the port types use: the
-  switches, two bytes per allocated channel and two per keypad. At about
-  150 cycles a byte, a full burst of some 22 bytes would take about 10%
-  of the 6502's time, against 3.5% now.
+- **Burst size:** the AVR sends only what the port types use: a 5-byte
+  record per joystick and two bytes per keypad. At about 150 cycles a
+  byte, a full burst of 22 bytes takes about 9-10% of the 6502's time.
 - **The AVR does the allocation.** It knows both port types, so it can
   lay the burst out in slot order, and the ROM stores bytes without
   knowing the rules.

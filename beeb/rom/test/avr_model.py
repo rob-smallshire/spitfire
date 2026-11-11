@@ -60,23 +60,20 @@ class AVR:
         if s["y"] < 256: d |= 0x20
         return d
 
+    @classmethod
+    def switch(cls, s):
+        """A joystick's switch byte: fire in b0, directions in b4-7."""
+        return 0 if s is None else cls.directions(s) | int(s["fire"])
+
     def burst(self):
         sticks = self.sticks()
         n = len(sticks)
         k = sum(1 << i for i, s in enumerate(sticks) if s["keypad"] is not None)
         out = [0xA0 | n, 0x50 | k]
         def value(v): out.extend([adval_value(v) & 0xFF, adval_value(v) >> 8])
-        for pair in (0, 1):
-            first = 2 * pair
-            if first and n <= first: break
-            sw, x, y = 0, 0, 0
-            if first < n:
-                s = sticks[first]
-                sw = self.directions(s) | int(s["fire"]); x, y = s["x"], s["y"]
-            if first + 1 < n and sticks[first + 1]["fire"]: sw |= 2
-            out.append(sw); value(x); value(y)
-            if first + 1 < n:
-                value(sticks[first + 1]["x"]); value(sticks[first + 1]["y"])
+        for i in range(max(n, 1)):                 # J1's record is always sent
+            s = sticks[i] if i < n else None
+            out.append(self.switch(s)); value(s["x"] if s else 0); value(s["y"] if s else 0)
         for s in sticks:
             if s["keypad"] is not None:
                 out.extend([s["keypad"] & 0xFF, s["keypad"] >> 8])
@@ -87,16 +84,16 @@ class AVR:
         bytes, and every hooked channel's 16-bit value (0 if unallocated)."""
         sticks = self.sticks()
         n = len(sticks)
-        def sw(first):
-            if first >= n: return 0
-            v = self.directions(sticks[first]) | int(sticks[first]["fire"])
-            if first + 1 < n and sticks[first + 1]["fire"]: v |= 2
-            return v
+        def sw(i):
+            return self.switch(sticks[i]) if i < n else 0
+        def pair(first):                          # ADVAL(0) and (16): fire bits
+            return sw(first) | (sw(first + 1) & 1) << 1
         def xy(i, axis):
             return adval_value(sticks[i]["xy"[axis]]) if i < n else 0
-        mos = [sw(0), xy(0, 0) & 0xFF, xy(0, 0) >> 8, xy(0, 1) & 0xFF, xy(0, 1) >> 8]
-        ch = {3: xy(1, 0), 4: xy(1, 1), 16: sw(2), 17: xy(2, 0), 18: xy(2, 1),
-              19: xy(3, 0), 20: xy(3, 1)}
+        mos = [pair(0), xy(0, 0) & 0xFF, xy(0, 0) >> 8, xy(0, 1) & 0xFF, xy(0, 1) >> 8]
+        ch = {3: xy(1, 0), 4: xy(1, 1), 12: sw(0) | sw(1) << 8,
+              16: pair(2), 17: xy(2, 0), 18: xy(2, 1), 19: xy(3, 0), 20: xy(3, 1),
+              28: sw(2) | sw(3) << 8}
         for c, i in ((10, 0), (11, 1), (26, 2), (27, 3)):
             ch[c] = sticks[i]["keypad"] if i < n and sticks[i]["keypad"] is not None else 0
         return mos, ch

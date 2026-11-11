@@ -1,7 +1,7 @@
 ; SPItFIRE Joystick Allocation Test
 ; Needs the spijoy firmware. Reads the JOY_ALL burst ten times a second
-; and shows it in MODE 7: the header, the raw bytes in hex, and the ADVAL
-; channels they carry. The A and B keys cycle each port through the
+; and shows it in MODE 7: the header, the raw bytes in hex, and each
+; joystick's record (switch byte, X, Y) and keypad. The A and B keys cycle each port through the
 ; eight port types without saving (JOY_PORT_); S saves the types shown
 ; (CFG_PORT_). Escape puts the saved types back before leaving. See
 ; docs/protocol.md, "Joystick allocation".
@@ -34,7 +34,7 @@ CMD_JOY_CONFIG = &58        ; Saved configuration
 CMD_CFG_PORT   = &D0        ; +port*8+type: set and save
 CMD_JOY_PORT   = &E0        ; +port*8+type: set until reset, not saved
 
-MAX_BURST = 20
+MAX_BURST = 26
 
 ; OS calls
 OSWRCH = &FFEE
@@ -158,8 +158,8 @@ tmp_ptr  = &7C              ; String pointer (2 bytes)
     STA config
     RTS
 
-; Read the burst. Its length follows from the header: 7 bytes, plus 4,
-; 9 or 13 for joysticks 2-4, plus 2 per keypad.
+; Read the burst. Its length follows from the header: 2 bytes, plus 5
+; for each joystick (and for joystick 1 even if n = 0), plus 2 per keypad.
 .read_burst
     JSR select_device
     LDA #CMD_JOY_ALL
@@ -219,7 +219,7 @@ tmp_ptr  = &7C              ; String pointer (2 bytes)
     JMP deselect_device
 
 .len_by_n
-    EQUB 7, 7, 11, 16, 20
+    EQUB 7, 7, 12, 17, 22
 
 ; ------ Display ------
 
@@ -253,63 +253,67 @@ tmp_ptr  = &7C              ; String pointer (2 bytes)
     LDX #LO(txt_len) : LDY #HI(txt_len) : JSR print
     LDA count : JSR print_hex
 
-    ; Raw bytes, ten to a line, on rows 8 and 9
-    LDX #0 : LDY #8 : JSR tab
+    ; Raw bytes, eight to a line, on rows 8-10
+    LDA #8 : STA row
     LDY #2
-.raw_loop
-    CPY count
-    BCS raw_pad
+.raw_line
     STY ptr
-    LDA burst, Y : JSR print_hex
+    LDX #0 : LDY row : JSR tab
+    LDY ptr
+.raw_loop
     LDA #' ' : JSR OSWRCH
+    CPY count
+    BCS raw_blank
+    LDA burst, Y : JSR print_hex
+    JMP raw_next
+.raw_blank
+    LDA #' ' : JSR OSWRCH : JSR OSWRCH
+.raw_next
     LDY ptr
     INY
-    CPY #12
-    BNE raw_loop
     STY ptr
-    LDX #0 : LDY #9 : JSR tab
-    LDY ptr
-    JMP raw_loop
-.raw_pad
-    LDX #12                 ; Clear what is left of the two lines
-    LDA #' '
-.raw_pad_loop
-    JSR OSWRCH : JSR OSWRCH : JSR OSWRCH
-    DEX
-    BNE raw_pad_loop
+    TYA
+    AND #7
+    CMP #2                  ; Eight bytes from 2: 2-9, 10-17, 18-25
+    BNE raw_loop
+    INC row
+    CPY #MAX_BURST
+    BCC raw_line
 
-    ; Decoded channels, rows 11-20
-    LDA #11 : STA row
+    ; Joystick records, rows 12-16
+    LDX #0 : LDY #12 : JSR tab
+    LDX #LO(txt_records) : LDY #HI(txt_records) : JSR print
+    LDA #13 : STA row
     LDA #2 : STA ptr        ; Burst index
-    ; J1: ADVAL(0), (1), (2)
-    LDA #0 : JSR show_switch
-    LDA #1 : JSR show_value
-    LDA #2 : JSR show_value
-    LDA n : CMP #2 : BCC no_j2
-    LDA #3 : JSR show_value
-    LDA #4 : JSR show_value
-    JMP j3
-.no_j2
-    LDA #3 : JSR show_unused
-    LDA #4 : JSR show_unused
-.j3
-    LDA n : CMP #3 : BCC no_j3
-    LDA #16 : JSR show_switch
-    LDA #17 : JSR show_value
-    LDA #18 : JSR show_value
-    JMP j4
-.no_j3
-    LDA #16 : JSR show_unused
-    LDA #17 : JSR show_unused
-    LDA #18 : JSR show_unused
-.j4
-    LDA n : CMP #4 : BCC no_j4
-    LDA #19 : JSR show_value
-    LDA #20 : JSR show_value
-    JMP keypads
-.no_j4
-    LDA #19 : JSR show_unused
-    LDA #20 : JSR show_unused
+    LDA #0 : STA tmp        ; Joystick index
+.rec_loop
+    LDX #2 : LDY row : JSR tab
+    LDA #'J' : JSR OSWRCH
+    LDA tmp : CLC : ADC #1 : JSR print_digit
+    LDX #6 : LDY row : JSR tab
+    LDA tmp
+    BEQ rec_show            ; Joystick 1's record is always sent
+    CMP n
+    BCS rec_unused
+.rec_show
+    LDA #'&' : JSR OSWRCH
+    LDY ptr
+    LDA burst, Y : JSR print_hex
+    INC ptr
+    LDX #14 : LDY row : JSR tab
+    JSR show_word
+    LDX #22 : LDY row : JSR tab
+    JSR show_word
+    JMP rec_next
+.rec_unused
+    LDX #LO(txt_unused) : LDY #HI(txt_unused) : JSR print
+.rec_next
+    INC row
+    INC tmp
+    LDA tmp
+    CMP #4
+    BNE rec_loop
+
 .keypads
     ; Keypads, in joystick order, on row 22
     LDX #0 : LDY #22 : JSR tab
@@ -348,43 +352,14 @@ tmp_ptr  = &7C              ; String pointer (2 bytes)
     BNE key_pad
     RTS
 
-; "ADVAL(c)" at the start of the row, then a tab to the value column
-.row_label
-    PHA
-    LDX #2 : LDY row : JSR tab
-    LDX #LO(txt_adval) : LDY #HI(txt_adval) : JSR print
-    PLA
-    JSR print_dec2
-    LDA #')' : JSR OSWRCH
-    LDX #14 : LDY row : JMP tab
-
-; Channel A: a switch byte at the burst pointer
-.show_switch
-    JSR row_label
-    LDA #'&' : JSR OSWRCH
-    LDY ptr
-    LDA burst, Y : JSR print_hex
-    INC ptr
-    LDX #LO(txt_blank) : LDY #HI(txt_blank) : JSR print
-    INC row
-    RTS
-
-; Channel A: a 16-bit value at the burst pointer
-.show_value
-    JSR row_label
+; A 16-bit value at the burst pointer, as &hhll
+.show_word
     LDA #'&' : JSR OSWRCH
     LDY ptr
     LDA burst+1, Y : JSR print_hex
     LDY ptr
     LDA burst, Y : JSR print_hex
     INC ptr : INC ptr
-    INC row
-    RTS
-
-.show_unused
-    JSR row_label
-    LDX #LO(txt_unused) : LDY #HI(txt_unused) : JSR print
-    INC row
     RTS
 
 ; Print port type A (0-7) by name, padded to 15 characters
@@ -416,27 +391,6 @@ tmp_ptr  = &7C              ; String pointer (2 bytes)
     CLC
     ADC #'0'
     JMP OSWRCH
-
-; Print A (0-99) as two characters, space-padded
-.print_dec2
-    LDX #0
-.dec_tens
-    CMP #10
-    BCC dec_units
-    SBC #10
-    INX
-    BNE dec_tens
-.dec_units
-    PHA
-    TXA
-    BEQ dec_space
-    JSR print_digit
-    JMP dec_last
-.dec_space
-    LDA #' ' : JSR OSWRCH
-.dec_last
-    PLA
-    JMP print_digit
 
 ; Move the cursor to X, Y
 .tab
@@ -577,9 +531,8 @@ tmp_ptr  = &7C              ; String pointer (2 bytes)
 .txt_n       EQUS "  n=", 0
 .txt_k       EQUS " k=", 0
 .txt_len     EQUS " len &", 0
-.txt_adval   EQUS "ADVAL(", 0
-.txt_blank   EQUS "  ", 0
-.txt_unused  EQUS "-    ", 0
+.txt_records EQUS "      Switch  X       Y", 0
+.txt_unused  EQUS "-                    ", 0
 .txt_keys    EQUS "Keypads ", 0
 
 .type_names                 ; 16 bytes each, as the protocol numbers them

@@ -60,7 +60,7 @@ make        # Builds build/SPITFIRE (+ .inf for the Econet file server)
 make test   # Emulator regression tests of the RTC and joystick modules and *SPITFIRE commands (needs uv)
 ```
 
-Builds the Sideways ROM image: header, service dispatch, SPI core, the RTC module (OSWORD &0E/&0F, so `*TIME` and `TIME$` use the DS3234) and the joystick module (MOS 5.x service call &2C polls the `spijoy` firmware's JOY_ALL burst at 50 Hz: joysticks 1-4 are allocated from the two ports' types; `ADVAL(0)`-`(2)` go to the MOS's workspace, the rest to one page of private HAZEL workspace, answered by a BYTEV hook), with `*SPITFIRE JOYSTICK PORT` keeping the port types in the AVR's EEPROM, `*SPITFIRE ADVAL`, `*STATUS` lines and OSWORD &3F. Load it on the Compact with `*SRLOAD SPITFIRE 8000 <bank>` in a bank above ANFS, then Ctrl-Break: the workspace is only claimed at a hard reset, so `*SRLOAD ... I` alone leaves the joystick commands asking for Ctrl-Break. Other modules are still under design - see `docs/rom-design.md`.
+Builds the Sideways ROM image: header, service dispatch, SPI core, the RTC module (OSWORD &0E/&0F, so `*TIME` and `TIME$` use the DS3234) and the joystick module (MOS 5.x service call &2C polls the `spijoy` firmware's JOY_ALL burst at 50 Hz: joysticks 1-4 are allocated from the two ports' types; `ADVAL(0)`-`(2)` go to the MOS's workspace, the rest, including the per-joystick switch bytes in `ADVAL(12)` and `(28)`, to one page of private HAZEL workspace, answered by a BYTEV hook), with `*SPITFIRE JOYSTICK PORT` keeping the port types in the AVR's EEPROM, `*SPITFIRE ADVAL`, `*STATUS` lines and OSWORD &3F. Load it on the Compact with `*SRLOAD SPITFIRE 8000 <bank>` in a bank above ANFS, then Ctrl-Break: the workspace is only claimed at a hard reset, so `*SRLOAD ... I` alone leaves the joystick commands asking for Ctrl-Break. Other modules are still under design - see `docs/rom-design.md`.
 
 ### Mouse Lookup Tables
 
@@ -108,7 +108,7 @@ Mouse deltas are clamped to int8 and drained on read; large movements spread acr
 ### Standard BBC Mouse APIs
 The ROM should implement standard BBC Micro mouse interfaces for ecosystem compatibility:
 - `*MOUSE ON/OFF`, `ADVAL(7/8/9)`, `INKEY-10/-11/-12` (and `-107/-108/-109`, which AMX software uses), `OSWORD &40`
-- The Master Compact's own mouse driver (PMFS, on the Welcome disc) also uses `ADVAL(5)`-`(9)`, with `ADVAL(9)` as its device mode. ADVAL channel uses, mouse drivers and the planned joystick channel map (joysticks 3/4 at `ADVAL(16)`-`(20)`, keypads at 10/11/26/27) are in `docs/adval-and-mouse-conventions.md` and `docs/rom-design.md`
+- The Master Compact's own mouse driver (PMFS, on the Welcome disc) also uses `ADVAL(5)`-`(9)`, with `ADVAL(9)` as its device mode. ADVAL channel uses, mouse drivers and the joystick channel map (joysticks 3/4 at `ADVAL(16)`-`(20)`, keypads at 10/11/26/27, switch bytes at 12/28) are in `docs/adval-and-mouse-conventions.md` and `docs/rom-design.md`
 - SPItFIRE-specific configuration goes under a `*SPITFIRE <subsystem> ...` namespace (not `*MOUSE`)
 - BBC graphics coordinates: **bottom-left origin**, 0-1279 X, 0-1023 Y. Text coordinates: top-left.
 - See `docs/rom-design.md` for the full design proposal.

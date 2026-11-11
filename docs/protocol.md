@@ -139,24 +139,29 @@ defaults after reflashing.
 
 Slots are allocated as in the ROM design: Port A's joysticks first, then
 Port B's, giving joysticks 1-4 (channel pairs (1,2), (3,4), (17,18),
-(19,20)). The burst carries only the groups that are allocated, in this
-order, in one chip select:
+(19,20)). The burst carries a record for each allocated joystick, the
+same for every joystick, then the keypads, in one chip select:
 
 | Group | Bytes | Present | Content |
 |---|---|---|---|
 | Header | 2 | Always | Byte 0: &A0 OR n, n = joysticks allocated (0-4). Byte 1: &50 OR k, k = keypad mask (bit j-1 set if joystick j has a keypad) |
-| J1 | 5 | Always | `ADVAL(0)` switches, then `ADVAL(1)` and `(2)`: exactly MOS 5's &02B6-&02BA |
-| J2 | 4 | n >= 2 | `ADVAL(3)`, `(4)` |
-| J3 | 5 | n >= 3 | `ADVAL(16)` switches, then `ADVAL(17)`, `(18)` |
-| J4 | 4 | n = 4 | `ADVAL(19)`, `(20)` |
+| J1 | 5 | Always | Switch byte, X, Y |
+| J2 | 5 | n >= 2 | Switch byte, X, Y |
+| J3 | 5 | n >= 3 | Switch byte, X, Y |
+| J4 | 5 | n = 4 | Switch byte, X, Y |
 | Keypads | 2 each | Per bit of k, joystick order | Keys 0-11, 1 = pressed, low byte first, bits 12-15 zero |
 
-- **Values** are 16-bit ADVAL values, low byte first, `v<<6 OR v>>4`
-  from the 10-bit reading, as now.
-- **Switch bytes** (`ADVAL(0)` and `(16)`): bit 0 is the first joystick
-  of the pair's fire, bit 1 the second's; bits 4-7 are the first
-  joystick's directions (left, down, up, right) beyond a quarter of full
-  scale from centre. Bits 2 and 3 are 0.
+- **Values** (X and Y) are 16-bit ADVAL values, low byte first,
+  `v<<6 OR v>>4` from the 10-bit reading.
+- **Switch byte:** bit 0 is the joystick's fire; bits 4-7 are its
+  directions (left, down, up, right), set beyond a quarter of full scale
+  from centre. Bits 1-3 are 0. The threshold is applied here, in the
+  firmware only, so every program gets the same answer.
+- **What the ROM makes of them:** the switch bytes are `ADVAL(12)`
+  (joysticks 1 and 2, low byte first) and `ADVAL(28)` (3 and 4).
+  `ADVAL(0)` and `(16)` are the odd joystick's switch byte with the even
+  joystick's fire added in bit 1, the BBC's layout. The J1 record, with
+  that bit added, is MOS 5's &02B6-&02BA.
 - **J1 is always sent**, as zeros when nothing is allocated, so the ROM
   always writes the MOS's five bytes and an empty configuration reads 0.
 - **The ROM zeroes** the groups that are not sent, so unallocated
@@ -173,14 +178,12 @@ order, in one chip select:
 - **Validity:** the two header marker nibbles (&A, &5) cannot come from a
   floating or stuck MISO. The ROM ignores a burst whose header is wrong,
   or whose n or k is out of range.
-- **Length:** 7 bytes with none or one joystick, 11 with two, 16 with
-  three and 20 with four, plus 2 per keypad. Only a `14B` has a keypad,
-  and it is one joystick, so the longest bursts are 20 bytes (four
-  joysticks), 18 (`DUAL` and `14B`) and 15 (two `14B`s). With today's
-  bit-bang loop, about 100 µs a byte, 20 bytes would cost about 10% of
-  the 6502 at 50 Hz, against 3.5% now. The ROM will read the burst with a
-  receive-only loop to cut that; see [performance.md](performance.md).
-  Raising SS ends a burst early.
+- **Length:** 7 bytes with none or one joystick, then 5 more for each
+  joystick, plus 2 per keypad. Only a `14B` has a keypad, and it is one
+  joystick, so the longest bursts are 22 bytes (four joysticks), 19
+  (`DUAL` and `14B`) and 16 (two `14B`s). The ROM reads the burst with a
+  receive-only loop; at 50 Hz, 22 bytes cost about 9-10% of the 6502
+  (see [performance.md](performance.md)). Raising SS ends a burst early.
 
 #### Empty ports
 A port set to a joystick type with nothing plugged in floats (about

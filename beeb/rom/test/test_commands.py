@@ -200,19 +200,22 @@ def adval_table(text):
 def fmt(kind, v):
     return f"&{v:02X}" if kind == "byte" else f"&{v:04X}" if kind == "word" else str(v)
 
-KINDS = {0: "byte", 16: "byte", 10: "word", 11: "word", 26: "word", 27: "word"}
+KINDS = {0: "byte", 16: "byte", 10: "word", 11: "word", 26: "word", 27: "word", 12: "word", 28: "word"}
 for config, uses in [
     (0x42, {0: ("Fire 1, 2", "A"), 1: ("Joystick 1 X", "A"), 2: ("Joystick 1 Y", "A"),
-            3: ("Joystick 2 X", "A"), 4: ("Joystick 2 Y", "A")}),
+            3: ("Joystick 2 X", "A"), 4: ("Joystick 2 Y", "A"), 12: ("Switches 1, 2", "A")}),
     (0x4C, {0: ("Fire 1, 2", "A"), 1: ("Joystick 1 X", "A"), 2: ("Joystick 1 Y", "A"),
-            3: ("Joystick 2 X", "A"), 4: ("Joystick 2 Y", "A"), 16: ("Fire 3", "B"),
-            17: ("Joystick 3 X", "B"), 18: ("Joystick 3 Y", "B")}),
+            3: ("Joystick 2 X", "A"), 4: ("Joystick 2 Y", "A"), 12: ("Switches 1, 2", "A"),
+            16: ("Fire 3", "B"), 17: ("Joystick 3 X", "B"), 18: ("Joystick 3 Y", "B"),
+            28: ("Switches 3", "B")}),
     (0x55, {0: ("Fire 1, 2", "A"), 1: ("Joystick 1 X", "A"), 2: ("Joystick 1 Y", "A"),
             10: ("Joystick 1 keypad", "A"), 3: ("Joystick 2 X", "B"), 4: ("Joystick 2 Y", "B"),
-            16: ("Fire 3", "B"), 17: ("Joystick 3 X", "B"), 18: ("Joystick 3 Y", "B")}),
+            12: ("Switches 1, 2", "A"), 16: ("Fire 3", "B"), 17: ("Joystick 3 X", "B"),
+            18: ("Joystick 3 Y", "B"), 28: ("Switches 3", "B")}),
     (0x7E, {0: ("Fire 1, 2", "A"), 1: ("Bitstik X", "A"), 2: ("Bitstik Y", "A"), 3: ("Bitstik twist", "A"),
-            4: ("Bitstik button", "A"), 16: ("Fire 3, 4", "B"), 17: ("Quinkey 1", "B"),
-            18: ("Quinkey 2", "B"), 19: ("Quinkey 3", "B"), 20: ("Quinkey 4", "B")}),
+            4: ("Bitstik button", "A"), 12: ("Switches 1, 2", "A"), 16: ("Fire 3, 4", "B"),
+            17: ("Quinkey 1", "B"), 18: ("Quinkey 2", "B"), 19: ("Quinkey 3", "B"),
+            20: ("Quinkey 4", "B"), 28: ("Switches 3, 4", "B")}),
 ]:
     avr.config = config
     avr.type = [config & 7, (config >> 3) & 7]
@@ -230,7 +233,7 @@ for config, uses in [
             check(rows[c] == (use, port, fmt(KINDS.get(c), values[c])),
                   f"ADVAL {config:02X} ch {c}: {rows[c]} != {(use, port, fmt(KINDS.get(c), values[c]))}")
     out, rows = adval_table("spitfire adval all")
-    check(set(rows) == {0, 1, 2, 3, 4, 10, 11, 16, 17, 18, 19, 20, 26, 27} and "5-9 Passed on (mouse)" in out,
+    check(set(rows) == {0, 1, 2, 3, 4, 10, 11, 12, 16, 17, 18, 19, 20, 26, 27, 28} and "5-9 Passed on (mouse)" in out,
           f"ADVAL ALL {config:02X}: {sorted(rows)}")
     for c in set(rows) - set(uses):
         check(rows[c] == ("-", "-", fmt(KINDS.get(c), 0)), f"ADVAL ALL {config:02X} ch {c}: {rows[c]}")

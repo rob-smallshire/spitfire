@@ -49,16 +49,14 @@
  * (19,20): Port A's first, then Port B's. JOY_ALL sends only what is
  * allocated, in one chip select:
  *   header  0xA0 | n (joysticks, 0-4), 0x50 | k (keypad mask)
- *   J1      ADVAL(0) switches, ADVAL(1), ADVAL(2)  (always)
- *   J2      ADVAL(3), ADVAL(4)                     (n >= 2)
- *   J3      ADVAL(16) switches, ADVAL(17), (18)    (n >= 3)
- *   J4      ADVAL(19), ADVAL(20)                   (n = 4)
+ *   J1-Jn   a record each: switch byte, X, Y (J1's is sent even if n = 0)
  *   keypads keys 0-11, low byte first, for each joystick in k
- * ADVAL values are 16-bit, low byte first. A switch byte has the pair's
- * fire bits in b0 and b1 and the first joystick's directions in b4-7
- * (left, down, up, right). The J1 bytes are the MOS 5.x ADVAL workspace
- * (&02B6-&02BA), so the ROM's service call &2C handler just stores them.
- * Raising SS ends a burst early.
+ * X and Y are 16-bit ADVAL values, low byte first. A switch byte has the
+ * joystick's fire button in b0 and its directions in b4-7 (left, down,
+ * up, right); b1-3 are 0. The ROM makes ADVAL(12) and (28) from the
+ * switch bytes, and ADVAL(0) and (16) by adding the even joystick's fire
+ * button to the odd joystick's switch byte in b1. J1's record is then the
+ * MOS 5.x ADVAL workspace (&02B6-&02BA). Raising SS ends a burst early.
  *
  * The configuration lives in EEPROM and is applied at power-up; a blank
  * or corrupt record (including one saved by the old four-type firmware)
@@ -100,7 +98,7 @@ namespace {
     };
     constexpr uint8_t TYPE_MASK = 7;
 
-    // Switch bits, as in MOS 5.x ADVAL(0). Bits 0 and 1 are fire.
+    // Switch bits, as in MOS 5.x ADVAL(0). Bit 0 is fire.
     constexpr uint8_t SW_LEFT    = 0x10;
     constexpr uint8_t SW_DOWN    = 0x20;
     constexpr uint8_t SW_UP      = 0x40;
@@ -130,11 +128,12 @@ namespace {
     constexpr uint16_t LOW_THRESHOLD = 256;
     constexpr uint16_t HIGH_THRESHOLD = 768;
 
-    // JOY_ALL: a 2-byte header, groups of 5, 4, 5 and 4 bytes for
-    // joysticks 1-4, and at most two keypads (only a 14B has one)
+    // JOY_ALL: a 2-byte header, a 5-byte record for each of up to four
+    // joysticks, and at most two keypads (only a 14B has one)
     constexpr uint8_t HEADER_N = 0xA0;
     constexpr uint8_t HEADER_K = 0x50;
-    constexpr uint8_t MAX_BURST = 2 + 5 + 4 + 5 + 4 + 2 * 2;
+    constexpr uint8_t RECORD = 5;
+    constexpr uint8_t MAX_BURST = 2 + 4 * RECORD + 2 * 2;
 
     // --- Written by interrupts ---
     volatile uint16_t samples[8];          // ADC interrupt
@@ -337,25 +336,19 @@ namespace {
         out[1] = HEADER_K | k;
         uint8_t pos = 2;
 
-        // Joystick pairs: J1 (and J2), then J3 (and J4). J1 is always sent.
-        for (uint8_t pair = 0; pair < 2; pair++) {
-            uint8_t first = 2 * pair;
-            if (first > 0 && n <= first) break;
+        // A record for each joystick; J1's is always sent, as zeros if
+        // nothing is allocated
+        for (uint8_t i = 0; i < n || i == 0; i++) {
             uint8_t switches = 0;
             uint16_t x = 0, y = 0;
-            if (first < n) {
-                switches = directions(sticks[first]) | (sticks[first].fire ? 1 : 0);
-                x = sticks[first].x;
-                y = sticks[first].y;
+            if (i < n) {
+                switches = directions(sticks[i]) | (sticks[i].fire ? 1 : 0);
+                x = sticks[i].x;
+                y = sticks[i].y;
             }
-            if (first + 1 < n && sticks[first + 1].fire) switches |= 2;
             out[pos++] = switches;
             pos = put_value(out, pos, x);
             pos = put_value(out, pos, y);
-            if (first + 1 < n) {
-                pos = put_value(out, pos, sticks[first + 1].x);
-                pos = put_value(out, pos, sticks[first + 1].y);
-            }
         }
 
         for (uint8_t i = 0; i < n; i++) {

@@ -16,7 +16,8 @@
 ;                               filing systems show their station)
 ;   *HELP SPITFIRE [JOYSTICK]   The commands, then the settings
 ;   *STATUS [SPITFIRE]          The settings, after the MOS's
-;   OSWORD &3F                  Describe the joysticks (for software)
+;   OSWORD &3F                  Identify SPItFIRE and describe the
+;                               joysticks (for software)
 ;
 ; The port types live in the AVR's EEPROM. The AVR only writes it when a
 ; value changes, and only PORT changes them.
@@ -43,6 +44,7 @@ str_ptr   = ws + 6          ; 2 bytes: print_inline's pointer
 T_14B     = 5
 T_BITSTIK = 6
 T_QUINKEY = 7
+T_BITSTIK_AUX = 8           ; OSWORD &3F: a Bitstik's second slot
 
 ; Service &04: unrecognised command. Y = offset of the command at
 ; (CMD_PTR). Return C=0 if claimed (the command has run), C=1 to pass.
@@ -732,25 +734,49 @@ T_QUINKEY = 7
 
 ; ------ OSWORD &3F ------
 
-; Service &08: OSWORD &3F, describe the joysticks. C=0 if claimed. Saves
-; and restores &A8-&AF. Block on exit (reason code 0):
-;   0 &53, 1 API version, 2-3 port types, 4 joysticks n, 5 keypad mask,
-;   6-9 joysticks 1-4 (b7 port, b0-2 type; &FF if not allocated),
-;   10 flags: b0 no workspace, b1 the AVR did not answer
+; Service &08: OSWORD &3F, for software (see "Enumeration: OSWORD &3F"
+; in docs/rom-design.md). Byte 0 of the block is the reason code:
+;   0 identify: 0 &53, 1 API version, 2-3 ROM version (BCD major,
+;     minor), 4 modules (b0 joystick, b1 RTC), 5 status flags
+;   1 joystick summary: 0 &53, 1 n, 2-3 port types, 4-7 joysticks 1-4
+;     (b7 port, b6 handset, b0-5 type; &FF if not allocated), 8 flags
+;   2 describe joystick j (byte 1): 0 &53, 2 as reason 1, 3 kind,
+;     4 capabilities, 5 buttons
+;   3 name a port type: 1 type, 2 which (0 keyword, 1 full name), 3-4
+;     buffer, 5 buffer size; on exit 0 &53, 6 characters copied (before
+;     the CR), 7 b0 = no such type or name
+; Other reason codes are not claimed. C=0 if claimed. Saves and restores
+; &A8-&AF.
+API_VERSION = 1
+
+ST_NO_WS   = 1              ; Status flags
+ST_NO_AVR  = 2
+ST_OFF     = 4
+ST_STOPPED = 8
+
+MOD_JOYSTICK = 1            ; Modules in this ROM
+MOD_RTC      = 2
+
+flags     = ws + 2          ; OSWORD: the status flags
+slot      = ws + 1          ; OSWORD: the slot being described
+src       = ws + 4          ; OSWORD reason 3: the name (2 bytes)
+dst       = ws + 6          ; OSWORD reason 3: the buffer (2 bytes)
+
 .joy_osword
     LDA OSWORD_A
     CMP #&3F
     BNE joy_osword_pass
     LDY #0
     LDA (OSWORD_BLK), Y
-    BNE joy_osword_pass     ; Only reason code 0
+    CMP #joy_osword_reasons_end - joy_osword_reasons
+    BCS joy_osword_pass     ; Not a reason code we know
     LDX #7                  ; Save &A8-&AF
 .joy_osword_save
     LDA ws, X
     PHA
     DEX
     BPL joy_osword_save
-    JSR joy_describe
+    JSR joy_osword_reason
     LDX #&F8                ; Restore &A8-&AF (as rtc_osword)
 .joy_osword_restore
     PLA
@@ -763,39 +789,115 @@ T_QUINKEY = 7
     SEC
     RTS
 
-.joy_describe
-    LDY #10                 ; Start from nothing allocated
-    LDA #&FF
-.joy_describe_clear
-    STA (OSWORD_BLK), Y
-    DEY
-    CPY #6
-    BCS joy_describe_clear
-    LDA #0
-.joy_describe_zero
-    STA (OSWORD_BLK), Y     ; Bytes 1-5
-    DEY
-    BNE joy_describe_zero
+; Answer the block's reason code: mark the block as answered, then run
+; the reason's routine
+.joy_osword_reason
+    LDY #0
+    LDA (OSWORD_BLK), Y
+    TAX
+    LDA joy_osword_hi, X
+    PHA
+    LDA joy_osword_reasons, X
+    PHA
+    LDY #0
     LDA #&53
     STA (OSWORD_BLK), Y
-    INY
-    LDA #1                  ; API version
+    RTS                     ; To the routine
+.joy_osword_reasons         ; Routine addresses less one, low bytes
+    EQUB LO(joy_identify - 1), LO(joy_summary - 1)
+    EQUB LO(joy_joystick - 1), LO(joy_name - 1)
+.joy_osword_reasons_end
+.joy_osword_hi
+    EQUB HI(joy_identify - 1), HI(joy_summary - 1)
+    EQUB HI(joy_joystick - 1), HI(joy_name - 1)
+
+; The status flags into `flags`, and `config` from the AVR if the flags
+; allow (bits 0 and 1 clear). Z=1 if they do.
+.joy_status
+    LDA OSWORD_A            ; OSBYTE stores its A, X and Y over the
+    PHA                     ; OSWORD number and block address: keep them
+    LDA OSWORD_BLK
+    PHA
+    LDA OSWORD_BLK+1
+    PHA
+    LDA #&BE                ; Read the MOS's joystick byte into X
+    LDX #0
+    LDY #&FF
+    JSR OSBYTE
+    PLA
+    STA OSWORD_BLK+1
+    PLA
+    STA OSWORD_BLK
+    PLA
+    STA OSWORD_A
+    LDA #0
+    CPX #&80
+    BCS joy_status_on
+    LDA #ST_OFF             ; Bit 7 clear: the MOS has the joystick
+.joy_status_on
+    LDX ADC_MAXIMUM
+    BNE joy_status_running
+    ORA #ST_STOPPED         ; *FX16,0
+.joy_status_running
+    STA flags
+    JSR have_ws
+    BEQ joy_status_ws
+    LDA #ST_NO_WS
+    BNE joy_status_bad
+.joy_status_ws
+    JSR read_config
+    BCC joy_status_ok
+    LDA #ST_NO_AVR
+.joy_status_bad
+    ORA flags
+    STA flags
+    RTS                     ; Z=0
+.joy_status_ok
+    LDA #0                  ; Z=1
+    RTS
+
+; Reason 0: identify
+.joy_identify
+    JSR joy_status
+    LDY #1
+    LDA #API_VERSION
     STA (OSWORD_BLK), Y
-    LDY #10
+    INY
+    LDA #HI(VERSION_BCD)
+    STA (OSWORD_BLK), Y
+    INY
+    LDA #LO(VERSION_BCD)
+    STA (OSWORD_BLK), Y
+    INY
+    LDA #MOD_JOYSTICK OR MOD_RTC
+    STA (OSWORD_BLK), Y
+    INY
+    LDA flags
+    STA (OSWORD_BLK), Y
+    RTS
+
+; Reason 1: joystick summary
+.joy_summary
+    LDY #1                  ; Start from nothing allocated
     LDA #0
     STA (OSWORD_BLK), Y
-    JSR have_ws
-    BEQ joy_describe_ws
-    LDA #1                  ; No workspace
+    INY
     STA (OSWORD_BLK), Y
-    RTS
-.joy_describe_ws
-    JSR read_config
-    BCC joy_describe_config
-    LDA #2                  ; The AVR did not answer
+    INY
     STA (OSWORD_BLK), Y
-    RTS
-.joy_describe_config
+    LDA #&FF
+.joy_summary_clear
+    INY
+    STA (OSWORD_BLK), Y     ; Bytes 4-7
+    CPY #7
+    BNE joy_summary_clear
+    JSR joy_status
+    PHP
+    LDY #8
+    LDA flags
+    STA (OSWORD_BLK), Y
+    PLP
+    BNE joy_summary_done
     LDA config
     AND #7
     LDY #2
@@ -808,47 +910,176 @@ T_QUINKEY = 7
     INY
     STA (OSWORD_BLK), Y
     LDA #0
-    STA port                ; The slot
-.joy_describe_slot
-    LDA port
-    JSR slot_info
+    STA slot
+.joy_summary_slot
+    LDA slot
+    JSR slot_byte
     CMP #&FF
-    BEQ joy_describe_next
-    STA dj                  ; The type (port is the slot here)
-    CPX #0
-    BEQ joy_describe_store
-    ORA #&80                ; Port B
-.joy_describe_store
+    BEQ joy_summary_next
     PHA
-    LDA port
+    LDA slot
     CLC
-    ADC #6
+    ADC #4
     TAY
     PLA
     STA (OSWORD_BLK), Y
-    LDY #4                  ; n = slots so far + 1
-    LDA port
+    LDY #1                  ; n = this slot + 1: slots fill in order
+    LDA slot
     CLC
     ADC #1
     STA (OSWORD_BLK), Y
-    LDA dj
-    CMP #T_14B
-    BNE joy_describe_next
-    LDX port                ; Keypad: bit `slot` of k
-    LDA #0
-    SEC
-.joy_describe_bit
-    ROL A
-    DEX
-    BPL joy_describe_bit
-    INY
-    ORA (OSWORD_BLK), Y
-    STA (OSWORD_BLK), Y
-.joy_describe_next
-    INC port
-    LDA port
+.joy_summary_next
+    INC slot
+    LDA slot
     CMP #4
-    BNE joy_describe_slot
+    BNE joy_summary_slot
+.joy_summary_done
+    RTS
+
+; Reason 2: describe joystick j
+.joy_joystick
+    LDY #2
+    LDA #&FF                ; Not allocated
+    STA (OSWORD_BLK), Y
+    LDA #0
+.joy_joystick_clear
+    INY
+    STA (OSWORD_BLK), Y     ; Bytes 3-5
+    CPY #5
+    BNE joy_joystick_clear
+    JSR joy_status
+    BNE joy_joystick_done
+    LDY #1
+    LDA (OSWORD_BLK), Y
+    SEC
+    SBC #1
+    CMP #4
+    BCS joy_joystick_done   ; Not joystick 1-4
+    JSR slot_byte
+    CMP #&FF
+    BEQ joy_joystick_done
+    LDY #2
+    STA (OSWORD_BLK), Y
+    LDX dtype
+    LDA dj
+    BEQ joy_joystick_kind
+    CPX #T_BITSTIK
+    BNE joy_joystick_kind
+    LDX #T_BITSTIK_AUX      ; A Bitstik's second slot
+.joy_joystick_kind
+    INY
+    LDA kind_of, X
+    STA (OSWORD_BLK), Y
+    INY
+    LDA capabilities_of, X
+    STA (OSWORD_BLK), Y
+    INY
+    LDA buttons_of, X
+    STA (OSWORD_BLK), Y
+.joy_joystick_done
+    RTS
+
+; The descriptor of slot A (0-3): b7 port, b6 handset, b0-5 type; or
+; &FF if nothing is allocated to it. Also dtype = the type and dj = the
+; handset. Needs `config`.
+.slot_byte
+    JSR slot_info           ; A = type or &FF, X = port, Y = handset
+    STA dtype
+    STY dj
+    CMP #&FF
+    BEQ slot_byte_done
+    CPY #0
+    BEQ slot_byte_port
+    ORA #&40
+.slot_byte_port
+    CPX #0
+    BEQ slot_byte_done
+    ORA #&80
+.slot_byte_done
+    RTS
+
+; Reason 3: name a port type
+.joy_name
+    LDY #2
+    LDA (OSWORD_BLK), Y     ; Which name
+    TAX
+    DEY
+    LDA (OSWORD_BLK), Y     ; The type
+    CMP #joysticks_of_end - joysticks_of
+    BCS joy_name_none
+    CPX #0
+    BEQ joy_name_keyword
+    CPX #1
+    BNE joy_name_none
+    TAX                     ; Full name
+    LDA type_names, X
+    CLC
+    ADC #LO(type_name_none)
+    STA src
+    LDA #HI(type_name_none)
+    ADC #0
+    STA src+1
+    LDA #0
+    BEQ joy_name_copy
+.joy_name_keyword           ; Skip `type` keywords from NONE
+    TAX
+    LDY #0
+.joy_name_skip
+    DEX
+    BMI joy_name_found
+.joy_name_skip_char
+    INY
+    LDA word_none - 1, Y
+    BNE joy_name_skip_char
+    BEQ joy_name_skip
+.joy_name_found
+    TYA
+    CLC
+    ADC #LO(word_none)
+    STA src
+    LDA #HI(word_none)
+    ADC #0
+    STA src+1
+    LDA #0
+    BEQ joy_name_copy
+.joy_name_none
+    LDA #LO(empty_name)
+    STA src
+    LDA #HI(empty_name)
+    STA src+1
+    LDA #1                  ; No such type or name
+.joy_name_copy
+    LDY #7
+    STA (OSWORD_BLK), Y
+    LDY #3
+    LDA (OSWORD_BLK), Y
+    STA dst
+    INY
+    LDA (OSWORD_BLK), Y
+    STA dst+1
+    INY
+    LDA (OSWORD_BLK), Y     ; The buffer's size
+    TAX
+    LDY #0
+    CPX #0
+    BEQ joy_name_count      ; No room even for the CR
+    DEX                     ; Room for the characters
+.joy_name_char
+    TXA
+    BEQ joy_name_end        ; Full
+    LDA (src), Y
+    BEQ joy_name_end
+    STA (dst), Y
+    INY
+    DEX
+    JMP joy_name_char
+.joy_name_end
+    LDA #13
+    STA (dst), Y
+.joy_name_count
+    TYA
+    LDY #6
+    STA (OSWORD_BLK), Y
     RTS
 
 ; ------ Parsing ------
@@ -1056,6 +1287,17 @@ T_QUINKEY = 7
 ; Joysticks (slots) each port type takes
 .joysticks_of
     EQUB 0, 1, 2, 2, 2, 1, 2, 2
+.joysticks_of_end
+
+; OSWORD &3F reason 2, by type, then T_BITSTIK_AUX. Kinds: 1 stick,
+; 2 position, 3 auxiliary, 4 chord. Capabilities: b0 X and Y carry
+; readings, b1 directions, b2 keypad.
+.kind_of
+    EQUB 0, 1, 1, 1, 1, 1, 2, 4, 3
+.capabilities_of
+    EQUB 0, 3, 3, 3, 3, 7, 3, 1, 1
+.buttons_of
+    EQUB 0, 1, 1, 1, 1, 1, 1, 0, 1
 
 ; The X channel of each slot
 .slot_channels
@@ -1122,6 +1364,7 @@ K_SWBYTES  = 4              ; A pair's switch bytes, one each
 .type_name_14b      EQUS "Voltmace Delta 14B", 0
 .type_name_bitstik  EQUS "Acorn Bitstik", 0
 .type_name_quinkey  EQUS "Microwriter Quinkey", 0
+.empty_name         EQUB 0
 
 ; Error blocks: BRK, number, message, zero
 .errors

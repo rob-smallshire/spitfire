@@ -13,7 +13,8 @@ documented later.
 
 | To | BASIC | 6502 |
 |---|---|---|
-| Detect SPItFIRE | OSWORD &3F, byte 0 becomes `&53` | The same |
+| Detect SPItFIRE and check it is ready | OSWORD &3F reason 0: byte 0 becomes `&53`, byte 5 (status) is 0 | The same |
+| Find the joysticks and what they are | OSWORD &3F reasons 1 (summary), 2 (one joystick), 3 (names) | The same |
 | Read joystick *j*'s X, Y | `ADVAL(x)`, `ADVAL(x+1)`, with x = 1, 3, 17, 19 for j = 1-4 | OSBYTE &80, X = channel; result in X (low), Y (high) |
 | Read fire buttons | `ADVAL(0) AND 3` (joysticks 1, 2), `ADVAL(16) AND 3` (3, 4) | OSBYTE &80, X = 0 or 16; bits 0 and 1 of X |
 | Read every joystick digitally (directions and fire) | `ADVAL(12)` (joysticks 1, 2), `ADVAL(28)` (3, 4): a switch byte each, low byte first | OSBYTE &80, X = 12 or 28; X = odd joystick, Y = even |
@@ -25,7 +26,7 @@ so existing two-player software works unchanged.
 ## Requirements
 
 - A Master Compact (MOS 5.x) with SPItFIRE connected to its joystick port.
-- The SPItFIRE ROM (version 0.02 or later) in a sideways ROM or RAM bank.
+- The SPItFIRE ROM (version 0.03 or later) in a sideways ROM or RAM bank.
 - After loading the ROM into sideways RAM with `*SRLOAD`, press
   **Ctrl-Break**. The ROM claims its workspace only at a hard reset; until
   then the joystick commands say `Press Ctrl-Break to start SPItFIRE` and
@@ -57,7 +58,11 @@ cycles. The user sets it with:
 | 6 | `BITSTIK` | Acorn Bitstik | (documented later) |
 | 7 | `QUINKEY` | Microwriter Quinkey | (documented later) |
 
-The defaults are Port A `DUAL` and Port B `NONE`.
+The defaults are Port A `DUAL` and Port B `NONE`. **Type numbers never
+change meaning**; new types get new numbers. Even so, a program should
+not need a table of them: OSWORD &3F describes each joystick and names
+each type (below), so a program that uses it works with types added
+later.
 
 A port left set to a joystick type with nothing plugged in gives readings
 that drift around the middle of the range; it is up to the user to set
@@ -106,49 +111,135 @@ repeat the layout of joysticks 1 and 2 sixteen channels up.
 ## Detecting SPItFIRE
 
 Use OSWORD &3F. Without the SPItFIRE ROM, nothing claims the call and the
-parameter block comes back unchanged, so a program puts 0 in byte 0, makes
-the call, and checks for `&53` ("S").
+parameter block comes back unchanged, so a program puts the reason code
+in byte 0, makes the call, and checks for `&53` ("S") in byte 0.
 
 Do not try to detect SPItFIRE through `ADVAL`: without the ROM, MOS 5
 answers every channel above 0 with a copy of `ADVAL(1)` or `ADVAL(2)`, so
 an extra channel cannot be told from a real one.
 
+### Staying independent of versions
+
+- **Test for the call you need, not for a version.** A ROM that does not
+  know a reason code does not claim it, so byte 0 comes back as the
+  reason code instead of `&53`. The API version and ROM version are for
+  information only.
+- **The channel map is permanent.** Joystick *j*'s channels are fixed by
+  *j*, so a program can build them in; no call returns them.
+- **Choose joysticks by what they can do,** with reason 2, rather than by
+  type number, and **get names from SPItFIRE** with reason 3, rather than
+  from a table in the program.
+- **Fields are only ever added,** at the end of a block or in bits that
+  are now reserved; reserved bits read 0. Ignore what you do not know.
+- **SPItFIRE cannot tell whether a joystick is plugged in.** Floating
+  inputs give readings like a joystick at rest. It reports what the user
+  configured; a game confirms a player by asking them to press fire.
+
 ### The OSWORD &3F block
 
-On entry, byte 0 is the reason code: 0 = describe the joysticks. The block
-is 11 bytes; allow 16. Other reason codes are reserved and not claimed.
+Allow 16 bytes. Byte 0 is the reason code on entry and `&53` on exit if
+SPItFIRE answered.
 
-| Byte | On exit |
-|---|---|
-| 0 | `&53`: SPItFIRE answered (unchanged, 0, if not) |
-| 1 | API version: 1 |
-| 2 | Port A's type (0-7) |
-| 3 | Port B's type (0-7) |
-| 4 | n: the number of joysticks allocated (0-4) |
-| 5 | Keypad mask: bit j-1 set if joystick j has a keypad |
-| 6-9 | Joysticks 1-4: bit 7 = port (0 = A, 1 = B), bits 0-2 = the port's type; `&FF` if not allocated |
-| 10 | Flags: bit 0 = no workspace (the user must press Ctrl-Break); bit 1 = the SPItFIRE hardware did not answer |
+**Status flags**, in reasons 0 and 1:
 
-If either flag is set, n is 0 and no joystick is allocated. Bits 3-6 of
-bytes 6-9 are 0.
+| Bit | Set when | What to tell the user |
+|---|---|---|
+| 0 | The ROM has no workspace | Press Ctrl-Break |
+| 1 | The SPItFIRE hardware did not answer | Check SPItFIRE is connected |
+| 2 | Joystick handling is off: ADVAL comes from the MOS, not SPItFIRE | `*SPITFIRE JOYSTICK ON` |
+| 3 | Updates are stopped by `*FX16,0`: values do not change | `*FX16,4`, or Break |
+
+With bit 0 or 1 set, no joysticks are reported. Bits 4-7 are reserved.
+
+**Reason 0: identify.** Whether SPItFIRE is there and ready.
+
+| Byte | On entry | On exit |
+|---|---|---|
+| 0 | 0 | `&53` |
+| 1 | | API version: 1 |
+| 2 | | ROM version, major, in BCD (`&00` for 0.03) |
+| 3 | | ROM version, minor, in BCD (`&03` for 0.03) |
+| 4 | | Modules in the ROM: bit 0 joystick, bit 1 real-time clock |
+| 5 | | Status flags |
+
+**Reason 1: joystick summary.**
+
+| Byte | On entry | On exit |
+|---|---|---|
+| 0 | 1 | `&53` |
+| 1 | | n: the number of joysticks (0-4); they are joysticks 1 to n |
+| 2 | | Port A's type |
+| 3 | | Port B's type |
+| 4-7 | | Joysticks 1-4: bit 7 = port (0 = A, 1 = B), bit 6 = handset (0 = the port's first joystick, 1 = its second), bits 0-5 = the port's type; `&FF` if not allocated |
+| 8 | | Status flags |
+
+**Reason 2: describe joystick j.**
+
+| Byte | On entry | On exit |
+|---|---|---|
+| 0 | 2 | `&53` |
+| 1 | j (1-4) | Unchanged |
+| 2 | | Port, handset and type, as in reason 1; `&FF` if not allocated, and then bytes 3-5 are 0 |
+| 3 | | Kind: 0 none, 1 stick, 2 position, 3 auxiliary, 4 chord |
+| 4 | | Capabilities: bit 0 = its X and Y channels carry readings, bit 1 = its switch byte carries directions, bit 2 = it has a keypad |
+| 5 | | Buttons, n: bits 0 to n-1 of its switch byte; bit 0 is also its fire bit |
+
+A **stick** (kind 1) is a self-centring joystick: every type in this
+guide. The other kinds are for devices documented later (a Bitstik's
+position and its twist, a Quinkey's chords). **A game wanting players
+uses the joysticks of kind 1.** Today every stick has one button; a
+later type may report more, in bits 1-3 of its switch byte.
+
+**Reason 3: name a port type.** Copies a name into a buffer of the
+program's.
+
+| Byte | On entry | On exit |
+|---|---|---|
+| 0 | 3 | `&53` |
+| 1 | Type number | Unchanged |
+| 2 | 0 = keyword (`3BT`), 1 = full name ("Voltmace Delta 3B Twin") | Unchanged |
+| 3-4 | The buffer's address, low byte first | Unchanged |
+| 5 | The buffer's size in bytes | Unchanged |
+| 6 | | Characters copied, not counting the CR |
+| 7 | | Bit 0 set: no such type or name (the buffer holds just a CR) |
+
+The name ends with a CR (`$S%` reads it in BASIC) and is cut to fit; a
+size of 0 copies nothing. No name is longer than 24 characters today,
+so a 25-byte buffer holds any of them.
 
 ### BASIC
 
 ```
-10 DIM B% 15
-20 ?B%=0:A%=&3F:X%=B% MOD 256:Y%=B% DIV 256:CALL &FFF1
-30 IF ?B%<>&53 PRINT "No SPItFIRE":END
-40 IF B%?10 AND 1 PRINT "Press Ctrl-Break to start SPItFIRE":END
-50 IF B%?10 AND 2 PRINT "SPItFIRE hardware not responding":END
-60 N%=B%?4
-70 PRINT "Joysticks: ";N%
-80 FOR J%=1 TO N%
-90   D%=B%?(5+J%)
-100  IF D% AND &80 THEN P$="B" ELSE P$="A"
-110  PRINT "Joystick ";J%;": port ";P$;", type ";D% AND 7;
-120  IF B%?5 AND 2^(J%-1) THEN PRINT ", keypad" ELSE PRINT
-130 NEXT
+10 DIM B% 15,S% 25
+20 A%=&3F:X%=B% MOD 256:Y%=B% DIV 256
+30 ?B%=0:CALL &FFF1
+40 IF ?B%<>&53 PRINT "No SPItFIRE":END
+50 F%=B%?5
+60 IF F% AND 1 PRINT "Press Ctrl-Break to start SPItFIRE":END
+70 IF F% AND 2 PRINT "SPItFIRE hardware not responding":END
+80 IF F% AND 4 PRINT "Type *SPITFIRE JOYSTICK ON":END
+90 IF F% AND 8 PRINT "Joystick updates stopped by *FX16,0":END
+100 ?B%=1:CALL &FFF1
+110 N%=B%?1
+120 PRINT "Joysticks: ";N%
+130 FOR J%=1 TO N%
+140   D%=B%?(3+J%)
+150   ?B%=2:B%?1=J%:CALL &FFF1:K%=B%?3:C%=B%?4
+160   PRINT "Joystick ";J%;": port ";CHR$(65-(D%>127));", ";FNname(D% AND 63,1);
+170   IF C% AND 4 PRINT ", keypad";
+180   IF K%=1 PRINT ", stick" ELSE PRINT
+190   ?B%=1:CALL &FFF1
+200 NEXT
+210 END
+220 DEF FNname(T%,W%)
+230 ?B%=3:B%?1=T%:B%?2=W%:B%!3=S%:B%?5=25:CALL &FFF1
+240 =$S%
 ```
+
+Each call reuses the block, so the program reads what it needs before
+the next call, and line 190 fetches the summary again for the next
+joystick. In line 230, `B%!3=S%` writes four bytes, so the size goes in
+after it.
 
 ### 6502
 
@@ -156,19 +247,24 @@ bytes 6-9 are 0.
 OSWORD = &FFF1
 
 .detect
-    LDA #0
-    STA block               ; Reason code 0
-    LDA #&3F
-    LDX #LO(block)
-    LDY #HI(block)
-    JSR OSWORD
+    LDA #0                  ; Reason 0: identify
+    JSR call
     LDA block
     CMP #&53
     BNE no_spitfire         ; Nothing answered
-    LDA block+10
-    BNE not_ready           ; Needs Ctrl-Break, or hardware not answering
-    LDA block+4             ; n, the joysticks allocated
+    LDA block+5
+    BNE not_ready           ; Status flags: see the table
+    LDA #1                  ; Reason 1: summary
+    JSR call
+    LDA block+1             ; n, the joysticks
     ...
+
+.call                       ; OSWORD &3F with reason code A
+    STA block
+    LDA #&3F
+    LDX #LO(block)
+    LDY #HI(block)
+    JMP OSWORD
 
 .block
     SKIP 16
@@ -339,17 +435,22 @@ high byte for even ones.
 
 ```
 10 DIM B% 15
-20 ?B%=0:A%=&3F:X%=B% MOD 256:Y%=B% DIV 256:CALL &FFF1
-30 IF ?B%<>&53 OR B%?10 PRINT "SPItFIRE not ready":END
-40 N%=B%?4:K%=B%?5
-50 CLS
-60 REPEAT
-70   PRINT TAB(0,0);
-80   FOR J%=1 TO N%
-90     PRINT "Joystick ";J%;"  X ";FNx(J%);"  Y ";FNy(J%);"  Fire ";-FNfire(J%);"   "
-100    IF K% AND 2^(J%-1) PRINT "  Keys ";~FNkeys(J%);"    "
-110  NEXT
-120 UNTIL FALSE
+20 A%=&3F:X%=B% MOD 256:Y%=B% DIV 256
+30 ?B%=1:CALL &FFF1
+40 IF ?B%<>&53 OR B%?8 PRINT "SPItFIRE not ready":END
+50 N%=B%?1:K%=0
+60 FOR J%=1 TO N%
+70   ?B%=2:B%?1=J%:CALL &FFF1
+80   IF B%?4 AND 4 K%=K% OR 2^(J%-1)
+90 NEXT
+100 CLS
+110 REPEAT
+120   PRINT TAB(0,0);
+130   FOR J%=1 TO N%
+140     PRINT "Joystick ";J%;"  X ";FNx(J%);"  Y ";FNy(J%);"  Fire ";-FNfire(J%);"   "
+150     IF K% AND 2^(J%-1) PRINT "  Keys ";~FNkeys(J%);"    "
+160   NEXT
+170 UNTIL FALSE
 ```
 
 with the functions above appended.
@@ -477,7 +578,8 @@ ROM takes it again. While off:
   bus, so the values are meaningless.
 - The other channels (3, 4, 10-12, 16-20, 26-28) keep their last values:
   SPItFIRE still answers them but no longer updates them.
-- OSWORD &3F still describes the configured joysticks.
+- OSWORD &3F still describes the configured joysticks, with status bit 2
+  set.
 
 A program should not turn SPItFIRE off; if it must change the joystick
 byte, it should keep bit 7.

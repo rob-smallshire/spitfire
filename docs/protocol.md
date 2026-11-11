@@ -173,7 +173,8 @@ same for every joystick, then the keypads, in one chip select:
     button) the second's.
   - `14B`: key 10 is the fire bit; the keypad carries all twelve keys.
   - `BITSTIK`: the two digital buttons are the two fire bits; channels
-    are raw, with the third button on CH3.
+    are raw, with the third button on CH3. Directions only for the first
+    joystick (X and Y): the second is the twist and the third button.
   - `QUINKEY`: no fire or direction bits; channels are raw.
 - **Validity:** the two header marker nibbles (&A, &5) cannot come from a
   floating or stuck MISO. The ROM ignores a burst whose header is wrong,

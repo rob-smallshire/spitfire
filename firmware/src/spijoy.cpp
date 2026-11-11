@@ -286,7 +286,10 @@ namespace {
         uint8_t buttons = joystick::fire_buttons(static_cast<joystick::Port>(port));
         s.has_keypad = type == PortType::DELTA_14B;
         s.keypad = s.has_keypad ? keys[port] : 0;
-        s.has_dirs = type != PortType::QUINKEY;
+        // A Quinkey is a chord keyboard and a Bitstik's second slot is
+        // its twist and a button: neither has directions
+        s.has_dirs = type != PortType::QUINKEY &&
+                     !(type == PortType::BITSTIK && j == 1);
         if (type == PortType::DELTA_14B) {
             s.fire = (s.keypad & KEY_FIRE_14B) != 0;
         } else if (type == PortType::QUINKEY) {

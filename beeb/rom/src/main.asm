@@ -27,12 +27,13 @@ GUARD &C000
     JMP service
     EQUB &82                ; Service entry, 6502 code
     EQUB LO(copyright - rom_start)
-    EQUB 1                  ; Binary version
+    EQUB 3                  ; Binary version
 .title
     EQUS "SPItFIRE"
     EQUB 0
 .version
-    EQUS "0.02"
+    EQUS "0.03"                 ; Keep VERSION_BCD in step
+VERSION_BCD = &0003             ; OSWORD &3F reason 0: major, minor
 .copyright
     EQUB 0
     EQUS "(C)2026 Robert Smallshire", 0

@@ -46,6 +46,7 @@ class Machine:
             mem[v] = 0x60                                   # RTS; trapped below
         mem[0x020A], mem[0x020B] = MOS_BYTEV & 0xFF, MOS_BYTEV >> 8
         mem[0xF4] = ROM_NUMBER
+        mem[0x024D] = 2                                     # *FX16,2
         self.joystick_byte = 0x05
         self.column = 0
         if claim:
@@ -72,6 +73,7 @@ class Machine:
                 out.append("\n"); self.column = 0
             elif pc == OSBYTE:
                 osbytes.append((mpu.a, mpu.x, mpu.y))
+                mem[0xEF], mem[0xF0], mem[0xF1] = mpu.a, mpu.x, mpu.y   # As the MOS does
                 if mpu.a == 0xBE:                           # (old AND Y) EOR X
                     old = self.joystick_byte
                     self.joystick_byte = (old & mpu.y) ^ mpu.x
@@ -111,9 +113,11 @@ class Machine:
         for _ in range(2):
             self.call(0x2C, y=WS)
 
-    def osword(self, reason=0):
+    def osword(self, reason=0, entry=()):
+        """OSWORD &3F with `reason` in byte 0 and `entry` from byte 1; the
+        rest of the block is &EE. Returns (A, the 16-byte block)."""
         mem = self.mem
-        mem[BLOCK:BLOCK + 16] = [reason] + [0xEE] * 15
+        mem[BLOCK:BLOCK + 16] = ([reason] + list(entry) + [0xEE] * 15)[:16]
         mem[0xEF] = 0x3F
         mem[0xF0], mem[0xF1] = BLOCK & 0xFF, BLOCK >> 8
         a, out, _, err = self.call(8)
@@ -132,7 +136,7 @@ m = Machine(avr)
 # --- *SPITFIRE ---
 for text in ("SPITFIRE", "spitfire", "SpitFire  "):
     a, out, _, err = m.star(text)
-    check(a == 0 and "SPItFIRE 0.02" in out and "JOYSTICK" in out and "Ctrl-Break" not in out,
+    check(a == 0 and "SPItFIRE 0.03" in out and "JOYSTICK" in out and "Ctrl-Break" not in out,
           f"*{text}: {a} {out!r} {err}")
 
 # --- *SPITFIRE JOYSTICK ON|OFF and status ---
@@ -239,24 +243,88 @@ for config, uses in [
         check(rows[c] == ("-", "-", fmt(KINDS.get(c), 0)), f"ADVAL ALL {config:02X} ch {c}: {rows[c]}")
 
 # --- OSWORD &3F ---
-for config, want in [
-    (0x42, [0x53, 1, 2, 0, 2, 0, 0x02, 0x02, 0xFF, 0xFF, 0]),
-    (0x55, [0x53, 1, 5, 2, 3, 1, 0x05, 0x82, 0x82, 0xFF, 0]),
-    (0x6D, [0x53, 1, 5, 5, 2, 3, 0x05, 0x85, 0xFF, 0xFF, 0]),
-    (0x40, [0x53, 1, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF, 0]),
-    (0x7E, [0x53, 1, 6, 7, 4, 0, 0x06, 0x06, 0x87, 0x87, 0]),
-]:
+JOYSTICKS = [0, 1, 2, 2, 2, 1, 2, 2]
+KEYWORDS = ["NONE", "SINGLE", "DUAL", "3BS", "3BT", "14B", "BITSTIK", "QUINKEY"]
+NAMES = ["No joystick", "Standard single joystick", "Standard dual joystick",
+         "Voltmace Delta 3B Single", "Voltmace Delta 3B Twin", "Voltmace Delta 14B",
+         "Acorn Bitstik", "Microwriter Quinkey"]
+STICK = (1, 3, 1)                       # Kind, capabilities, buttons
+DESCRIBE = {1: STICK, 2: STICK, 3: STICK, 4: STICK, 5: (1, 7, 1), 7: (4, 1, 0)}
+def joysticks(config):
+    """(descriptor byte, kind, capabilities, buttons) for each allocated joystick."""
+    out = []
+    for port in (0, 1):
+        t = (config >> 3 * port) & 7
+        for h in range(JOYSTICKS[t]):
+            if t == 6: d = (2, 3, 1) if h == 0 else (3, 1, 1)
+            else: d = DESCRIBE[t]
+            out.append((t | h << 6 | port << 7,) + d)
+    return out
+
+# Reason 0: identify
+a, block = m.osword(0)
+check(a == 0 and block[:6] == [0x53, 1, 0x00, 0x03, 3, 0] and block[6:] == [0xEE] * 10,
+      f"identify: {a} {[hex(b) for b in block]}")
+
+# Reasons 1 and 2, for every pair of port types
+for config in [0x40 | a_ | b_ << 3 for a_ in range(8) for b_ in range(8)]:
     avr.config = config
-    a, block = m.osword()
-    check(a == 0 and block[:11] == want and block[11:] == [0xEE] * 5,
-          f"OSWORD &3F {config:02X}: {a} {[hex(b) for b in block[:11]]}")
-a, block = m.osword(reason=1)
-check(a == 8 and block[0] == 1 and block[1:] == [0xEE] * 15, f"OSWORD &3F reason 1 claimed: {a} {block}")
-avr.absent = "high"
-a, block = m.osword()
-check(a == 0 and block[:11] == [0x53, 1, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF, 2], f"OSWORD absent: {block}")
-avr.absent = None
+    js = joysticks(config)
+    want = [0x53, len(js), config & 7, (config >> 3) & 7] + [j[0] for j in js] + [0xFF] * (4 - len(js)) + [0]
+    a, block = m.osword(1)
+    check(a == 0 and block[:9] == want and block[9:] == [0xEE] * 7,
+          f"summary {config:02X}: {a} {[hex(b) for b in block[:9]]} != {[hex(b) for b in want]}")
+    for j in range(6):
+        a, block = m.osword(2, [j])
+        d = list(js[j - 1]) if 1 <= j <= len(js) else [0xFF, 0, 0, 0]
+        check(a == 0 and block[:6] == [0x53, j] + d and block[6:] == [0xEE] * 10,
+              f"joystick {j} of {config:02X}: {a} {[hex(b) for b in block[:6]]} != {d}")
 avr.config = 0x42
+
+# Reason 3: names, cut to fit
+BUF = 0x0800
+def name(t, which, size):
+    m.mem[BUF:BUF + 48] = [0xEE] * 48
+    a, block = m.osword(3, [t, which, BUF & 0xFF, BUF >> 8, size])
+    return a, block, list(m.mem[BUF:BUF + 48])
+for t in range(8):
+    for which, text in ((0, KEYWORDS[t]), (1, NAMES[t])):
+        for size in (0, 1, 4, 25, 40):
+            a, block, buf = name(t, which, size)
+            got = text[:max(size - 1, 0)]
+            written = (list(got.encode()) + [13]) if size else []
+            check(a == 0 and block[:8] == [0x53, t, which, BUF & 0xFF, BUF >> 8, size, len(got), 0]
+                  and buf[:len(written)] == written and buf[len(written)] == 0xEE,
+                  f"name {t},{which},{size}: {block[:8]} {bytes(buf[:30])!r}")
+for t, which in ((8, 0), (8, 1), (255, 1), (2, 2), (2, 255)):
+    a, block, buf = name(t, which, 25)
+    check(a == 0 and block[6:8] == [0, 1] and buf[:2] == [13, 0xEE], f"no name {t},{which}: {block[:8]} {buf[:4]}")
+check(max(len(n) for n in NAMES) <= 24, "a name is longer than the guide says")
+
+# Unknown reason codes are not claimed
+for reason in (4, 5, 0x80, 0xFF):
+    a, block = m.osword(reason)
+    check(a == 8 and block == [reason] + [0xEE] * 15, f"OSWORD &3F reason {reason} claimed: {a} {block}")
+
+# Status flags
+def flags():
+    return m.osword(0)[1][5], m.osword(1)[1]
+f0, block = flags()
+check(f0 == 0 and block[8] == 0, f"flags clear: {f0} {block}")
+m.star("SPITFIRE JOYSTICK OFF")
+f0, block = flags()
+check(f0 == 4 and block[8] == 4 and block[1] == 2, f"joystick off: {f0} {block}")
+m.star("SPITFIRE JOYSTICK ON")
+m.mem[0x024D] = 0                       # *FX16,0
+f0, block = flags()
+check(f0 == 8 and block[8] == 8 and block[1] == 2, f"*FX16,0: {f0} {block}")
+m.mem[0x024D] = 2
+avr.absent = "high"
+f0, block = flags()
+check(f0 == 2 and block[:9] == [0x53, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF, 2], f"absent: {f0} {block}")
+a, block = m.osword(2, [1])
+check(block[:6] == [0x53, 1, 0xFF, 0, 0, 0], f"absent joystick 1: {block}")
+avr.absent = None
 
 # --- *STATUS ---
 a, out, _, _ = m.status()
@@ -304,7 +372,7 @@ for text in ("SPITFIRES", "SPIT", "JOYSTICK", "HELP", "SPITFIRE.", "XSPITFIRE"):
 # --- *HELP ---
 settings = "  Joystick {}\n  Port A: Standard dual joystick\n          Joysticks 1, 2\n  Port B: No joystick\n"
 a, out, _, _ = m.help()
-check(a == 9 and "SPItFIRE 0.02" in out and "  SPITFIRE\n" in out, f"*HELP: {out!r}")
+check(a == 9 and "SPItFIRE 0.03" in out and "  SPITFIRE\n" in out, f"*HELP: {out!r}")
 check(out.endswith(settings.format("on")), f"*HELP settings: {out!r}")
 a, out, _, _ = m.help("SPITFIRE")
 check(a == 9 and "SPITFIRE ADVAL [ALL]" in out and "SPITFIRE JOYSTICK PORT A|B <type>" in out,
@@ -332,8 +400,12 @@ a, out, _, _ = m2.status()
 check(out == "SPItFIRE: " + reminder, f"no ws *STATUS: {out!r}")
 a, out, _, _ = m2.help()
 check(out.endswith("  " + reminder), f"no ws *HELP: {out!r}")
-a, block = m2.osword()
-check(a == 0 and block[:11] == [0x53, 1, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF, 1], f"no ws OSWORD: {block}")
+a, block = m2.osword(0)
+check(a == 0 and block[:6] == [0x53, 1, 0x00, 0x03, 3, 1], f"no ws identify: {block}")
+a, block = m2.osword(1)
+check(a == 0 and block[:9] == [0x53, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF, 1], f"no ws summary: {block}")
+a, block = m2.osword(2, [1])
+check(a == 0 and block[:6] == [0x53, 1, 0xFF, 0, 0, 0], f"no ws joystick 1: {block}")
 a, out, _, err = m2.star("SPITFIRE JOYSTICK PORT B SINGLE")
 check(a == 0 and not err and avr2.config == 0x4A, f"no ws PORT: {err} {avr2.config:02X}")
 

@@ -47,7 +47,8 @@ class AVR:
                 if t == D14B: fire = bool(self.keys[p] & KEY_FIRE_14B)
                 elif t == QUINKEY: fire = False
                 else: fire = bool((self.fire[p] >> j) & 1)
-                out.append(dict(x=x, y=y, fire=fire, dirs=t != QUINKEY, keypad=keypad))
+                dirs = t != QUINKEY and not (t == BITSTIK and j == 1)
+                out.append(dict(x=x, y=y, fire=fire, dirs=dirs, keypad=keypad))
         return out
 
     @staticmethod

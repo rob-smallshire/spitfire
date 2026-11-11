@@ -162,7 +162,7 @@ This is a working sketch, not a final design:
 | `*SPITFIRE JOYSTICK PORT A\|B <type>` | Set and save a port's type (NONE, SINGLE, DUAL, 3BS, 3BT, 14B, BITSTIK, QUINKEY) |
 | `*SPITFIRE ADVAL [ALL]` | The channels SPItFIRE answers, with their values |
 | `*STATUS [SPITFIRE]` | The settings, after the MOS's |
-| OSWORD &3F | Describe the joysticks, for software |
+| OSWORD &3F | Identify SPItFIRE and describe the joysticks, for software |
 
 `*HELP SPITFIRE [JOYSTICK]` lists the commands, and plain `*HELP` lists
 `SPITFIRE` as a topic. Both end with the settings, as the network filing
@@ -595,7 +595,9 @@ follow the allocation:
 - **`BITSTIK`:** two slots, so two fire bits, which is where its two
   digital buttons are on a BBC. The third button stays on its analogue
   channel, and the readings are passed through unchanged, as Bitstik
-  software expects the real hardware.
+  software expects the real hardware. Only the first slot (X and Y) has
+  direction bits; the second slot's would come from the twist and the
+  third button, which have no direction.
 - **`QUINKEY`:** no fire bits; each Quinkey's thumb key is part of its
   chord on its channel.
 - A joystick with no keypad reads 0 in its keypad channel.
@@ -693,29 +695,134 @@ service call 8 (it handles only &00-&0F and &42/&43 itself, and sends
 below &80 it needs no length bytes: the default Tube transfer of 16 bytes
 each way covers the block.
 
-Reason code 0, describe joysticks:
+The design follows from what a game or other program wants to know, and
+from not tying programs to particular versions of the ROM (GitHub issue
+#3, which came from porting Don't Dither!):
+
+- **Can I use SPItFIRE now?** Present, with its workspace, the hardware
+  answering, joystick handling on (bit 7 of `*FX190`) and updates running
+  (not `*FX16,0`). The last two are states in which ADVAL returns rubbish
+  or stops changing.
+- **Which joysticks are there, and which can I play with?** A program
+  should choose players by what a device can do, not by its type number:
+  a Bitstik's second slot and the Quinkeys are not steering joysticks,
+  and a type table in a program goes stale when types are added.
+- **What do I call them?** The port type's keyword (`3BT`) and full name
+  ("Voltmace Delta 3B Twin"), for a title or setup screen.
+- **Which parts of SPItFIRE are there?** The modules in the ROM.
+
+What SPItFIRE cannot report is whether a joystick is plugged in: floating
+analogue inputs cross-talk too much for presence detection, so it reports
+the configuration only. A game confirms a player by asking them to press
+fire.
+
+**Rules for staying version-independent:**
+
+- **Feature detection by call.** A reason code the ROM does not know is
+  not claimed, so the block comes back unchanged (byte 0 still holds the
+  reason code). A program tests the call it needs, not a version number.
+  The API version is informative only.
+- **Fixed contracts.** Joystick *j*'s channels are a permanent function of
+  *j* ([the channel map](#the-channel-map)), so no call returns channel
+  numbers. Type numbers never change meaning; new types get new numbers.
+  Fields are only ever added, at the end of a block or in bits now
+  reserved (which read 0).
+- **Capabilities for what varies.** A joystick reports its kind, its
+  capabilities and its number of buttons; names come from the ROM. A
+  program that uses these works unchanged with port types added later.
+
+Every block fits in 16 bytes. The joystick module's status flags, used
+by reasons 0 and 1:
+
+| Bit | Set when |
+|---|---|
+| 0 | The ROM has no workspace (press Ctrl-Break) |
+| 1 | The SPItFIRE hardware did not answer |
+| 2 | Joystick handling is off (bit 7 of the `*FX190` byte clear, e.g. `*SPITFIRE JOYSTICK OFF`): ADVAL comes from the MOS's own routine |
+| 3 | Updates are stopped (`*FX16,0`): values keep their last readings |
+
+With bit 0 or 1 set, no joystick is reported. Bits 4-7 are reserved.
+
+**Reason 0, identify:**
 
 | Offset | On entry | On exit |
 |---|---|---|
-| 0 | 0 (reason code) | &53 ("S"): SPItFIRE answered |
+| 0 | 0 | &53 ("S"): SPItFIRE answered |
 | 1 | | API version (1) |
-| 2 | | Port A type (0-7, as [protocol.md](protocol.md)) |
+| 2 | | ROM version, major, in BCD (`&00` for 0.03) |
+| 3 | | ROM version, minor, in BCD (`&03` for 0.03) |
+| 4 | | Modules in this ROM: bit 0 joystick, bit 1 RTC; others reserved |
+| 5 | | Status flags |
+
+**Reason 1, joystick summary:**
+
+| Offset | On entry | On exit |
+|---|---|---|
+| 0 | 1 | &53 |
+| 1 | | n, joysticks allocated (0-4) |
+| 2 | | Port A type (as [protocol.md](protocol.md)) |
 | 3 | | Port B type |
-| 4 | | n, joysticks allocated (0-4) |
-| 5 | | Keypad mask: bit j-1 set if joystick j has a keypad |
-| 6-9 | | Joysticks 1-4: bit 7 the port (0 = A, 1 = B), bits 0-2 its type; &FF if not allocated |
-| 10 | | Flags: bit 0 set if the ROM has no workspace (press Ctrl-Break) |
+| 4-7 | | Joysticks 1-4: bit 7 the port (0 = A, 1 = B), bit 6 the handset (0 = the port's first joystick, 1 = its second), bits 0-5 the type; &FF if not allocated |
+| 8 | | Status flags |
+
+**Reason 2, describe joystick j:**
+
+| Offset | On entry | On exit |
+|---|---|---|
+| 0 | 2 | &53 |
+| 1 | j (1-4) | Unchanged |
+| 2 | | Port, handset and type, as in reason 1; &FF if not allocated (then bytes 3-5 are 0) |
+| 3 | | Kind: 0 none, 1 stick, 2 position, 3 auxiliary, 4 chord |
+| 4 | | Capabilities: bit 0 the X and Y channels carry readings, bit 1 its switch byte carries directions, bit 2 it has a keypad; others reserved |
+| 5 | | Buttons, n: they are bits 0 to n-1 of its switch byte, and bit 0 is also its fire bit in `ADVAL(0)` or `(16)` |
+
+| Kind | Meaning | Types |
+|---|---|---|
+| 1 stick | A self-centring joystick: steer with it | `SINGLE`, `DUAL`, `3BS`, `3BT`, `14B` |
+| 2 position | Absolute position, not self-centring | `BITSTIK` (first slot) |
+| 3 auxiliary | Extra controls of the device in the slot before it | `BITSTIK` (second slot: twist and a button) |
+| 4 chord | A chord keyboard on X and Y | `QUINKEY` |
+
+A game that wants players picks the joysticks of kind 1, or of any kind
+with bit 1 (directions) set if it can use a Bitstik too. Directions are
+not computed for a Bitstik's twist or a Quinkey. Buttons beyond the
+first are for later types (a 3B Single or Bitstik could report its other
+buttons in bits 1-3 of the switch byte); today every joystick has 0 or 1.
+
+**Reason 3, name a port type:**
+
+| Offset | On entry | On exit |
+|---|---|---|
+| 0 | 3 | &53 |
+| 1 | Type number | Unchanged |
+| 2 | 0 = keyword (`3BT`), 1 = full name ("Voltmace Delta 3B Twin") | Unchanged |
+| 3-4 | Buffer address, low byte first | Unchanged |
+| 5 | Buffer size, in bytes | Unchanged |
+| 6 | | Characters copied, not counting the CR |
+| 7 | | Bit 0: no such type or name (the buffer holds just CR) |
+
+The name is copied with a CR after it, cut to fit the buffer (a size of
+0 copies nothing). Full names are at most 24 characters, so a 25-byte
+buffer holds any of today's. The buffer is in the I/O processor's
+memory, which on a Compact (no Tube) is the only memory.
 
 - **Detection:** software puts 0 in byte 0 and makes the call. If no ROM
   claims it, the MOS returns the block unchanged, so byte 0 still holds
-  0; &53 means SPItFIRE answered.
-- **No workspace:** after `*SRLOAD ... I` without a reset, the call still
-  answers, with flag bit 0 set and n = 0.
-- **Unknown reason codes** are not claimed, so the block comes back
-  unchanged. Later reasons might set a port type from software or read
-  the AVR firmware's version.
+  0; &53 means SPItFIRE answered. The same works for every reason code.
+- **No workspace:** after `*SRLOAD ... I` without a reset, the calls
+  still answer, with status bit 0 set and no joysticks.
+- **Not provided:**
+  - *Channel numbers per joystick*, which the issue proposed: the map
+    cannot move without breaking every BASIC program that reads
+    `ADVAL(1)`, so returning it would suggest a flexibility that does
+    not exist. The guide states it as permanent instead.
+  - *Setting port types from software:* it writes the EEPROM, and a
+    temporary setting would be hidden state that outlives the program.
+    Configuration stays with `*SPITFIRE JOYSTICK` until a program needs
+    more.
+  - *Presence detection*, as above.
 - To make the number official, ask the mdfs.net/BeebWiki maintainer to
-  list &3F for SPItFIRE once it is built.
+  list &3F for SPItFIRE.
 
 #### Workspace
 Checked in the MOS 5.00 disassembly (`acorn_mos_disassembly`, whose
